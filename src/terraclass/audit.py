@@ -88,6 +88,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
     resume_evidence_path = root / "docs/RESUME_EVIDENCE.md"
     transfer_results_document_path = root / "docs/TRANSFER_RESULTS.md"
     transfer_results_report_path = root / "reports/transfer_learning_results_2026-07-12.json"
+    submission_notebook_path = root / "notebooks/TerraClass_IITK_Colab_Submission.ipynb"
+    colab_handoff_path = root / "docs/COLAB_HANDOFF.md"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -236,11 +238,57 @@ def audit_project(project_root: str | Path) -> AuditReport:
             for metric in ("accuracy", "macro_f1", "balanced_accuracy", "top3_accuracy"):
                 if run.get("test", {}).get(metric) != 1.0:
                     report.errors.append(f"Transfer result {split_kind} {metric} differs from 1.0")
-        if any(
-            run.get("result_claim_allowed") is not False
-            for run in transfer_results.get("incomplete_runs", [])
-        ):
-            report.errors.append("An incomplete run is incorrectly marked as claimable")
+    if any(
+        run.get("result_claim_allowed") is not False
+        for run in transfer_results.get("incomplete_runs", [])
+    ):
+        report.errors.append("An incomplete run is incorrectly marked as claimable")
+
+    if not submission_notebook_path.is_file():
+        report.errors.append("Self-contained IIT submission notebook is missing")
+        submission_notebook: dict[str, Any] = {"cells": [], "metadata": {}}
+    else:
+        submission_notebook = json.loads(submission_notebook_path.read_text(encoding="utf-8"))
+        if submission_notebook.get("nbformat") != 4:
+            report.errors.append("Submission notebook is not nbformat 4")
+        if submission_notebook.get("metadata", {}).get("accelerator") != "GPU":
+            report.errors.append("Submission notebook does not request a GPU accelerator")
+        submission_source = "\n".join(
+            str(cell.get("source", "")) for cell in submission_notebook.get("cells", [])
+        )
+        submission_tokens = (
+            config.split.manifest_sha256,
+            group_audit.get("manifest_sha256", "missing-group-manifest-hash"),
+            config.dataset.archive_sha256,
+            "ResNet18",
+            "EfficientNet-B0",
+            "validation macro F1",
+            "classification_report",
+            "terraclass_colab_results.zip",
+            "TO_BE_FILLED_AFTER_FINAL_GPU_RESULTS",
+        )
+        for token in submission_tokens:
+            if token not in submission_source:
+                report.errors.append(f"Submission notebook token is missing: {token}")
+        for forbidden in ("/Users/", "kaggle.json", "KAGGLE_KEY", "GITHUB_TOKEN", "ghp_"):
+            if forbidden in submission_source:
+                report.errors.append(f"Submission notebook contains forbidden token: {forbidden}")
+        for index, cell in enumerate(submission_notebook.get("cells", [])):
+            if cell.get("cell_type") != "code":
+                continue
+            if cell.get("outputs") or cell.get("execution_count") is not None:
+                report.errors.append(
+                    f"Submission notebook cell {index} contains saved execution state"
+                )
+            python_source = "\n".join(
+                line
+                for line in str(cell.get("source", "")).splitlines()
+                if not line.lstrip().startswith("%")
+            )
+            try:
+                compile(python_source, f"submission-cell-{index}", "exec")
+            except SyntaxError as error:
+                report.errors.append(f"Submission notebook cell {index} does not compile: {error}")
 
     download_metadata_path = root / "data/raw/DOWNLOAD_METADATA.json"
     if download_metadata_path.is_file():
@@ -303,6 +351,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         transfer_results_document = ""
     else:
         transfer_results_document = transfer_results_document_path.read_text(encoding="utf-8")
+    if not colab_handoff_path.is_file():
+        report.errors.append("docs/COLAB_HANDOFF.md is missing")
+        colab_handoff = ""
+    else:
+        colab_handoff = colab_handoff_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -323,6 +376,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             iit_criteria,
             resume_evidence,
             transfer_results_document,
+            colab_handoff,
         )
     )
     for token in required_documentation_tokens:
@@ -382,6 +436,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
             }
             for run in transfer_results.get("completed_runs", [])
         ],
+        "submission_notebook": {
+            "cells": len(submission_notebook.get("cells", [])),
+            "gpu_requested": submission_notebook.get("metadata", {}).get("accelerator") == "GPU",
+            "saved_outputs": sum(
+                bool(cell.get("outputs")) for cell in submission_notebook.get("cells", [])
+            ),
+        },
     }
     return report
 

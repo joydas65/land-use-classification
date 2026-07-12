@@ -10,7 +10,7 @@ This repository does not invent additional college rules. The items below are en
 |---|---|---|
 | Use an official sample project | Immutable supplied notebook and its SHA-256 | Complete |
 | Improve or modify model/performance | Selected ResNet18 replaces the custom CNN and improves historical test accuracy from 74.67% to 100.00% and macro F1 from 0.733 to 1.000 | Complete |
-| Submit an updated Jupyter Notebook | A clean Colab notebook will present acquisition, manifests, training, evaluation, and limitations | Pending final experiment results |
+| Submit an updated Jupyter Notebook | Self-contained Colab candidate presents verified acquisition, deterministic manifests, four transfer experiments, multi-metric evaluation, export, and limitations | Built and locally audited; final GPU execution evidence pending |
 | Submit by 20 July 2026 | Dated execution plan and Git history | In progress |
 
 ## Acceptance evidence for the final notebook

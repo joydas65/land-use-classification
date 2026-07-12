@@ -6,8 +6,9 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 
 - **12 July 2026 — complete:** credential audit, repository setup, immutable baseline, verified dataset provenance, deterministic historical manifest, controlled CPU reproduction, tests, and consistency audit.
 - **13 July 2026 milestone — complete for model selection:** conservative reviewed-scene groups, group-aware five-class manifest, transfer-learning infrastructure, and completed ResNet18 historical/group-aware experiments. ResNet18 is frozen as the selected model.
+- **14 July 2026 collaboration milestone — implementation complete, GPU evidence pending:** self-contained IIT Kanpur Colab notebook, four-entry GPU experiment matrix, secure results export, notebook tests, and local pre-training verification.
 - **Deferred benchmark:** EfficientNet-B0 exceeded the reasonable local CPU budget and produced no claimable test result; its two configurations remain ready for a Colab GPU.
-- **Next:** build and fresh-runtime-verify the updated IIT Kanpur Colab notebook, then add the selected model to the inference web app.
+- **Next:** run the notebook on Colab Pro, return the exported results bundle, freeze final notebook outputs and commit, then add the selected model to the inference web app.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -37,6 +38,8 @@ These are observed values from the original notebook, not newly reproduced resul
 - `tests/` protects consistency among code, configuration, documentation, and the original notebook.
 - `docs/BASELINE_AUDIT.md` records known defects in the supplied notebook.
 - `docs/EXPERIMENT_PROTOCOL.md` defines the fair comparison required for the IIT submission.
+- `notebooks/TerraClass_IITK_Colab_Submission.ipynb` is the self-contained GPU collaboration and submission candidate.
+- `docs/COLAB_HANDOFF.md` defines the credential-free user/Codex results handoff.
 
 ## Local setup
 
