@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "seed": 42,
+  "selected_classes": [
+    "agricultural",
+    "airplane",
+    "baseballdiamond",
+    "beach",
+    "buildings"
+  ],
+  "split_counts": {
+    "train": 350,
+    "validation": 75,
+    "test": 75
+  },
+  "manifest_path": "data/manifests/five_class_group_aware_seed42.csv",
+  "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+  "reviewed_groups_path": "data/grouping/verified_related_scenes.json",
+  "reviewed_groups_sha256": "5399069cb08a9cf944b5d17fbe17bc961da9b471e02f4196c18c278720a07e1c",
+  "historical_manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+  "historical_reviewed_group_crossings": {
+    "airplane_same_scene_01_02": [
+      "test",
+      "train"
+    ],
+    "beach_related_75_79": [
+      "test",
+      "train"
+    ],
+    "beach_related_86_91": [
+      "train",
+      "validation"
+    ]
+  },
+  "group_aware_crossings": {},
+  "grouping": {
+    "total_groups": 490,
+    "multi_image_groups": 4,
+    "grouped_images": 14,
+    "groups": {
+      "agricultural_related_91_94": [
+        "agricultural/agricultural91.tif",
+        "agricultural/agricultural94.tif"
+      ],
+      "airplane_same_scene_01_02": [
+        "airplane/airplane01.tif",
+        "airplane/airplane02.tif"
+      ],
+      "beach_related_75_79": [
+        "beach/beach75.tif",
+        "beach/beach77.tif",
+        "beach/beach78.tif",
+        "beach/beach79.tif"
+      ],
+      "beach_related_86_91": [
+        "beach/beach86.tif",
+        "beach/beach87.tif",
+        "beach/beach88.tif",
+        "beach/beach89.tif",
+        "beach/beach90.tif",
+        "beach/beach91.tif"
+      ]
+    }
+  }
+}

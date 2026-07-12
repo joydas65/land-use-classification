@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "experiment_name": "resnet18_imagenet_group_aware_5class",
+  "baseline_config_path": "configs/baseline_5class.json",
+  "split_kind": "group_aware",
+  "manifest_path": "data/manifests/five_class_group_aware_seed42.csv",
+  "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+  "model": {"architecture": "resnet18", "pretrained": true, "dropout": 0.2},
+  "training": {
+    "batch_size": 16,
+    "head_epochs": 3,
+    "fine_tune_epochs": 7,
+    "head_learning_rate": 0.001,
+    "fine_tune_learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "early_stopping_patience": 3
+  },
+  "selection_metric": "macro_f1"
+}

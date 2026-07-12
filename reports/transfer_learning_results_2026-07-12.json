@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "report_date": "2026-07-12",
+  "baseline": {
+    "model": "supplied custom CNN",
+    "historical_test_accuracy": 0.7467,
+    "historical_test_macro_f1": 0.733,
+    "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea"
+  },
+  "completed_runs": [
+    {
+      "experiment_name": "resnet18_imagenet_historical_5class",
+      "architecture": "resnet18",
+      "pretrained": true,
+      "total_parameters": 11179077,
+      "split_kind": "historical",
+      "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "selected_global_epoch": 5,
+      "selected_stage": "fine_tune",
+      "selected_stage_epoch": 2,
+      "validation_macro_f1": 1.0,
+      "test": {
+        "sample_count": 75,
+        "loss": 0.017093655938903492,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [[15, 0, 0, 0, 0], [0, 15, 0, 0, 0], [0, 0, 15, 0, 0], [0, 0, 0, 15, 0], [0, 0, 0, 0, 15]]
+      }
+    },
+    {
+      "experiment_name": "resnet18_imagenet_group_aware_5class",
+      "architecture": "resnet18",
+      "pretrained": true,
+      "total_parameters": 11179077,
+      "split_kind": "group_aware",
+      "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "selected_global_epoch": 4,
+      "selected_stage": "fine_tune",
+      "selected_stage_epoch": 1,
+      "validation_macro_f1": 1.0,
+      "test": {
+        "sample_count": 75,
+        "loss": 0.019746945450703303,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [[15, 0, 0, 0, 0], [0, 15, 0, 0, 0], [0, 0, 15, 0, 0], [0, 0, 0, 15, 0], [0, 0, 0, 0, 15]]
+      }
+    }
+  ],
+  "incomplete_runs": [
+    {
+      "experiment_name": "efficientnet_b0_imagenet_historical_5class",
+      "status": "interrupted_without_test_metrics",
+      "reason": "Exceeded the reasonable local CPU execution budget; CUDA and MPS were unavailable.",
+      "result_claim_allowed": false
+    },
+    {
+      "experiment_name": "efficientnet_b0_imagenet_group_aware_5class",
+      "status": "not_started_after_historical_cpu_feasibility_stop",
+      "reason": "Deferred to a Colab GPU because the historical CPU run did not complete within the local execution budget.",
+      "result_claim_allowed": false
+    }
+  ],
+  "selected_model": {
+    "architecture": "resnet18",
+    "reason": "Completed both required split tracks with perfect five-class test metrics; EfficientNet-B0 did not complete locally and has no claimable result."
+  },
+  "claim_boundary": "Results apply only to the balanced five-class, 500-image UC Merced subset and must not be stated as 21-class performance."
+}

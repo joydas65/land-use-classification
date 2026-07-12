@@ -2,6 +2,15 @@
 
 TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpur **Land Use Classification** sample project. The preserved notebook is evidence of the starting point; reusable code, configuration, manifests, tests, and later transfer-learning experiments live outside that immutable copy.
 
+## Delivery status
+
+- **12 July 2026 — complete:** credential audit, repository setup, immutable baseline, verified dataset provenance, deterministic historical manifest, controlled CPU reproduction, tests, and consistency audit.
+- **13 July 2026 milestone — complete for model selection:** conservative reviewed-scene groups, group-aware five-class manifest, transfer-learning infrastructure, and completed ResNet18 historical/group-aware experiments. ResNet18 is frozen as the selected model.
+- **Deferred benchmark:** EfficientNet-B0 exceeded the reasonable local CPU budget and produced no claimable test result; its two configurations remain ready for a Colab GPU.
+- **Next:** build and fresh-runtime-verify the updated IIT Kanpur Colab notebook, then add the selected model to the inference web app.
+
+Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
+
 ## Accepted baseline
 
 The supplied dataset contains 2,100 images across 21 classes, but the saved baseline trains on **5 classes** and **500 images**. Its deterministic target split is **350/75/75** for training, validation, and testing.
@@ -22,6 +31,8 @@ These are observed values from the original notebook, not newly reproduced resul
 - `configs/baseline_5class.json` is the machine-readable baseline specification.
 - `src/terraclass/` contains reusable dataset, transform, model, training, and audit code.
 - `data/manifests/` is reserved for versioned split manifests.
+- `data/grouping/` records manually reviewed related-scene groups used for leakage control.
+- `configs/transfer/` defines the ResNet18/EfficientNet-B0 by historical/group-aware experiment matrix.
 - `artifacts/` contains untracked checkpoints and run metrics.
 - `tests/` protects consistency among code, configuration, documentation, and the original notebook.
 - `docs/BASELINE_AUDIT.md` records known defects in the supplied notebook.
@@ -62,6 +73,24 @@ terraclass-baseline \
 The run produces `split_manifest.csv`, `best_baseline_model.pth`, and `metrics.json`. Data and model artifacts are intentionally excluded from Git.
 
 The controlled 12 July CPU reproduction completed at 78.67% test accuracy and 0.777 macro F1 on the identical manifest. This is recorded as parity evidence, not a model improvement; see `docs/REPRODUCTION_RUN.md`.
+
+The selected ResNet18 transfer model completed both five-class evaluation tracks at 100.00% test accuracy and 1.000 macro F1. On the historical manifest this is a +25.33 percentage-point accuracy gain and +0.267 macro-F1 gain over the supplied notebook. The equally strong group-aware result is separate robustness evidence. These results apply only to 500 images across 5 classes; see `docs/TRANSFER_RESULTS.md`.
+
+Create and verify the leakage-controlled manifest:
+
+```bash
+PYTHONPATH=src python scripts/prepare_group_aware_manifest.py \
+  --dataset-root data/raw/UCMerced_LandUse/Images
+```
+
+Run one transfer-learning experiment (replace the config and output directory for the other three matrix entries):
+
+```bash
+PYTHONPATH=src python -m terraclass.transfer_training \
+  --dataset-root data/raw/UCMerced_LandUse/Images \
+  --config configs/transfer/resnet18_historical.json \
+  --output-dir artifacts/resnet18_historical
+```
 
 ## Scope boundary
 

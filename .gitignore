@@ -4,6 +4,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.cache/
 dist/
 build/
 data/raw/*
@@ -13,4 +14,3 @@ artifacts/*
 *.pth
 *.pt
 *.onnx
-

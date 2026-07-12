@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "method": "Conservative connected components from same-class 64-bit difference-hash candidates at Hamming distance <= 4",
+  "review_policy": "Group candidates conservatively to prevent visually related scenes from crossing evaluation boundaries; grouping does not assert byte equality.",
+  "groups": [
+    {
+      "group_id": "agricultural_related_91_94",
+      "class_name": "agricultural",
+      "members": [
+        "agricultural/agricultural91.tif",
+        "agricultural/agricultural94.tif"
+      ],
+      "evidence": "difference_hash_candidate"
+    },
+    {
+      "group_id": "airplane_same_scene_01_02",
+      "class_name": "airplane",
+      "members": [
+        "airplane/airplane01.tif",
+        "airplane/airplane02.tif"
+      ],
+      "evidence": "difference_hash_distance_0_and_visual_same_scene_confirmation"
+    },
+    {
+      "group_id": "beach_related_75_79",
+      "class_name": "beach",
+      "members": [
+        "beach/beach75.tif",
+        "beach/beach77.tif",
+        "beach/beach78.tif",
+        "beach/beach79.tif"
+      ],
+      "evidence": "connected_difference_hash_candidates_and_visual_shoreline_similarity"
+    },
+    {
+      "group_id": "beach_related_86_91",
+      "class_name": "beach",
+      "members": [
+        "beach/beach86.tif",
+        "beach/beach87.tif",
+        "beach/beach88.tif",
+        "beach/beach89.tif",
+        "beach/beach90.tif",
+        "beach/beach91.tif"
+      ],
+      "evidence": "connected_difference_hash_candidates_and_visual_shoreline_similarity"
+    }
+  ]
+}

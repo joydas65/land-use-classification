@@ -114,27 +114,91 @@ def write_manifest(
     splits: dict[str, Sequence[Sample]],
     dataset_root: str | Path,
     include_hashes: bool = True,
+    group_by_relative_path: dict[str, str] | None = None,
 ) -> None:
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     root = Path(dataset_root).resolve()
     with destination.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(
-            handle, fieldnames=["split", "relative_path", "class_name", "label", "sha256"]
-        )
+        fieldnames = ["split", "relative_path", "class_name", "label", "sha256"]
+        if group_by_relative_path is not None:
+            fieldnames.append("group_id")
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         for split_name in ("train", "validation", "test"):
             for sample in sorted(splits[split_name], key=lambda item: str(item.path)):
                 resolved = sample.path.resolve()
-                writer.writerow(
-                    {
-                        "split": split_name,
-                        "relative_path": resolved.relative_to(root).as_posix(),
-                        "class_name": sample.class_name,
-                        "label": sample.label,
-                        "sha256": file_sha256(resolved) if include_hashes else "",
-                    }
-                )
+                relative_path = resolved.relative_to(root).as_posix()
+                row = {
+                    "split": split_name,
+                    "relative_path": relative_path,
+                    "class_name": sample.class_name,
+                    "label": sample.label,
+                    "sha256": file_sha256(resolved) if include_hashes else "",
+                }
+                if group_by_relative_path is not None:
+                    if relative_path not in group_by_relative_path:
+                        raise ValueError(f"Missing group ID for {relative_path}")
+                    row["group_id"] = group_by_relative_path[relative_path]
+                writer.writerow(row)
+
+
+def load_manifest(
+    path: str | Path,
+    dataset_root: str | Path,
+    config: ExperimentConfig,
+    *,
+    verify_hashes: bool = True,
+) -> tuple[dict[str, list[Sample]], dict[str, str]]:
+    """Load a manifest, verify provenance, and enforce optional group isolation."""
+    root = Path(dataset_root).resolve()
+    splits: dict[str, list[Sample]] = {
+        "train": [],
+        "validation": [],
+        "test": [],
+    }
+    path_to_group: dict[str, str] = {}
+    group_splits: dict[str, set[str]] = {}
+    expected_labels = {
+        class_name: label for label, class_name in enumerate(config.dataset.selected_classes)
+    }
+    with Path(path).open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        required = {"split", "relative_path", "class_name", "label", "sha256"}
+        if not reader.fieldnames or not required.issubset(reader.fieldnames):
+            raise ValueError(f"Manifest is missing required columns: {sorted(required)}")
+        for row in reader:
+            split_name = row["split"]
+            if split_name not in splits:
+                raise ValueError(f"Unknown manifest split: {split_name}")
+            relative = Path(row["relative_path"])
+            if relative.is_absolute():
+                raise ValueError("Manifest paths must be relative")
+            resolved = (root / relative).resolve()
+            if resolved != root and root not in resolved.parents:
+                raise ValueError(f"Manifest path escapes dataset root: {relative}")
+            if not resolved.is_file():
+                raise FileNotFoundError(f"Manifest image does not exist: {resolved}")
+            class_name = row["class_name"]
+            if class_name not in expected_labels:
+                raise ValueError(f"Unexpected class in manifest: {class_name}")
+            label = int(row["label"])
+            if label != expected_labels[class_name]:
+                raise ValueError(f"Label mismatch for {relative}")
+            if verify_hashes and file_sha256(resolved) != row["sha256"]:
+                raise ValueError(f"Image hash mismatch for {relative}")
+            relative_posix = relative.as_posix()
+            group_id = row.get("group_id") or f"singleton::{relative_posix}"
+            path_to_group[relative_posix] = group_id
+            group_splits.setdefault(group_id, set()).add(split_name)
+            splits[split_name].append(Sample(resolved, class_name, label))
+    validate_splits(splits, config)
+    crossing = {
+        group_id: sorted(names) for group_id, names in group_splits.items() if len(names) > 1
+    }
+    if crossing:
+        raise ValueError(f"Manifest groups cross split boundaries: {crossing}")
+    return splits, path_to_group
 
 
 class ImagePathDataset(Dataset[tuple[torch.Tensor, int]]):

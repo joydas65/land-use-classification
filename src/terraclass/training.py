@@ -51,11 +51,12 @@ def build_loader(
     *,
     shuffle: bool,
     num_workers: int,
+    batch_size: int | None = None,
 ) -> DataLoader:
     generator = torch.Generator().manual_seed(config.seed)
     return DataLoader(
         dataset,
-        batch_size=config.training.batch_size,
+        batch_size=batch_size or config.training.batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
         pin_memory=torch.cuda.is_available(),

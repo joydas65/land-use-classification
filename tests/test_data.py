@@ -10,6 +10,7 @@ from terraclass.config import ExperimentConfig
 from terraclass.data import (
     Sample,
     discover_samples,
+    load_manifest,
     stratified_split,
     validate_splits,
     write_manifest,
@@ -92,3 +93,39 @@ def test_manifest_contains_relative_paths_and_hashes(
     assert [row["split"] for row in rows] == ["train", "validation", "test"]
     assert all(not Path(row["relative_path"]).is_absolute() for row in rows)
     assert all(len(row["sha256"]) == 64 for row in rows)
+
+
+def test_grouped_manifest_round_trip_and_crossing_detection(
+    tmp_path: Path, baseline_config: ExperimentConfig
+) -> None:
+    config = replace(
+        baseline_config,
+        dataset=replace(baseline_config.dataset, images_per_class=3),
+        split=replace(
+            baseline_config.split,
+            expected_counts={"train": 5, "validation": 5, "test": 5},
+        ),
+    )
+    splits: dict[str, list[Sample]] = {name: [] for name in ("train", "validation", "test")}
+    groups: dict[str, str] = {}
+    for label, class_name in enumerate(config.dataset.selected_classes):
+        class_dir = tmp_path / class_name
+        class_dir.mkdir()
+        for split_name, index in zip(splits, range(3), strict=True):
+            path = class_dir / f"{class_name}{index:02d}.tif"
+            Image.new("RGB", (4, 4), (label * 30, index * 30, 1)).save(path)
+            splits[split_name].append(Sample(path, class_name, label))
+            relative = path.relative_to(tmp_path).as_posix()
+            groups[relative] = f"{class_name}_{split_name}"
+    manifest = tmp_path / "grouped.csv"
+    write_manifest(manifest, splits, tmp_path, group_by_relative_path=groups)
+    loaded, loaded_groups = load_manifest(manifest, tmp_path, config)
+    assert loaded == splits
+    assert loaded_groups == groups
+
+    rows = manifest.read_text(encoding="utf-8")
+    manifest.write_text(
+        rows.replace("agricultural_validation", "agricultural_train"), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="groups cross split boundaries"):
+        load_manifest(manifest, tmp_path, config)

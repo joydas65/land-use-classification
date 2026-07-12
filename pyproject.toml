@@ -21,6 +21,7 @@ dev = ["pytest>=8", "ruff>=0.5"]
 
 [project.scripts]
 terraclass-baseline = "terraclass.training:main"
+terraclass-transfer = "terraclass.transfer_training:main"
 terraclass-audit = "terraclass.audit:main"
 
 [tool.setuptools.packages.find]

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from terraclass.config import load_config
+from terraclass.transfer_config import load_transfer_config
 
 KNOWN_ISSUE_IDS = (
     "ART-001",
@@ -82,6 +83,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
     readme_path = root / "README.md"
     manifest_path = root / config.split.manifest_path
     dataset_audit_path = root / "data/DATASET_AUDIT.json"
+    group_audit_path = root / "data/GROUP_AWARE_AUDIT.json"
+    iit_criteria_path = root / "docs/IIT_SUBMISSION_CRITERIA.md"
+    resume_evidence_path = root / "docs/RESUME_EVIDENCE.md"
+    transfer_results_document_path = root / "docs/TRANSFER_RESULTS.md"
+    transfer_results_report_path = root / "reports/transfer_learning_results_2026-07-12.json"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -164,6 +170,78 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if baseline_split.get("perceptual_candidate_cross_split_count") != 8:
             report.errors.append("Five-class cross-split perceptual candidate count differs from 8")
 
+    if not group_audit_path.is_file():
+        report.errors.append("data/GROUP_AWARE_AUDIT.json is missing")
+        group_audit: dict[str, Any] = {}
+    else:
+        group_audit = json.loads(group_audit_path.read_text(encoding="utf-8"))
+        group_manifest_path = root / group_audit["manifest_path"]
+        if _sha256(group_manifest_path) != group_audit["manifest_sha256"]:
+            report.errors.append("Group-aware manifest checksum differs from its audit")
+        if group_audit.get("split_counts") != config.split.expected_counts:
+            report.errors.append("Group-aware split counts differ from baseline split counts")
+        if group_audit.get("group_aware_crossings") != {}:
+            report.errors.append("Group-aware manifest contains a reviewed group crossing")
+        with group_manifest_path.open(encoding="utf-8", newline="") as handle:
+            group_rows = list(csv.DictReader(handle))
+        group_splits: dict[str, set[str]] = {}
+        for row in group_rows:
+            group_splits.setdefault(row["group_id"], set()).add(row["split"])
+        if any(len(split_names) > 1 for split_names in group_splits.values()):
+            report.errors.append("A group ID crosses boundaries in the group-aware manifest")
+
+    transfer_config_paths = sorted((root / "configs/transfer").glob("*.json"))
+    if len(transfer_config_paths) != 4:
+        report.errors.append("Exactly four transfer-learning configurations are required")
+    transfer_matrix: set[tuple[str, str]] = set()
+    for transfer_config_path in transfer_config_paths:
+        transfer_config = load_transfer_config(transfer_config_path)
+        transfer_matrix.add((transfer_config.architecture, transfer_config.split_kind))
+        transfer_manifest = root / transfer_config.manifest_path
+        if not transfer_manifest.is_file():
+            report.errors.append(f"Transfer manifest is missing: {transfer_config.manifest_path}")
+        elif _sha256(transfer_manifest) != transfer_config.manifest_sha256:
+            report.errors.append(
+                f"Transfer manifest hash differs for {transfer_config.experiment_name}"
+            )
+    expected_transfer_matrix = {
+        (architecture, split_kind)
+        for architecture in ("resnet18", "efficientnet_b0")
+        for split_kind in ("historical", "group_aware")
+    }
+    if transfer_matrix != expected_transfer_matrix:
+        report.errors.append("Transfer configs do not cover both architectures and split tracks")
+
+    if not transfer_results_report_path.is_file():
+        report.errors.append("Versioned transfer-learning results report is missing")
+        transfer_results: dict[str, Any] = {}
+    else:
+        transfer_results = json.loads(transfer_results_report_path.read_text(encoding="utf-8"))
+        completed_runs = transfer_results.get("completed_runs", [])
+        if len(completed_runs) != 2:
+            report.errors.append("Transfer report must contain two completed ResNet18 runs")
+        completed_splits = {run.get("split_kind") for run in completed_runs}
+        if completed_splits != {"historical", "group_aware"}:
+            report.errors.append("Transfer report lacks both completed split tracks")
+        expected_manifest_hashes = {
+            "historical": config.split.manifest_sha256,
+            "group_aware": group_audit.get("manifest_sha256"),
+        }
+        for run in completed_runs:
+            split_kind = run.get("split_kind")
+            if run.get("architecture") != "resnet18":
+                report.errors.append("A completed selected-model run is not ResNet18")
+            if run.get("manifest_sha256") != expected_manifest_hashes.get(split_kind):
+                report.errors.append(f"Transfer result manifest differs for {split_kind}")
+            for metric in ("accuracy", "macro_f1", "balanced_accuracy", "top3_accuracy"):
+                if run.get("test", {}).get(metric) != 1.0:
+                    report.errors.append(f"Transfer result {split_kind} {metric} differs from 1.0")
+        if any(
+            run.get("result_claim_allowed") is not False
+            for run in transfer_results.get("incomplete_runs", [])
+        ):
+            report.errors.append("An incomplete run is incorrectly marked as claimable")
+
     download_metadata_path = root / "data/raw/DOWNLOAD_METADATA.json"
     if download_metadata_path.is_file():
         download_metadata = json.loads(download_metadata_path.read_text(encoding="utf-8"))
@@ -210,6 +288,21 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if token not in reproduction_document:
             report.errors.append(f"Reproduction documentation token is missing: {token}")
     readme = readme_path.read_text(encoding="utf-8")
+    if not iit_criteria_path.is_file():
+        report.errors.append("docs/IIT_SUBMISSION_CRITERIA.md is missing")
+        iit_criteria = ""
+    else:
+        iit_criteria = iit_criteria_path.read_text(encoding="utf-8")
+    if not resume_evidence_path.is_file():
+        report.errors.append("docs/RESUME_EVIDENCE.md is missing")
+        resume_evidence = ""
+    else:
+        resume_evidence = resume_evidence_path.read_text(encoding="utf-8")
+    if not transfer_results_document_path.is_file():
+        report.errors.append("docs/TRANSFER_RESULTS.md is missing")
+        transfer_results_document = ""
+    else:
+        transfer_results_document = transfer_results_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -222,7 +315,16 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "74.67%",
         "0.733",
     )
-    combined_documentation = readme + "\n" + audit_document + "\n" + reproduction_document
+    combined_documentation = "\n".join(
+        (
+            readme,
+            audit_document,
+            reproduction_document,
+            iit_criteria,
+            resume_evidence,
+            transfer_results_document,
+        )
+    )
     for token in required_documentation_tokens:
         if token not in combined_documentation:
             report.errors.append(f"Required baseline documentation token is missing: {token}")
@@ -260,6 +362,26 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "selected_epoch": reproduction_report["training"]["selected_epoch"],
         },
         "known_issue_ids": list(KNOWN_ISSUE_IDS),
+        "group_aware_manifest": {
+            "sha256": group_audit.get("manifest_sha256"),
+            "groups": group_audit.get("grouping", {}).get("total_groups"),
+            "reviewed_multi_image_groups": group_audit.get("grouping", {}).get(
+                "multi_image_groups"
+            ),
+            "crossings": group_audit.get("group_aware_crossings"),
+        },
+        "transfer_experiment_matrix": sorted(
+            f"{architecture}:{split_kind}" for architecture, split_kind in transfer_matrix
+        ),
+        "completed_transfer_runs": [
+            {
+                "experiment_name": run.get("experiment_name"),
+                "split_kind": run.get("split_kind"),
+                "test_accuracy": run.get("test", {}).get("accuracy"),
+                "test_macro_f1": run.get("test", {}).get("macro_f1"),
+            }
+            for run in transfer_results.get("completed_runs", [])
+        ],
     }
     return report
 
