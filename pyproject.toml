@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "terraclass"
+version = "0.1.0"
+description = "Reproducible UC Merced land-use classification baseline and evaluation pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "Pillow>=10",
+  "scikit-learn>=1.4",
+  "torch>=2.2",
+  "torchvision>=0.17"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+terraclass-baseline = "terraclass.training:main"
+terraclass-audit = "terraclass.audit:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks/original"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

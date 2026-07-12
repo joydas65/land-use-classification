@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "dataset_name": "UC Merced Land Use",
+  "dataset_root": "data/raw/UCMerced_LandUse/Images",
+  "total_images": 2100,
+  "total_classes": 21,
+  "class_counts": {
+    "agricultural": 100,
+    "airplane": 100,
+    "baseballdiamond": 100,
+    "beach": 100,
+    "buildings": 100,
+    "chaparral": 100,
+    "denseresidential": 100,
+    "forest": 100,
+    "freeway": 100,
+    "golfcourse": 100,
+    "harbor": 100,
+    "intersection": 100,
+    "mediumresidential": 100,
+    "mobilehomepark": 100,
+    "overpass": 100,
+    "parkinglot": 100,
+    "river": 100,
+    "runway": 100,
+    "sparseresidential": 100,
+    "storagetanks": 100,
+    "tenniscourt": 100
+  },
+  "dimensions": {
+    "242x256": 1,
+    "247x247": 9,
+    "247x256": 1,
+    "249x256": 1,
+    "250x256": 2,
+    "252x256": 2,
+    "253x256": 6,
+    "254x256": 3,
+    "255x256": 4,
+    "256x247": 1,
+    "256x249": 2,
+    "256x251": 5,
+    "256x253": 3,
+    "256x254": 2,
+    "256x255": 1,
+    "256x256": 2056,
+    "257x257": 1
+  },
+  "color_modes": {
+    "RGB": 2100
+  },
+  "image_formats": {
+    "TIFF": 2100
+  },
+  "total_image_bytes": 439087240,
+  "unique_content_hashes": 2100,
+  "exact_duplicate_group_count": 0,
+  "exact_duplicate_groups": [],
+  "perceptual_hash": {
+    "algorithm": "difference_hash_64bit",
+    "hamming_threshold": 4,
+    "candidate_pair_count": 31,
+    "candidate_examples": [
+      {
+        "left": "agricultural/agricultural91.tif",
+        "right": "agricultural/agricultural94.tif",
+        "hamming_distance": 3,
+        "left_split": "validation",
+        "right_split": "validation"
+      },
+      {
+        "left": "agricultural/agricultural91.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 3,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "agricultural/agricultural94.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 2,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "airplane/airplane01.tif",
+        "right": "airplane/airplane02.tif",
+        "hamming_distance": 0,
+        "left_split": "train",
+        "right_split": "test"
+      },
+      {
+        "left": "beach/beach75.tif",
+        "right": "beach/beach77.tif",
+        "hamming_distance": 4,
+        "left_split": "test",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach75.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 3,
+        "left_split": "test",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach78.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach86.tif",
+        "right": "beach/beach87.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "validation"
+      },
+      {
+        "left": "beach/beach86.tif",
+        "right": "beach/beach88.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach86.tif",
+        "right": "beach/beach89.tif",
+        "hamming_distance": 2,
+        "left_split": "train",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach87.tif",
+        "right": "beach/beach88.tif",
+        "hamming_distance": 4,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach87.tif",
+        "right": "beach/beach90.tif",
+        "hamming_distance": 4,
+        "left_split": "validation",
+        "right_split": "validation"
+      },
+      {
+        "left": "beach/beach88.tif",
+        "right": "beach/beach90.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "validation"
+      },
+      {
+        "left": "beach/beach88.tif",
+        "right": "beach/beach91.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "train"
+      },
+      {
+        "left": "freeway/freeway44.tif",
+        "right": "freeway/freeway45.tif",
+        "hamming_distance": 1
+      },
+      {
+        "left": "freeway/freeway44.tif",
+        "right": "freeway/freeway47.tif",
+        "hamming_distance": 1
+      },
+      {
+        "left": "freeway/freeway44.tif",
+        "right": "freeway/freeway59.tif",
+        "hamming_distance": 4
+      },
+      {
+        "left": "freeway/freeway44.tif",
+        "right": "harbor/harbor59.tif",
+        "hamming_distance": 2
+      },
+      {
+        "left": "freeway/freeway44.tif",
+        "right": "mobilehomepark/mobilehomepark11.tif",
+        "hamming_distance": 0
+      },
+      {
+        "left": "freeway/freeway45.tif",
+        "right": "freeway/freeway47.tif",
+        "hamming_distance": 2
+      },
+      {
+        "left": "freeway/freeway45.tif",
+        "right": "harbor/harbor59.tif",
+        "hamming_distance": 3
+      },
+      {
+        "left": "freeway/freeway45.tif",
+        "right": "mobilehomepark/mobilehomepark11.tif",
+        "hamming_distance": 1
+      },
+      {
+        "left": "freeway/freeway47.tif",
+        "right": "harbor/harbor14.tif",
+        "hamming_distance": 4
+      },
+      {
+        "left": "freeway/freeway47.tif",
+        "right": "harbor/harbor59.tif",
+        "hamming_distance": 3
+      },
+      {
+        "left": "freeway/freeway47.tif",
+        "right": "mobilehomepark/mobilehomepark11.tif",
+        "hamming_distance": 1
+      },
+      {
+        "left": "freeway/freeway59.tif",
+        "right": "mobilehomepark/mobilehomepark11.tif",
+        "hamming_distance": 4
+      },
+      {
+        "left": "harbor/harbor08.tif",
+        "right": "harbor/harbor65.tif",
+        "hamming_distance": 3
+      },
+      {
+        "left": "harbor/harbor17.tif",
+        "right": "harbor/harbor87.tif",
+        "hamming_distance": 4
+      },
+      {
+        "left": "harbor/harbor59.tif",
+        "right": "mobilehomepark/mobilehomepark11.tif",
+        "hamming_distance": 2
+      },
+      {
+        "left": "runway/runway29.tif",
+        "right": "runway/runway39.tif",
+        "hamming_distance": 3
+      },
+      {
+        "left": "runway/runway53.tif",
+        "right": "runway/runway57.tif",
+        "hamming_distance": 4
+      }
+    ]
+  },
+  "baseline_split": {
+    "seed": 42,
+    "manifest": "data/manifests/baseline_5class_seed42.csv",
+    "counts": {
+      "train": 350,
+      "validation": 75,
+      "test": 75
+    },
+    "class_counts": {
+      "train": {
+        "agricultural": 70,
+        "airplane": 70,
+        "baseballdiamond": 70,
+        "beach": 70,
+        "buildings": 70
+      },
+      "validation": {
+        "agricultural": 15,
+        "airplane": 15,
+        "baseballdiamond": 15,
+        "beach": 15,
+        "buildings": 15
+      },
+      "test": {
+        "agricultural": 15,
+        "airplane": 15,
+        "baseballdiamond": 15,
+        "beach": 15,
+        "buildings": 15
+      }
+    },
+    "perceptual_candidate_pair_count": 14,
+    "perceptual_candidate_cross_split_count": 8,
+    "perceptual_candidate_cross_split_examples": [
+      {
+        "left": "agricultural/agricultural91.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 3,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "agricultural/agricultural94.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 2,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "airplane/airplane01.tif",
+        "right": "airplane/airplane02.tif",
+        "hamming_distance": 0,
+        "left_split": "train",
+        "right_split": "test"
+      },
+      {
+        "left": "beach/beach75.tif",
+        "right": "beach/beach77.tif",
+        "hamming_distance": 4,
+        "left_split": "test",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach75.tif",
+        "right": "beach/beach79.tif",
+        "hamming_distance": 3,
+        "left_split": "test",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach86.tif",
+        "right": "beach/beach87.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "validation"
+      },
+      {
+        "left": "beach/beach87.tif",
+        "right": "beach/beach88.tif",
+        "hamming_distance": 4,
+        "left_split": "validation",
+        "right_split": "train"
+      },
+      {
+        "left": "beach/beach88.tif",
+        "right": "beach/beach90.tif",
+        "hamming_distance": 4,
+        "left_split": "train",
+        "right_split": "validation"
+      }
+    ]
+  }
+}

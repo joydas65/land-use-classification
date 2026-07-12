@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "experiment_name": "uc_merced_custom_cnn_5class_baseline",
+  "seed": 42,
+  "dataset": {
+    "name": "UC Merced Land Use",
+    "source_url": "http://weegee.vision.ucmerced.edu/datasets/UCMerced_LandUse.zip",
+    "verified_mirror_url": "https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip",
+    "archive_sha256": "06c539ef28703a58fb07bd2837991ac7c48b813b00bb12ac197efd813a18daeb",
+    "archive_size_bytes": 332468434,
+    "total_images": 2100,
+    "total_classes": 21,
+    "all_classes": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings",
+      "chaparral",
+      "denseresidential",
+      "forest",
+      "freeway",
+      "golfcourse",
+      "harbor",
+      "intersection",
+      "mediumresidential",
+      "mobilehomepark",
+      "overpass",
+      "parkinglot",
+      "river",
+      "runway",
+      "sparseresidential",
+      "storagetanks",
+      "tenniscourt"
+    ],
+    "selected_classes": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ],
+    "images_per_class": 100,
+    "extensions": [".tif", ".tiff"]
+  },
+  "split": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15,
+    "manifest_path": "data/manifests/baseline_5class_seed42.csv",
+    "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+    "expected_counts": {
+      "train": 350,
+      "validation": 75,
+      "test": 75
+    }
+  },
+  "preprocessing": {
+    "image_size": 224,
+    "normalization_mean": [0.485, 0.456, 0.406],
+    "normalization_std": [0.229, 0.224, 0.225],
+    "horizontal_flip_probability": 0.5,
+    "rotation_degrees": 15,
+    "color_jitter": 0.2
+  },
+  "training": {
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "epochs": 10,
+    "optimizer": "Adam",
+    "scheduler": "StepLR",
+    "scheduler_step_size": 7,
+    "scheduler_gamma": 0.1
+  },
+  "observed_baseline": {
+    "parameter_count": 102277,
+    "best_training_accuracy": 0.7886,
+    "best_validation_accuracy": 0.8133,
+    "test_accuracy": 0.7467,
+    "test_macro_f1": 0.733
+  }
+}

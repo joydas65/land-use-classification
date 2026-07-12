@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "run_id": "baseline_5class_seed42_cpu_2026-07-12",
+  "run_date": "2026-07-12",
+  "dataset": {
+    "source_kind": "torchgeo_https_mirror",
+    "archive_sha256": "06c539ef28703a58fb07bd2837991ac7c48b813b00bb12ac197efd813a18daeb",
+    "archive_size_bytes": 332468434
+  },
+  "split_manifest": {
+    "path": "data/manifests/baseline_5class_seed42.csv",
+    "sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea"
+  },
+  "environment": {
+    "python": "3.13.5",
+    "torch": "2.12.0",
+    "torchvision": "0.27.0",
+    "scikit_learn": "1.9.0",
+    "numpy": "2.4.5",
+    "pillow": "12.2.0",
+    "device": "cpu",
+    "data_loader_workers": 0
+  },
+  "training": {
+    "selected_epoch": 9,
+    "best_training_accuracy": 0.7657142857142857,
+    "best_validation_accuracy": 0.76
+  },
+  "test": {
+    "loss": 0.5948088049888611,
+    "accuracy": 0.7866666666666666,
+    "macro_f1": 0.777083002277663
+  },
+  "historical_notebook": {
+    "test_accuracy": 0.7467,
+    "macro_f1": 0.733
+  },
+  "interpretation": "Parity reproduction of the same model and protocol; metric differences are not a model improvement claim."
+}
