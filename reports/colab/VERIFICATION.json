@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "verified_date": "2026-07-13",
+  "source_bundle": {
+    "filename": "terraclass_colab_results.zip",
+    "sha256": "2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae",
+    "size_bytes": 339342,
+    "member_count": 9
+  },
+  "hardware": {
+    "device": "cuda",
+    "gpu": "NVIDIA L4"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.0.2",
+    "scikit_learn": "1.6.1"
+  },
+  "dataset": {
+    "archive_sha256": "06c539ef28703a58fb07bd2837991ac7c48b813b00bb12ac197efd813a18daeb",
+    "selected_classes": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ],
+    "selected_images": 500
+  },
+  "manifests": {
+    "historical": {
+      "sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "rows": 500,
+      "split_counts": {
+        "train": 350,
+        "validation": 75,
+        "test": 75
+      },
+      "group_crossings": 0
+    },
+    "group_aware": {
+      "sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "rows": 500,
+      "split_counts": {
+        "train": 350,
+        "validation": 75,
+        "test": 75
+      },
+      "group_crossings": 0
+    }
+  },
+  "failures": [],
+  "completed_matrix": [
+    "efficientnet_b0:group_aware",
+    "efficientnet_b0:historical",
+    "resnet18:group_aware",
+    "resnet18:historical"
+  ],
+  "runs": [
+    {
+      "experiment_name": "resnet18_historical",
+      "architecture": "resnet18",
+      "split_kind": "historical",
+      "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "total_parameters": 11179077,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 11.195126458000232,
+      "test": {
+        "loss": 0.024664994478225708,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ]
+      }
+    },
+    {
+      "experiment_name": "resnet18_group_aware",
+      "architecture": "resnet18",
+      "split_kind": "group_aware",
+      "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "total_parameters": 11179077,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 9.378838990000077,
+      "test": {
+        "loss": 0.029365468621253967,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ]
+      }
+    },
+    {
+      "experiment_name": "efficientnet_b0_historical",
+      "architecture": "efficientnet_b0",
+      "split_kind": "historical",
+      "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "total_parameters": 4013953,
+      "selected": {
+        "global_epoch": 5,
+        "stage": "fine_tune",
+        "stage_epoch": 2,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 36.141047012999934,
+      "test": {
+        "loss": 0.045725121572613714,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ]
+      }
+    },
+    {
+      "experiment_name": "efficientnet_b0_group_aware",
+      "architecture": "efficientnet_b0",
+      "split_kind": "group_aware",
+      "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "total_parameters": 4013953,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 9.790503210000224,
+      "test": {
+        "loss": 0.08041294351220131,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ]
+      }
+    }
+  ],
+  "figure": {
+    "sha256": "c5d1ba44d1d202bd2e259b3a2959f9876a37f438ce340ba6a0c23f884759faf0",
+    "width": 2017,
+    "height": 2538
+  },
+  "file_sha256": {
+    "colab_run_report.json": "0929d5923aac12cc8b9c45263d95b5032937847a302befbb3d50ec9e589297c3",
+    "efficientnet_b0_group_aware.json": "46ef9291c77015cb8f6f9a53aeac3422ed4a48403bfe925b4a28aac5054921af",
+    "efficientnet_b0_historical.json": "c03cf947c43a9691304f75f5e02312c7fde00769d673edb43aedc9c51b8c74e8",
+    "group_aware_manifest.csv": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+    "historical_manifest.csv": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+    "model_comparison.csv": "510b8e44604d52851e3939d97033320a3cf56ffa3f956af6ea2340b5e3ec0c25",
+    "resnet18_group_aware.json": "4a302febfeadec3af233dcbb98daa0e3e892633a8962ecc0d479408de1013e41",
+    "resnet18_historical.json": "a0017251584a2d1e40637eeee49b0cef3c0a9a161cb1258f48ba481563f66a7b",
+    "training_and_confusion.png": "c5d1ba44d1d202bd2e259b3a2959f9876a37f438ce340ba6a0c23f884759faf0"
+  },
+  "selected_architecture": "resnet18",
+  "selection_rationale": "Both architectures tied on classification metrics. ResNet18 had lower test loss on both manifests, completed the historical L4 run faster, and already has matching local CPU evidence. EfficientNet-B0 remains the parameter-efficient alternative."
+}

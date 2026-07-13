@@ -1,0 +1,3305 @@
+{
+  "schema_version": 1,
+  "submission_commit": "TO_BE_FILLED_AFTER_FINAL_GPU_RESULTS",
+  "hardware": {
+    "device": "cuda",
+    "gpu": "NVIDIA L4"
+  },
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.0.2",
+    "scikit_learn": "1.6.1"
+  },
+  "dataset": {
+    "archive_sha256": "06c539ef28703a58fb07bd2837991ac7c48b813b00bb12ac197efd813a18daeb",
+    "selected_classes": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ],
+    "selected_images": 500
+  },
+  "historical_manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+  "group_manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+  "results": [
+    {
+      "schema_version": 1,
+      "experiment_name": "resnet18_historical",
+      "architecture": "resnet18",
+      "split_kind": "historical",
+      "seed": 42,
+      "device": "cuda",
+      "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "total_parameters": 11179077,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 11.195126458000232,
+      "history": [
+        {
+          "global_epoch": 1,
+          "stage": "head",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 1.5426918261391775,
+            "accuracy": 0.32571428571428573
+          },
+          "validation": {
+            "loss": 0.9255211464564006,
+            "accuracy": 0.8266666666666667,
+            "macro_f1": 0.8251688311688312,
+            "balanced_accuracy": 0.8266666666666665,
+            "top3_accuracy": 0.9733333333333334,
+            "confusion_matrix": [
+              [
+                13,
+                1,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                12,
+                0,
+                1,
+                2
+              ],
+              [
+                0,
+                3,
+                9,
+                1,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                13
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.9285714285714286,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 0.6666666666666666,
+                "recall": 0.8,
+                "f1-score": 0.7272727272727273,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9,
+                "recall": 0.6,
+                "f1-score": 0.72,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.8823529411764706,
+                "recall": 1.0,
+                "f1-score": 0.9375,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.7647058823529411,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.8125,
+                "support": 15.0
+              },
+              "accuracy": 0.8266666666666667,
+              "macro avg": {
+                "precision": 0.8427450980392155,
+                "recall": 0.8266666666666665,
+                "f1-score": 0.8251688311688312,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.8427450980392156,
+                "recall": 0.8266666666666667,
+                "f1-score": 0.8251688311688311,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 2,
+          "stage": "head",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.9111856520175934,
+            "accuracy": 0.7228571428571429
+          },
+          "validation": {
+            "loss": 0.5866826740900676,
+            "accuracy": 0.9066666666666666,
+            "macro_f1": 0.9033185020393029,
+            "balanced_accuracy": 0.9066666666666666,
+            "top3_accuracy": 0.9866666666666667,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                9,
+                0,
+                1,
+                5
+              ],
+              [
+                0,
+                0,
+                14,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.6,
+                "f1-score": 0.75,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.7142857142857143,
+                "recall": 1.0,
+                "f1-score": 0.8333333333333334,
+                "support": 15.0
+              },
+              "accuracy": 0.9066666666666666,
+              "macro avg": {
+                "precision": 0.9303571428571429,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.9033185020393029,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.930357142857143,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.9033185020393031,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 3,
+          "stage": "head",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.6295353490965707,
+            "accuracy": 0.8457142857142858
+          },
+          "validation": {
+            "loss": 0.4044112825393677,
+            "accuracy": 0.9066666666666666,
+            "macro_f1": 0.9085482468849608,
+            "balanced_accuracy": 0.9066666666666666,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                12,
+                0,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                13,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                14
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 0.9230769230769231,
+                "recall": 0.8,
+                "f1-score": 0.8571428571428571,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9285714285714286,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.896551724137931,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.7368421052631579,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.8235294117647058,
+                "support": 15.0
+              },
+              "accuracy": 0.9066666666666666,
+              "macro avg": {
+                "precision": 0.917698091382302,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.9085482468849608,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9176980913823019,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.9085482468849609,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 4,
+          "stage": "fine_tune",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 0.1440177127186741,
+            "accuracy": 0.9771428571428571
+          },
+          "validation": {
+            "loss": 0.013142467762033145,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 5,
+          "stage": "fine_tune",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.058221985963838443,
+            "accuracy": 0.98
+          },
+          "validation": {
+            "loss": 0.0024566370931764442,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 6,
+          "stage": "fine_tune",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.03716203655781491,
+            "accuracy": 0.9885714285714285
+          },
+          "validation": {
+            "loss": 0.008983030368884405,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 7,
+          "stage": "fine_tune",
+          "stage_epoch": 4,
+          "train": {
+            "loss": 0.011368334298687322,
+            "accuracy": 0.9971428571428571
+          },
+          "validation": {
+            "loss": 0.007286819890141487,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        }
+      ],
+      "test": {
+        "loss": 0.024664994478225708,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ],
+        "classification_report": {
+          "agricultural": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "airplane": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "baseballdiamond": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "beach": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "buildings": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          }
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "experiment_name": "resnet18_group_aware",
+      "architecture": "resnet18",
+      "split_kind": "group_aware",
+      "seed": 42,
+      "device": "cuda",
+      "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "total_parameters": 11179077,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 9.378838990000077,
+      "history": [
+        {
+          "global_epoch": 1,
+          "stage": "head",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 1.4667703669411796,
+            "accuracy": 0.35714285714285715
+          },
+          "validation": {
+            "loss": 0.9902021487553915,
+            "accuracy": 0.72,
+            "macro_f1": 0.6905601582325721,
+            "balanced_accuracy": 0.72,
+            "top3_accuracy": 0.9066666666666666,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                13,
+                0,
+                0,
+                2
+              ],
+              [
+                0,
+                2,
+                10,
+                1,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                3,
+                10,
+                0,
+                2
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 0.7222222222222222,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.7878787878787878,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.5,
+                "recall": 0.6666666666666666,
+                "f1-score": 0.5714285714285714,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.8823529411764706,
+                "recall": 1.0,
+                "f1-score": 0.9375,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.3333333333333333,
+                "recall": 0.13333333333333333,
+                "f1-score": 0.19047619047619047,
+                "support": 15.0
+              },
+              "accuracy": 0.72,
+              "macro avg": {
+                "precision": 0.6875816993464052,
+                "recall": 0.72,
+                "f1-score": 0.6905601582325721,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.6875816993464052,
+                "recall": 0.72,
+                "f1-score": 0.690560158232572,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 2,
+          "stage": "head",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.8723534304755075,
+            "accuracy": 0.7742857142857142
+          },
+          "validation": {
+            "loss": 0.6545473039150238,
+            "accuracy": 0.8266666666666667,
+            "macro_f1": 0.8327330779054918,
+            "balanced_accuracy": 0.8266666666666668,
+            "top3_accuracy": 0.9866666666666667,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                9,
+                0,
+                0,
+                6
+              ],
+              [
+                0,
+                0,
+                11,
+                0,
+                4
+              ],
+              [
+                0,
+                0,
+                0,
+                14,
+                1
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                14
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.6,
+                "f1-score": 0.75,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9166666666666666,
+                "recall": 0.7333333333333333,
+                "f1-score": 0.8148148148148148,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9333333333333333,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9333333333333333,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.56,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.7,
+                "support": 15.0
+              },
+              "accuracy": 0.8266666666666667,
+              "macro avg": {
+                "precision": 0.882,
+                "recall": 0.8266666666666668,
+                "f1-score": 0.8327330779054918,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.8820000000000001,
+                "recall": 0.8266666666666667,
+                "f1-score": 0.8327330779054918,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 3,
+          "stage": "head",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.5804259814534869,
+            "accuracy": 0.8714285714285714
+          },
+          "validation": {
+            "loss": 0.46157820224761964,
+            "accuracy": 0.9466666666666667,
+            "macro_f1": 0.9451920122887865,
+            "balanced_accuracy": 0.9466666666666667,
+            "top3_accuracy": 0.9866666666666667,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                12,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                14
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9230769230769231,
+                "recall": 0.8,
+                "f1-score": 0.8571428571428571,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.9333333333333333,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9333333333333333,
+                "support": 15.0
+              },
+              "accuracy": 0.9466666666666667,
+              "macro avg": {
+                "precision": 0.9462820512820513,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9451920122887865,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9462820512820512,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9451920122887866,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 4,
+          "stage": "fine_tune",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 0.17775821856622184,
+            "accuracy": 0.9542857142857143
+          },
+          "validation": {
+            "loss": 0.03643791690468788,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 5,
+          "stage": "fine_tune",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.031949503421783446,
+            "accuracy": 0.9942857142857143
+          },
+          "validation": {
+            "loss": 0.02910059615969658,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 6,
+          "stage": "fine_tune",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.018631835340389185,
+            "accuracy": 0.9942857142857143
+          },
+          "validation": {
+            "loss": 0.023419397634764513,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 7,
+          "stage": "fine_tune",
+          "stage_epoch": 4,
+          "train": {
+            "loss": 0.017571249012170092,
+            "accuracy": 0.9971428571428571
+          },
+          "validation": {
+            "loss": 0.011042268968497713,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        }
+      ],
+      "test": {
+        "loss": 0.029365468621253967,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ],
+        "classification_report": {
+          "agricultural": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "airplane": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "baseballdiamond": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "beach": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "buildings": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          }
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "experiment_name": "efficientnet_b0_historical",
+      "architecture": "efficientnet_b0",
+      "split_kind": "historical",
+      "seed": 42,
+      "device": "cuda",
+      "manifest_sha256": "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
+      "total_parameters": 4013953,
+      "selected": {
+        "global_epoch": 5,
+        "stage": "fine_tune",
+        "stage_epoch": 2,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 36.141047012999934,
+      "history": [
+        {
+          "global_epoch": 1,
+          "stage": "head",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 1.1931263950892856,
+            "accuracy": 0.6114285714285714
+          },
+          "validation": {
+            "loss": 0.7535366098086039,
+            "accuracy": 0.96,
+            "macro_f1": 0.9599137931034484,
+            "balanced_accuracy": 0.96,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                14,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                13,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9285714285714286,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.896551724137931,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.8823529411764706,
+                "recall": 1.0,
+                "f1-score": 0.9375,
+                "support": 15.0
+              },
+              "accuracy": 0.96,
+              "macro avg": {
+                "precision": 0.96218487394958,
+                "recall": 0.96,
+                "f1-score": 0.9599137931034484,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9621848739495799,
+                "recall": 0.96,
+                "f1-score": 0.9599137931034485,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 2,
+          "stage": "head",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.6521207090786525,
+            "accuracy": 0.9171428571428571
+          },
+          "validation": {
+            "loss": 0.4714159639676412,
+            "accuracy": 0.9466666666666667,
+            "macro_f1": 0.9463502015226153,
+            "balanced_accuracy": 0.9466666666666667,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                14,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                12,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.9230769230769231,
+                "recall": 0.8,
+                "f1-score": 0.8571428571428571,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.8333333333333334,
+                "recall": 1.0,
+                "f1-score": 0.9090909090909091,
+                "support": 15.0
+              },
+              "accuracy": 0.9466666666666667,
+              "macro avg": {
+                "precision": 0.9512820512820512,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9463502015226153,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9512820512820512,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9463502015226154,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 3,
+          "stage": "head",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.3993488415649959,
+            "accuracy": 0.96
+          },
+          "validation": {
+            "loss": 0.3627516436576843,
+            "accuracy": 0.96,
+            "macro_f1": 0.9595959595959596,
+            "balanced_accuracy": 0.96,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                12,
+                0,
+                3
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 0.8,
+                "f1-score": 0.8888888888888888,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.8333333333333334,
+                "recall": 1.0,
+                "f1-score": 0.9090909090909091,
+                "support": 15.0
+              },
+              "accuracy": 0.96,
+              "macro avg": {
+                "precision": 0.9666666666666666,
+                "recall": 0.96,
+                "f1-score": 0.9595959595959596,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9666666666666667,
+                "recall": 0.96,
+                "f1-score": 0.9595959595959596,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 4,
+          "stage": "fine_tune",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 0.21923839015620095,
+            "accuracy": 0.9714285714285714
+          },
+          "validation": {
+            "loss": 0.11032797078291576,
+            "accuracy": 0.9866666666666667,
+            "macro_f1": 0.9866518353726363,
+            "balanced_accuracy": 0.9866666666666667,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                14,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "accuracy": 0.9866666666666667,
+              "macro avg": {
+                "precision": 0.9875,
+                "recall": 0.9866666666666667,
+                "f1-score": 0.9866518353726363,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9875,
+                "recall": 0.9866666666666667,
+                "f1-score": 0.9866518353726363,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 5,
+          "stage": "fine_tune",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.12202351476464952,
+            "accuracy": 0.9771428571428571
+          },
+          "validation": {
+            "loss": 0.05004380524158478,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 6,
+          "stage": "fine_tune",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.07246913942907537,
+            "accuracy": 0.98
+          },
+          "validation": {
+            "loss": 0.03569314296046893,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 7,
+          "stage": "fine_tune",
+          "stage_epoch": 4,
+          "train": {
+            "loss": 0.028016455833401,
+            "accuracy": 0.9942857142857143
+          },
+          "validation": {
+            "loss": 0.03542515392104784,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 8,
+          "stage": "fine_tune",
+          "stage_epoch": 5,
+          "train": {
+            "loss": 0.034483879309679784,
+            "accuracy": 0.9914285714285714
+          },
+          "validation": {
+            "loss": 0.025898594756921134,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        }
+      ],
+      "test": {
+        "loss": 0.045725121572613714,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ],
+        "classification_report": {
+          "agricultural": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "airplane": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "baseballdiamond": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "beach": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "buildings": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          }
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "experiment_name": "efficientnet_b0_group_aware",
+      "architecture": "efficientnet_b0",
+      "split_kind": "group_aware",
+      "seed": 42,
+      "device": "cuda",
+      "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+      "total_parameters": 4013953,
+      "selected": {
+        "global_epoch": 4,
+        "stage": "fine_tune",
+        "stage_epoch": 1,
+        "validation_macro_f1": 1.0
+      },
+      "elapsed_seconds": 9.790503210000224,
+      "history": [
+        {
+          "global_epoch": 1,
+          "stage": "head",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 1.1531626663889203,
+            "accuracy": 0.6857142857142857
+          },
+          "validation": {
+            "loss": 0.7964605720837911,
+            "accuracy": 0.9333333333333333,
+            "macro_f1": 0.9329144616352625,
+            "balanced_accuracy": 0.9333333333333333,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                14,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                1,
+                12,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 0.9333333333333333,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9333333333333333,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 0.8,
+                "f1-score": 0.8888888888888888,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.8333333333333334,
+                "recall": 1.0,
+                "f1-score": 0.9090909090909091,
+                "support": 15.0
+              },
+              "accuracy": 0.9333333333333333,
+              "macro avg": {
+                "precision": 0.9408333333333333,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9329144616352625,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9408333333333333,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9329144616352626,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 2,
+          "stage": "head",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.6331832442964827,
+            "accuracy": 0.9114285714285715
+          },
+          "validation": {
+            "loss": 0.5361769088109334,
+            "accuracy": 0.9066666666666666,
+            "macro_f1": 0.9068443721574653,
+            "balanced_accuracy": 0.9066666666666666,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                13,
+                0,
+                1,
+                1,
+                0
+              ],
+              [
+                0,
+                12,
+                1,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                13,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.9285714285714286,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.8,
+                "f1-score": 0.8888888888888888,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 0.8666666666666667,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.8666666666666667,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.7894736842105263,
+                "recall": 1.0,
+                "f1-score": 0.8823529411764706,
+                "support": 15.0
+              },
+              "accuracy": 0.9066666666666666,
+              "macro avg": {
+                "precision": 0.9187280701754386,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.9068443721574653,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9187280701754386,
+                "recall": 0.9066666666666666,
+                "f1-score": 0.906844372157465,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 3,
+          "stage": "head",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.3958900671345847,
+            "accuracy": 0.96
+          },
+          "validation": {
+            "loss": 0.40862969040870667,
+            "accuracy": 0.9466666666666667,
+            "macro_f1": 0.9472877511809659,
+            "balanced_accuracy": 0.9466666666666667,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                14,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                13,
+                0,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 0.8666666666666667,
+                "f1-score": 0.9285714285714286,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 0.8333333333333334,
+                "recall": 1.0,
+                "f1-score": 0.9090909090909091,
+                "support": 15.0
+              },
+              "accuracy": 0.9466666666666667,
+              "macro avg": {
+                "precision": 0.9541666666666666,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9472877511809659,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9541666666666667,
+                "recall": 0.9466666666666667,
+                "f1-score": 0.9472877511809659,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 4,
+          "stage": "fine_tune",
+          "stage_epoch": 1,
+          "train": {
+            "loss": 0.19494364602225167,
+            "accuracy": 0.9857142857142858
+          },
+          "validation": {
+            "loss": 0.1342195741335551,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 5,
+          "stage": "fine_tune",
+          "stage_epoch": 2,
+          "train": {
+            "loss": 0.07628989215408052,
+            "accuracy": 0.9971428571428571
+          },
+          "validation": {
+            "loss": 0.0668823367357254,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 6,
+          "stage": "fine_tune",
+          "stage_epoch": 3,
+          "train": {
+            "loss": 0.045743434045995984,
+            "accuracy": 0.9914285714285714
+          },
+          "validation": {
+            "loss": 0.04607685228188833,
+            "accuracy": 0.9866666666666667,
+            "macro_f1": 0.9866518353726363,
+            "balanced_accuracy": 0.9866666666666667,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                14,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.9655172413793104,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 0.9375,
+                "recall": 1.0,
+                "f1-score": 0.967741935483871,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 0.9866666666666667,
+              "macro avg": {
+                "precision": 0.9875,
+                "recall": 0.9866666666666667,
+                "f1-score": 0.9866518353726363,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 0.9875,
+                "recall": 0.9866666666666667,
+                "f1-score": 0.9866518353726363,
+                "support": 75.0
+              }
+            }
+          }
+        },
+        {
+          "global_epoch": 7,
+          "stage": "fine_tune",
+          "stage_epoch": 4,
+          "train": {
+            "loss": 0.03469828706766878,
+            "accuracy": 0.9971428571428571
+          },
+          "validation": {
+            "loss": 0.030351766099532444,
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "balanced_accuracy": 1.0,
+            "top3_accuracy": 1.0,
+            "confusion_matrix": [
+              [
+                15,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                15,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                15,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                15,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                15
+              ]
+            ],
+            "classification_report": {
+              "agricultural": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "airplane": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "baseballdiamond": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "beach": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "buildings": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 15.0
+              },
+              "accuracy": 1.0,
+              "macro avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              },
+              "weighted avg": {
+                "precision": 1.0,
+                "recall": 1.0,
+                "f1-score": 1.0,
+                "support": 75.0
+              }
+            }
+          }
+        }
+      ],
+      "test": {
+        "loss": 0.08041294351220131,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "balanced_accuracy": 1.0,
+        "top3_accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            15,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            15
+          ]
+        ],
+        "classification_report": {
+          "agricultural": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "airplane": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "baseballdiamond": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "beach": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "buildings": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 15.0
+          },
+          "accuracy": 1.0,
+          "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          },
+          "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 75.0
+          }
+        }
+      }
+    }
+  ],
+  "failures": []
+}

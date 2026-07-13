@@ -1,0 +1,6 @@
+model,split,accuracy,macro_f1,balanced_accuracy,top3_accuracy,selected_epoch,elapsed_seconds
+supplied_custom_cnn,historical,0.7467,0.733,,,10,
+resnet18,historical,1.0,1.0,1.0,1.0,4,11.195126458000232
+resnet18,group_aware,1.0,1.0,1.0,1.0,4,9.378838990000077
+efficientnet_b0,historical,1.0,1.0,1.0,1.0,5,36.141047012999934
+efficientnet_b0,group_aware,1.0,1.0,1.0,1.0,4,9.790503210000224
