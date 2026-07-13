@@ -2,24 +2,26 @@
 
 ## Selected model
 
-ResNet18 with ImageNet weights is the selected model for the IIT Kanpur notebook and first web-app version. It completed both required five-class tracks and reached the same ceiling metrics; the simpler completed evidence is preferable to an unfinished alternative.
+ResNet18 with ImageNet weights is the selected IIT Kanpur model. The complete NVIDIA L4 comparison found no classification-metric difference between ResNet18 and EfficientNet-B0, so selection uses secondary evidence rather than overstating an accuracy advantage.
 
-| Model | Split | Selected checkpoint | Test accuracy | Test macro F1 | Balanced accuracy | Top-3 accuracy |
+| Model | Split | Parameters | Epoch | Test loss | Accuracy | Macro F1 |
 |---|---|---:|---:|---:|---:|---:|
-| Supplied custom CNN | Historical | Supplied epoch 10 output | 74.67% | 0.733 | Not reported | Not reported |
-| ResNet18 transfer learning | Historical | Global epoch 5 | 100.00% | 1.000 | 100.00% | 100.00% |
-| ResNet18 transfer learning | Group-aware | Global epoch 4 | 100.00% | 1.000 | 100.00% | 100.00% |
+| Supplied custom CNN | Historical | 102,277 | 10 | Not reported | 74.67% | 0.733 |
+| ResNet18 | Historical | 11,179,077 | 4 | 0.0247 | 100.00% | 1.000 |
+| ResNet18 | Group-aware | 11,179,077 | 4 | 0.0294 | 100.00% | 1.000 |
+| EfficientNet-B0 | Historical | 4,013,953 | 5 | 0.0457 | 100.00% | 1.000 |
+| EfficientNet-B0 | Group-aware | 4,013,953 | 4 | 0.0804 | 100.00% | 1.000 |
 
 The direct historical improvement is **+25.33 percentage points accuracy** and **+0.267 macro F1**. The group-aware result uses a different manifest and is robustness evidence, not another direct baseline comparison.
 
-Both test partitions contain 75 images, 15 per class. Both ResNet18 confusion matrices are diagonal with 15 correct predictions for each of agricultural, airplane, baseballdiamond, beach, and buildings.
+All GPU runs also reached 100.00% balanced accuracy and top-3 accuracy. Every test confusion matrix is diagonal with 15 correct predictions for each of agricultural, airplane, baseballdiamond, beach, and buildings.
 
-## EfficientNet-B0 feasibility result
+## Architecture decision
 
-The historical EfficientNet-B0 CPU run was stopped without test metrics after exceeding the reasonable local execution budget; CUDA and MPS were unavailable. Its group-aware run was therefore not started locally. These are explicitly incomplete experiments and provide no numerical result claim. The checked-in configurations remain ready for a Colab GPU benchmark.
+EfficientNet-B0 matched every classification score with 4,013,953 parameters—about 64% fewer than ResNet18—and is therefore a credible size-efficient alternative. ResNet18 remains selected because it produced lower test loss on both split protocols, completed the historical L4 run in 11.2 seconds versus 36.1 seconds, and agrees with an independent local CPU run. Training duration is not inference latency; the web-app phase must benchmark inference before making a production-serving decision.
 
 ## Interpretation boundary
 
 Perfect performance on this small, visually distinct, balanced five-class subset is not evidence of perfect satellite-scene classification in general. It must never be described as a 21-class UC Merced score. The final notebook should disclose the 500-image scope, the 75-image test size, ImageNet pretraining, and the manually reviewed grouping policy.
 
-The canonical machine-readable evidence is `reports/transfer_learning_results_2026-07-12.json`; checkpoints and raw run artifacts remain untracked.
+The canonical GPU evidence is `reports/colab/VERIFICATION.json`, derived from bundle SHA-256 `2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae`. The earlier `reports/transfer_learning_results_2026-07-12.json` remains an immutable record of local CPU feasibility, including the interrupted EfficientNet attempt.

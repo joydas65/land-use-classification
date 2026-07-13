@@ -2,9 +2,9 @@
 
 ## Current status
 
-Codex has built and locally audited `notebooks/TerraClass_IITK_Colab_Submission.ipynb`. The notebook is self-contained: it does not clone the private repository and does not request a Kaggle, GitHub, or Google credential. Its only network downloads are the checksum-pinned public dataset archive and official torchvision ImageNet weights.
+The collaboration handoff is complete. The self-contained notebook ran on an NVIDIA L4, the returned bundle contained all four experiments with no failures, and Codex imported only the validated report, comparison CSV, and evidence figure.
 
-## User run
+## Completed user run
 
 1. Download the notebook from the repository and upload it to Google Colab.
 2. Choose **Runtime → Change runtime type → GPU**. A T4, L4, A100, or other CUDA GPU is suitable.
@@ -12,12 +12,12 @@ Codex has built and locally audited `notebooks/TerraClass_IITK_Colab_Submission.
 4. Confirm the device cell prints `Device: cuda` and a GPU name.
 5. Let all four experiment entries finish. A failure is recorded rather than hidden.
 6. The final cell downloads `terraclass_colab_results.zip`.
-7. Attach that ZIP to this Codex task. Do not send a checkpoint yet; the small results bundle is enough for metric verification.
+7. The returned ZIP had SHA-256 `2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae`.
 
 ## Codex return step
 
-Codex will verify archive contents, environment metadata, manifest hashes, completed and failed runs, test metrics, confusion matrices, and result/documentation consistency. It will then update the final notebook outputs, replace the submission-commit placeholder, rerun the complete repository gate, and push the final IIT submission commit.
+Codex verified archive paths, file hashes, environment metadata, manifest hashes, completed and failed runs, checkpoint-selection logic, test metrics, per-class supports, confusion matrices, comparison CSV values, and figure integrity. Evidence commit `414233c8471ea961bfd9406a33f54b427e75ab49` anchors the imported results.
 
 ## Claim control
 
-No new EfficientNet result is claimable until it appears in the returned `colab_run_report.json`. The existing ResNet18 results remain the selected evidence unless the complete GPU comparison supports a different choice. Every résumé bullet must retain the “500-image, five-class subset” scope.
+EfficientNet-B0 is now claimable as a completed comparison: it matched ResNet18 classification metrics with about 64% fewer parameters. ResNet18 remains the final IIT model for the documented loss, historical-runtime, and cross-runtime reproducibility reasons. Every résumé bullet must retain the “500-image, five-class subset” scope.

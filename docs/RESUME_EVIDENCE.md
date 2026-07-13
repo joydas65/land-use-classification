@@ -12,11 +12,16 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Leakage analysis using exact hashes, perceptual-hash candidates, manual review, and group-aware splitting
 - Two-stage ImageNet transfer-learning design for ResNet18 and EfficientNet-B0
 - Validation macro-F1 checkpoint selection and multi-metric test evaluation
+- Comparative L4 GPU benchmarking of ResNet18 and EfficientNet-B0 with parameter/loss/runtime tradeoff analysis
 - Automated tests and a cross-artifact audit covering code, configurations, manifests, comments, and documentation
 
 ## Supported numerical claim
 
 > Built a reproducible PyTorch land-use classifier on a balanced 500-image, five-class UC Merced subset; improved historical test accuracy from 74.67% to 100.00% and macro F1 from 0.733 to 1.000 using ImageNet-pretrained ResNet18, then reproduced 1.000 macro F1 on a separately generated, leakage-controlled group split.
+
+Optional second bullet:
+
+> Benchmarked ResNet18 and EfficientNet-B0 across historical and leakage-controlled splits on an NVIDIA L4; both achieved 1.000 macro F1, and selected ResNet18 using test loss, runtime, reproducibility, and model-size tradeoffs rather than accuracy alone.
 
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 

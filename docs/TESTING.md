@@ -26,4 +26,14 @@ python scripts/verify_submission_notebook.py \
 
 Full training verification is performed on Colab Pro GPU according to `docs/COLAB_HANDOFF.md`; the returned results bundle is audited before any GPU metric is accepted.
 
+The returned bundle was imported only after the strict validator checked archive safety and every cross-artifact invariant:
+
+```bash
+PYTHONPATH=src python scripts/import_colab_results.py \
+  --bundle /path/to/terraclass_colab_results.zip \
+  --verified-date 2026-07-13
+```
+
+`pytest` and `terraclass-audit` subsequently revalidate the committed report, comparison CSV, figure, manifests, bundle provenance, completed experiment matrix, and notebook attachment without requiring the original ZIP.
+
 A dataset-free test pass proves internal consistency; it does not reproduce the reported 74.67% accuracy. Reproduction is complete only after a full dataset run generates a hashed manifest and new `metrics.json`.

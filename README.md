@@ -6,9 +6,9 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 
 - **12 July 2026 — complete:** credential audit, repository setup, immutable baseline, verified dataset provenance, deterministic historical manifest, controlled CPU reproduction, tests, and consistency audit.
 - **13 July 2026 milestone — complete for model selection:** conservative reviewed-scene groups, group-aware five-class manifest, transfer-learning infrastructure, and completed ResNet18 historical/group-aware experiments. ResNet18 is frozen as the selected model.
-- **14 July 2026 collaboration milestone — implementation complete, GPU evidence pending:** self-contained IIT Kanpur Colab notebook, four-entry GPU experiment matrix, secure results export, notebook tests, and local pre-training verification.
-- **Deferred benchmark:** EfficientNet-B0 exceeded the reasonable local CPU budget and produced no claimable test result; its two configurations remain ready for a Colab GPU.
-- **Next:** run the notebook on Colab Pro, return the exported results bundle, freeze final notebook outputs and commit, then add the selected model to the inference web app.
+- **14 July 2026 collaboration milestone — complete:** self-contained IIT Kanpur Colab notebook, four-entry GPU matrix, secure results export, notebook tests, and local pre-training verification.
+- **15 July 2026 submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and IIT submission evidence finalized.
+- **Next:** submit the updated notebook by 20 July 2026, then start the inference web-app phase.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -40,6 +40,8 @@ These are observed values from the original notebook, not newly reproduced resul
 - `docs/EXPERIMENT_PROTOCOL.md` defines the fair comparison required for the IIT submission.
 - `notebooks/TerraClass_IITK_Colab_Submission.ipynb` is the self-contained GPU collaboration and submission candidate.
 - `docs/COLAB_HANDOFF.md` defines the credential-free user/Codex results handoff.
+- `reports/colab/VERIFICATION.json` is the canonical audited NVIDIA L4 evidence.
+- `reports/figures/training_and_confusion_colab_l4.png` preserves the verified curves and confusion matrices.
 
 ## Local setup
 
@@ -77,7 +79,7 @@ The run produces `split_manifest.csv`, `best_baseline_model.pth`, and `metrics.j
 
 The controlled 12 July CPU reproduction completed at 78.67% test accuracy and 0.777 macro F1 on the identical manifest. This is recorded as parity evidence, not a model improvement; see `docs/REPRODUCTION_RUN.md`.
 
-The selected ResNet18 transfer model completed both five-class evaluation tracks at 100.00% test accuracy and 1.000 macro F1. On the historical manifest this is a +25.33 percentage-point accuracy gain and +0.267 macro-F1 gain over the supplied notebook. The equally strong group-aware result is separate robustness evidence. These results apply only to 500 images across 5 classes; see `docs/TRANSFER_RESULTS.md`.
+The verified NVIDIA L4 matrix completed without failures. ResNet18 and EfficientNet-B0 both reached 100.00% test accuracy and 1.000 macro F1 on historical and group-aware manifests. ResNet18 remains selected because it had lower test loss on both manifests, faster historical L4 training, and independent local CPU support. On the historical manifest it improves accuracy by +25.33 percentage points and macro F1 by +0.267 over the supplied notebook. These results apply only to 500 images across 5 classes; see `docs/TRANSFER_RESULTS.md`.
 
 Create and verify the leakage-controlled manifest:
 

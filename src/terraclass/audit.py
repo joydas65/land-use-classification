@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import hashlib
 import json
@@ -11,6 +12,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from terraclass.colab_results import BundleValidationError, audit_versioned_evidence
 from terraclass.config import load_config
 from terraclass.transfer_config import load_transfer_config
 
@@ -90,6 +92,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
     transfer_results_report_path = root / "reports/transfer_learning_results_2026-07-12.json"
     submission_notebook_path = root / "notebooks/TerraClass_IITK_Colab_Submission.ipynb"
     colab_handoff_path = root / "docs/COLAB_HANDOFF.md"
+    iit_checklist_path = root / "docs/IIT_SUBMISSION_CHECKLIST.md"
+    colab_report_dir = root / "reports/colab"
+    colab_figure_path = root / "reports/figures/training_and_confusion_colab_l4.png"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -244,6 +249,17 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         report.errors.append("An incomplete run is incorrectly marked as claimable")
 
+    try:
+        colab_verification = audit_versioned_evidence(
+            colab_report_dir,
+            colab_figure_path,
+            manifest_path,
+            root / group_audit.get("manifest_path", "missing-group-manifest"),
+        )
+    except (BundleValidationError, FileNotFoundError, KeyError, json.JSONDecodeError) as error:
+        report.errors.append(f"Versioned Colab evidence failed validation: {error}")
+        colab_verification: dict[str, Any] = {}
+
     if not submission_notebook_path.is_file():
         report.errors.append("Self-contained IIT submission notebook is missing")
         submission_notebook: dict[str, Any] = {"cells": [], "metadata": {}}
@@ -265,14 +281,38 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "validation macro F1",
             "classification_report",
             "terraclass_colab_results.zip",
-            "TO_BE_FILLED_AFTER_FINAL_GPU_RESULTS",
+            "2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae",
+            "414233c8471ea961bfd9406a33f54b427e75ab49",
+            "NVIDIA L4",
+            "Selected final architecture: ResNet18",
         )
         for token in submission_tokens:
             if token not in submission_source:
                 report.errors.append(f"Submission notebook token is missing: {token}")
-        for forbidden in ("/Users/", "kaggle.json", "KAGGLE_KEY", "GITHUB_TOKEN", "ghp_"):
+        for forbidden in (
+            "/Users/",
+            "kaggle.json",
+            "KAGGLE_KEY",
+            "GITHUB_TOKEN",
+            "ghp_",
+            "TO_BE_FILLED",
+        ):
             if forbidden in submission_source:
                 report.errors.append(f"Submission notebook contains forbidden token: {forbidden}")
+        attachment_payloads = [
+            encoded
+            for cell in submission_notebook.get("cells", [])
+            for attachment in cell.get("attachments", {}).values()
+            for encoded in attachment.values()
+        ]
+        if len(attachment_payloads) != 1:
+            report.errors.append(
+                "Submission notebook must contain one verified evidence attachment"
+            )
+        elif hashlib.sha256(base64.b64decode(attachment_payloads[0])).hexdigest() != (
+            colab_verification.get("figure", {}).get("sha256")
+        ):
+            report.errors.append("Submission notebook attachment differs from verified GPU figure")
         for index, cell in enumerate(submission_notebook.get("cells", [])):
             if cell.get("cell_type") != "code":
                 continue
@@ -356,6 +396,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         colab_handoff = ""
     else:
         colab_handoff = colab_handoff_path.read_text(encoding="utf-8")
+    if not iit_checklist_path.is_file():
+        report.errors.append("docs/IIT_SUBMISSION_CHECKLIST.md is missing")
+        iit_checklist = ""
+    else:
+        iit_checklist = iit_checklist_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -377,6 +422,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             resume_evidence,
             transfer_results_document,
             colab_handoff,
+            iit_checklist,
         )
     )
     for token in required_documentation_tokens:
@@ -427,7 +473,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "transfer_experiment_matrix": sorted(
             f"{architecture}:{split_kind}" for architecture, split_kind in transfer_matrix
         ),
-        "completed_transfer_runs": [
+        "local_cpu_transfer_runs": [
             {
                 "experiment_name": run.get("experiment_name"),
                 "split_kind": run.get("split_kind"),
@@ -436,11 +482,21 @@ def audit_project(project_root: str | Path) -> AuditReport:
             }
             for run in transfer_results.get("completed_runs", [])
         ],
+        "verified_colab_gpu": {
+            "bundle_sha256": colab_verification.get("source_bundle", {}).get("sha256"),
+            "gpu": colab_verification.get("hardware", {}).get("gpu"),
+            "completed_matrix": colab_verification.get("completed_matrix"),
+            "failures": colab_verification.get("failures"),
+            "selected_architecture": colab_verification.get("selected_architecture"),
+        },
         "submission_notebook": {
             "cells": len(submission_notebook.get("cells", [])),
             "gpu_requested": submission_notebook.get("metadata", {}).get("accelerator") == "GPU",
             "saved_outputs": sum(
                 bool(cell.get("outputs")) for cell in submission_notebook.get("cells", [])
+            ),
+            "attachments": sum(
+                len(cell.get("attachments", {})) for cell in submission_notebook.get("cells", [])
             ),
         },
     }

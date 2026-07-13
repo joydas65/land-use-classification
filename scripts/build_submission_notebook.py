@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 from pathlib import Path
 from textwrap import dedent
@@ -28,6 +29,45 @@ def code(source: str, *, tags: list[str] | None = None) -> dict[str, Any]:
         "outputs": [],
         "source": dedent(source).strip() + "\n",
     }
+
+
+def verified_results_cell() -> dict[str, Any]:
+    figure_path = (
+        Path(__file__).resolve().parents[1] / "reports/figures/training_and_confusion_colab_l4.png"
+    )
+    encoded_figure = base64.b64encode(figure_path.read_bytes()).decode("ascii")
+    cell = markdown(
+        """
+        ## Verified Colab Pro GPU results — 13 July 2026
+
+        The returned results bundle was validated against its individual JSON files, comparison
+        CSV, confusion matrices, per-class supports, dataset checksum, and both manifest checksums.
+        It ran on an **NVIDIA L4** with no failed experiments.
+
+        | Model | Split | Parameters | Selected epoch | Test loss | Accuracy | Macro F1 |
+        |---|---|---:|---:|---:|---:|---:|
+        | Supplied custom CNN | Historical | 102,277 | 10 | Not reported | 74.67% | 0.733 |
+        | ResNet18 | Historical | 11,179,077 | 4 | 0.0247 | 100.00% | 1.000 |
+        | ResNet18 | Group-aware | 11,179,077 | 4 | 0.0294 | 100.00% | 1.000 |
+        | EfficientNet-B0 | Historical | 4,013,953 | 5 | 0.0457 | 100.00% | 1.000 |
+        | EfficientNet-B0 | Group-aware | 4,013,953 | 4 | 0.0804 | 100.00% | 1.000 |
+
+        **Selected final architecture: ResNet18.** Classification metrics tied, while ResNet18
+        produced lower loss on both manifests, completed the historical L4 run faster, and matched
+        the independently obtained local CPU evidence. EfficientNet-B0 is retained as the
+        parameter-efficient alternative.
+
+        Evidence bundle SHA-256:
+        `2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae`
+        Evidence commit: `414233c8471ea961bfd9406a33f54b427e75ab49`
+
+        ![Verified training curves and test confusion matrices][verified-figure]
+
+        [verified-figure]: attachment:training_and_confusion_colab_l4.png
+        """
+    )
+    cell["attachments"] = {"training_and_confusion_colab_l4.png": {"image/png": encoded_figure}}
+    return cell
 
 
 def build_notebook() -> dict[str, Any]:
@@ -63,6 +103,7 @@ def build_notebook() -> dict[str, Any]:
             - The supplied reference is 74.67% test accuracy and 0.733 macro F1.
             """
         ),
+        verified_results_cell(),
         code(
             """
             %pip -q install "scikit-learn>=1.4" "seaborn>=0.13" "Pillow>=10"
@@ -131,7 +172,7 @@ def build_notebook() -> dict[str, Any]:
             )
             ARCHIVE_SIZE_BYTES = 332_468_434
             SUPPLIED_BASELINE = {"accuracy": 0.7467, "macro_f1": 0.733}
-            SUBMISSION_COMMIT = "TO_BE_FILLED_AFTER_FINAL_GPU_RESULTS"
+            RESULTS_EVIDENCE_COMMIT = "414233c8471ea961bfd9406a33f54b427e75ab49"
 
             WORK_DIR = Path.cwd() / "terraclass_colab"
             DATA_DIR = WORK_DIR / "data"
@@ -740,7 +781,7 @@ def build_notebook() -> dict[str, Any]:
             """
             run_report = {
                 "schema_version": 1,
-                "submission_commit": SUBMISSION_COMMIT,
+                "results_evidence_commit": RESULTS_EVIDENCE_COMMIT,
                 "hardware": {
                     "device": str(DEVICE),
                     "gpu": torch.cuda.get_device_name(0) if DEVICE.type == "cuda" else None,
