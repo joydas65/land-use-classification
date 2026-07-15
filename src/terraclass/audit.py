@@ -105,9 +105,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
     api_test_path = root / "tests/test_api.py"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
+    web_css_path = root / "web/app/globals.css"
     web_package_path = root / "web/package.json"
     web_test_path = root / "web/tests/rendered-html.test.mjs"
     web_hosting_path = root / "web/.openai/hosting.json"
+    web_vercel_path = root / "web/vercel.json"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -491,10 +493,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
         web_package = json.loads(web_package_path.read_text(encoding="utf-8"))
         if web_package.get("name") != "terraclass-web":
             report.errors.append("Browser package name is not terraclass-web")
+        if web_package.get("engines", {}).get("node") != "24.x":
+            report.errors.append("Browser Node.js runtime is not pinned to the audited major")
         if web_package.get("scripts", {}).get("test") != (
             "vinext build && node --test tests/rendered-html.test.mjs"
         ):
             report.errors.append("Browser test command does not build before render testing")
+        if web_package.get("scripts", {}).get("build:vercel") != "next build":
+            report.errors.append("Vercel build command does not use the native Next.js build")
         forbidden_web_dependencies = {"react-loading-skeleton", "drizzle-orm", "drizzle-kit"}
         declared_web_dependencies = {
             *web_package.get("dependencies", {}),
@@ -513,6 +519,17 @@ def audit_project(project_root: str | Path) -> AuditReport:
         web_test_count = len(re.findall(r'^test\("', web_test_source, re.MULTILINE))
         if web_test_count != 2:
             report.errors.append("Browser suite must contain two focused render tests")
+    if not web_css_path.is_file():
+        report.errors.append("Browser global stylesheet is missing")
+        web_css_source = ""
+    else:
+        web_css_source = web_css_path.read_text(encoding="utf-8")
+        for token in ('@import "tailwindcss"', "@theme"):
+            if token not in web_css_source:
+                report.errors.append(f"Tailwind CSS contract token is missing: {token}")
+    for token in ("bg-paper", "text-teal", "max-[620px]:grid-cols-2"):
+        if token not in web_app_source:
+            report.errors.append(f"Tailwind utility token is missing from browser source: {token}")
     if not web_hosting_path.is_file():
         report.errors.append("Sites hosting configuration is missing")
     else:
@@ -520,6 +537,18 @@ def audit_project(project_root: str | Path) -> AuditReport:
         unexpected_hosting_keys = set(hosting_config) - {"project_id", "d1", "r2"}
         if unexpected_hosting_keys:
             report.errors.append("Sites hosting configuration contains unexpected keys")
+    if not web_vercel_path.is_file():
+        report.errors.append("Vercel project configuration is missing")
+    else:
+        vercel_config = json.loads(web_vercel_path.read_text(encoding="utf-8"))
+        expected_vercel_config = {
+            "$schema": "https://openapi.vercel.sh/vercel.json",
+            "framework": "nextjs",
+            "buildCommand": "npm run build:vercel",
+            "installCommand": "npm ci",
+        }
+        if vercel_config != expected_vercel_config:
+            report.errors.append("Vercel project configuration differs from the audited contract")
 
     download_metadata_path = root / "data/raw/DOWNLOAD_METADATA.json"
     if download_metadata_path.is_file():
@@ -649,13 +678,16 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         if token not in "\n".join((iit_criteria, iit_checklist)):
             report.errors.append(f"IIT submission status token is missing: {token}")
+    api_document_normalized = " ".join(api_document.split())
     for token in (
         "FastAPI",
         "request ID",
         "NEXT_PUBLIC_TERRACLASS_API_URL",
+        "https://terraclass-land-use-classification.vercel.app",
+        "Tailwind CSS",
         "not yet claimed as a deployed integrated system",
     ):
-        if token not in api_document:
+        if token not in api_document_normalized:
             report.errors.append(f"Application documentation token is missing: {token}")
 
     report.warnings.extend(
@@ -753,7 +785,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "api_contract_tests": api_test_count,
             "web_render_tests": web_test_count,
             "browser_package": web_package.get("name"),
+            "tailwind_css": True,
             "private_frontend_preview": True,
+            "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
             "integrated_deployment_claimed": False,
         },
     }

@@ -29,11 +29,12 @@ test("server-renders the TerraClass application shell", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|Codex is building/i);
 });
 
-test("keeps the API contract and accessibility controls explicit", async () => {
-  const [app, css, packageJson] = await Promise.all([
+test("keeps Tailwind, Vercel, API, and accessibility contracts explicit", async () => {
+  const [app, css, packageJson, vercelConfig] = await Promise.all([
     readFile(new URL("../app/TerraClassApp.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../vercel.json", import.meta.url), "utf8"),
   ]);
 
   assert.match(app, /NEXT_PUBLIC_TERRACLASS_API_URL/);
@@ -43,6 +44,15 @@ test("keeps the API contract and accessibility controls explicit", async () => {
   assert.match(app, /role="alert"/);
   assert.match(app, /accept="image\/png,image\/jpeg,image\/tiff,image\/webp"/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(css, /@import "tailwindcss"/);
+  assert.match(css, /@theme/);
+  assert.match(app, /bg-paper/);
+  assert.match(app, /grid-cols-\[minmax\(0,1fr\)_minmax\(420px,0\.86fr\)\]/);
   assert.match(packageJson, /"name": "terraclass-web"/);
+  assert.match(packageJson, /"node": "24\.x"/);
+  assert.match(packageJson, /"build:vercel": "next build"/);
+  assert.match(vercelConfig, /"framework": "nextjs"/);
+  assert.match(vercelConfig, /"buildCommand": "npm run build:vercel"/);
   assert.doesNotMatch(app, /_sites-preview|SkeletonPreview/);
+  assert.doesNotMatch(app, /site-header|hero-copy|upload-panel|result-panel/);
 });

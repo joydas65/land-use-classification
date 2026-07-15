@@ -36,10 +36,10 @@ stack traces to callers. CORS is restricted to explicit origins from
 
 ## Browser interface
 
-The `web/` application provides drag-and-drop and file-picker input, an in-memory preview, model
-status, ranked probability bars, image dimensions, inference latency, model version, and shortened
-request provenance. It supports keyboard navigation, semantic status and alert regions, responsive
-layouts, and reduced-motion preferences.
+The `web/` application uses Next.js and Tailwind CSS. It provides drag-and-drop and file-picker
+input, an in-memory preview, model status, ranked probability bars, image dimensions, inference
+latency, model version, and shortened request provenance. It supports keyboard navigation, semantic
+status and alert regions, responsive layouts, and reduced-motion preferences.
 
 The API origin is configured at build time with `NEXT_PUBLIC_TERRACLASS_API_URL`. Local development
 defaults to `http://localhost:8000`.
@@ -50,22 +50,26 @@ defaults to `http://localhost:8000`.
   behavior, request IDs, and the OpenAPI route contract.
 - Two web tests build and render the production worker, verify core content and model-scope language,
   and protect the API paths and accessibility controls.
-- ESLint and the production vinext build pass.
+- ESLint, the production vinext build, and the native Next.js build used by Vercel pass.
 - A real-artifact smoke test loaded the hash-pinned ResNet18 and classified `beach00.tif` as beach
   with 99.68% confidence. The cold request took 2,194.6 ms and the immediate warm request took
   10.6 ms, so cold-start behavior remains an explicit deployment test requirement.
-- The production dependency audit has no high or critical advisory. Two moderate findings from the
-  Next.js-embedded PostCSS version have no non-breaking npm resolution and are recorded in
-  `docs/TESTING.md` for deployment review.
+- The complete dependency audit has no high or critical advisory. It reports one low and three
+  moderate transitive findings. The production-only tree has two moderate findings in the
+  Next.js-embedded PostCSS version; npm offers no non-breaking resolution. The findings are recorded
+  in `docs/TESTING.md` for integrated-deployment review.
 
 ## Deployment boundary
 
-The frontend has an owner-private build preview at
-`https://terraclass-joydas65.joydas-0111.chatgpt.site`. It is useful for reviewing the responsive
-interface, but classification remains unavailable there because the production model API does not
-exist yet. The project is therefore not yet claimed as a deployed integrated system.
+The Tailwind CSS/Next.js frontend is publicly deployed on Vercel at
+`https://terraclass-land-use-classification.vercel.app`. An owner-private Sites preview is also
+retained at `https://terraclass-joydas65.joydas-0111.chatgpt.site`. Both builds are useful for
+reviewing the responsive interface, but classification remains unavailable because the production
+model API does not exist yet. The project is therefore not yet claimed as a deployed integrated
+system.
 
 The serving artifact remains intentionally outside Git. Integrated deployment requires a container
 image for the API, a hash-verified artifact distribution path, an HTTPS API origin, updated CORS
-origins, and environment-specific concurrency, memory, latency, and cold-start evidence. The private
-preview must not be presented as the completed public portfolio demo until that work passes.
+origins, and environment-specific concurrency, memory, latency, and cold-start evidence. The public
+frontend may be presented as a deployed UI, but it must not be presented as a working end-to-end
+classifier until that work passes.

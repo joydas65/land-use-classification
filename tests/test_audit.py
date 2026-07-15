@@ -26,6 +26,8 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         "api_contract_tests": 5,
         "web_render_tests": 2,
         "browser_package": "terraclass-web",
+        "tailwind_css": True,
         "private_frontend_preview": True,
+        "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
         "integrated_deployment_claimed": False,
     }

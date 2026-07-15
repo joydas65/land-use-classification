@@ -18,8 +18,8 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Bounded, thread-safe image inference with strict model/provenance validation and structured top-k output
 - Reproducible local CPU latency benchmarking over all 75 leakage-controlled test images
 - Typed, versioned FastAPI inference service with bounded multipart uploads, structured errors, CORS, request IDs, structured request logs, and liveness/readiness probes
-- Responsive TypeScript browser interface with client-side validation, model readiness, ranked confidence visualization, request provenance, and explicit model-scope communication
-- Production web build, server-render contract tests, API integration tests, and dependency security review
+- Responsive Tailwind CSS/Next.js browser interface with client-side validation, model readiness, ranked confidence visualization, request provenance, and explicit model-scope communication
+- Public Vercel frontend deployment, native Next.js and worker builds, server-render contract tests, API integration tests, and dependency security review
 
 ## Supported numerical claim
 
@@ -35,13 +35,13 @@ Optional serving bullet:
 
 Optional application bullet:
 
-> Engineered a versioned FastAPI and TypeScript inference application around a PyTorch ResNet18 model, including bounded uploads, structured errors, health probes, request tracing, ranked probabilities, responsive UI, and automated API/render tests.
+> Engineered a versioned FastAPI inference service around a PyTorch ResNet18 model and deployed its responsive Tailwind CSS/Next.js frontend to Vercel, with bounded uploads, structured errors, health probes, request tracing, ranked probabilities, and automated API/render tests.
 
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
 
 The model/version contract, input validation, restricted artifact loading, local latency benchmark,
-typed HTTP service, structured API errors, request tracing, health probes, and browser interface are
-complete. Containerization, CI, concurrency/load tests, deployed API evidence, production SLOs, and
-drift-ready telemetry remain future deliverables and must not yet be claimed.
+typed HTTP service, structured API errors, request tracing, health probes, and public Vercel frontend
+are complete. Containerization, CI, concurrency/load tests, deployed API evidence, production SLOs,
+and drift-ready telemetry remain future deliverables and must not yet be claimed.

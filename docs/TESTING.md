@@ -1,10 +1,11 @@
 # Testing and Audit Guide
 
-The quality gate contains three layers:
+The quality gate contains four layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, benchmark statistics, and the versioned FastAPI contract.
-3. The web gate runs ESLint, a production vinext build, and server-rendered HTML/contract tests.
+3. The web gate runs ESLint, a production vinext build, server-rendered HTML/contract tests, and the
+   native Next.js build used by Vercel.
 4. `python -m compileall src scripts tests` catches syntax/import compilation failures.
 
 The complete local gate is:
@@ -15,14 +16,20 @@ PYTHONPATH=src pytest
 ruff check .
 ruff format --check .
 python -m compileall -q src scripts tests
-cd web && npm ci && npm run lint && npm test
+cd web
+npm ci
+npm run lint
+npm test
+npm run build:vercel
 ```
 
-The 15 July dependency review also ran `npm audit --omit=dev --audit-level=high`. It found no high
-or critical production advisory. Two moderate findings are inherited from Next.js's embedded
-PostCSS version; npm offered only a breaking downgrade, so they are documented rather than hidden or
-force-fixed. TerraClass does not accept user-authored CSS, but the advisory must be reviewed again
-before public deployment.
+The 15 July dependency review ran `npm audit --audit-level=high` for the complete tree and
+`npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or
+critical advisory. The complete tree reports one low and three moderate transitive findings. The
+production tree reports two moderate findings inherited from Next.js's embedded PostCSS version;
+npm offered only a breaking downgrade, so they are documented rather than hidden or force-fixed.
+TerraClass does not accept user-authored CSS, but the advisory must be reviewed again before the
+integrated model API is deployed.
 
 Verify the submission notebook's acquisition and manifest cells against the real local dataset without running training:
 

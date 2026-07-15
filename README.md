@@ -9,8 +9,8 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **14 July 2026 collaboration milestone — complete:** self-contained IIT Kanpur Colab notebook, four-entry GPU matrix, secure results export, notebook tests, and local pre-training verification.
 - **15 July 2026 IIT submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and the executed notebook emailed to IIT Kanpur before the deadline.
 - **15 July 2026 inference-foundation milestone — complete:** hash-verified checkpoint promotion, restricted weights-only serving artifact, bounded and thread-safe inference layer, tests, and a 75-image local CPU latency benchmark.
-- **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive browser interface, server-render tests, production web build, and an owner-private frontend preview. The integrated model API is not deployed yet.
-- **Next engineering phase:** containerize the model API, add CI and concurrency/load tests, publish the serving artifact through a verified release path, then deploy the integrated application with production observability.
+- **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive Tailwind CSS/Next.js interface, server-render tests, native production build, and public frontend deployment at [terraclass-land-use-classification.vercel.app](https://terraclass-land-use-classification.vercel.app). The integrated model API is not deployed yet.
+- **Next engineering phase:** containerize and deploy the model API, add CI and concurrency/load tests, publish the serving artifact through a verified release path, connect the Vercel frontend to the HTTPS API, and add production observability.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -47,7 +47,7 @@ These are observed values from the original notebook, not newly reproduced resul
 - `configs/serving/resnet18_group_aware_v1.json` is the model identity, provenance, input-limit, and artifact-hash contract for inference.
 - `src/terraclass/inference.py` is the reusable image-validation and prediction boundary for the web application.
 - `src/terraclass/api.py` exposes the model through a typed, versioned FastAPI contract.
-- `web/` contains the responsive TerraClass browser interface and its production build tests.
+- `web/` contains the responsive Tailwind CSS/Next.js TerraClass interface, Vercel configuration, and production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
 - `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and remaining deployment boundary.
 
@@ -120,8 +120,9 @@ npm ci
 npm run dev
 ```
 
-The interface uses `http://localhost:8000` by default. A hosted build must set
-`NEXT_PUBLIC_TERRACLASS_API_URL` to the deployed API origin; see `docs/API_AND_WEB_APP.md`.
+The interface uses `http://localhost:8000` by default. The public Vercel frontend deliberately
+shows the model as offline until a hosted build sets `NEXT_PUBLIC_TERRACLASS_API_URL` to the
+deployed API origin; see `docs/API_AND_WEB_APP.md`.
 
 Create and verify the leakage-controlled manifest:
 
