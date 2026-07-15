@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=83"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.26",
-  "Pillow>=10",
+  "Pillow>=12.3",
   "scikit-learn>=1.4",
   "torch>=2.2",
   "torchvision>=0.17"

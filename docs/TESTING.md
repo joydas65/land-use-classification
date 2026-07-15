@@ -45,11 +45,16 @@ npm offered only a breaking downgrade, so they are documented rather than hidden
 TerraClass does not accept user-authored CSS, but the advisory must be reviewed again before the
 integrated model API is deployed.
 
-The 16 July Python audit initially identified the virtual environment's pip 25.1.1 as vulnerable.
-After upgrading to pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities;
-the local `terraclass` package was skipped because it is not published on PyPI and is instead
-covered by the repository's source, contract, and integration tests. The container pins the same
-patched pip release.
+The 16 July local Python audit initially identified pip 25.1.1 as vulnerable. After upgrading to
+pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities; the local
+`terraclass` package was skipped because it is not published on PyPI and is instead covered by the
+repository's source, contract, and integration tests. The first GitHub run additionally exposed
+runner-resolved Pillow 12.2.0 and setuptools 78.1.0 advisories. The project now requires Pillow
+12.3 or newer, the build system requires setuptools 83 or newer, and CI upgrades setuptools before
+auditing. The container pins the same patched Pillow and pip releases.
+
+The workflow action majors were also refreshed to their current Node 24-based releases after the
+first run reported Node 20 deprecation warnings.
 
 Verify the submission notebook's acquisition and manifest cells against the real local dataset without running training:
 

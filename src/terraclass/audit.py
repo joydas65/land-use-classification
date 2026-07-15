@@ -573,6 +573,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             (
                 "audit_consistency.py",
                 "python -m pip_audit",
+                "setuptools>=83",
                 "pytest -q",
                 "npm test",
                 "target: runtime-base",

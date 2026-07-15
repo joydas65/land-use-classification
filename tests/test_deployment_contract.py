@@ -18,6 +18,10 @@ def test_container_is_non_root_cpu_only_and_hash_fetches_model(project_root: Pat
         "https://github.com/joydas65/land-use-classification/releases/download/"
     )
 
+    pyproject = (project_root / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'requires = ["setuptools>=83"]' in pyproject
+    assert '"Pillow>=12.3"' in pyproject
+
 
 def test_cloud_run_template_matches_api_capacity_and_frontend_origin(project_root: Path) -> None:
     template = (project_root / "deploy/cloud-run-service.template.yaml").read_text(encoding="utf-8")
@@ -35,6 +39,7 @@ def test_ci_covers_python_web_and_container_contracts(project_root: Path) -> Non
     for token in (
         "audit_consistency.py",
         "python -m pip_audit",
+        "setuptools>=83",
         "pytest -q",
         "ruff check",
         "npm test",
