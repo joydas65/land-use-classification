@@ -16,3 +16,15 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         report.observed["serving_foundation"]["request_latency_p95_ms"]
         >= (report.observed["serving_foundation"]["request_latency_p50_ms"])
     )
+    assert report.observed["application_layer"] == {
+        "api_routes": [
+            "/api/v1/health/live",
+            "/api/v1/health/ready",
+            "/api/v1/model",
+            "/api/v1/predictions",
+        ],
+        "api_contract_tests": 5,
+        "web_render_tests": 2,
+        "browser_package": "terraclass-web",
+        "deployment_claimed": False,
+    }

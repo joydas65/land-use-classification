@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import re
+import tomllib
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -99,6 +100,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
     serving_config_path = root / "configs/serving/resnet18_group_aware_v1.json"
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
+    api_document_path = root / "docs/API_AND_WEB_APP.md"
+    api_source_path = root / "src/terraclass/api.py"
+    api_test_path = root / "tests/test_api.py"
+    pyproject_path = root / "pyproject.toml"
+    web_app_path = root / "web/app/TerraClassApp.tsx"
+    web_package_path = root / "web/package.json"
+    web_test_path = root / "web/tests/rendered-html.test.mjs"
+    web_hosting_path = root / "web/.openai/hosting.json"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -418,6 +427,100 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if inference_benchmark.get("throughput_requests_per_second", 0) <= 0:
             report.errors.append("Inference benchmark throughput must be positive")
 
+    if not api_source_path.is_file():
+        report.errors.append("Typed inference API source is missing")
+        api_source = ""
+    else:
+        api_source = api_source_path.read_text(encoding="utf-8")
+    expected_api_routes = (
+        "/api/v1/health/live",
+        "/api/v1/health/ready",
+        "/api/v1/model",
+        "/api/v1/predictions",
+    )
+    for route in expected_api_routes:
+        if route not in api_source:
+            report.errors.append(f"Versioned API route is missing: {route}")
+    for token in (
+        "CORSMiddleware",
+        "X-Request-ID",
+        "RequestValidationError",
+        "run_in_threadpool",
+        "max_image_bytes",
+    ):
+        if token not in api_source:
+            report.errors.append(f"API safety/operability token is missing: {token}")
+
+    api_test_count = 0
+    if not api_test_path.is_file():
+        report.errors.append("API contract tests are missing")
+    else:
+        api_test_source = api_test_path.read_text(encoding="utf-8")
+        api_test_count = len(re.findall(r"^def test_", api_test_source, re.MULTILINE))
+        if api_test_count != 5:
+            report.errors.append("API contract suite must contain five focused tests")
+
+    pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
+    if not any(str(dependency).startswith("fastapi") for dependency in web_dependencies):
+        report.errors.append("FastAPI is missing from the web optional dependency set")
+    if pyproject.get("project", {}).get("scripts", {}).get("terraclass-api") != (
+        "terraclass.api:main"
+    ):
+        report.errors.append("terraclass-api command does not target terraclass.api:main")
+
+    web_test_count = 0
+    if not web_app_path.is_file():
+        report.errors.append("TerraClass browser application source is missing")
+        web_app_source = ""
+    else:
+        web_app_source = web_app_path.read_text(encoding="utf-8")
+    for token in (
+        "NEXT_PUBLIC_TERRACLASS_API_URL",
+        "/api/v1/health/ready",
+        "/api/v1/predictions?top_k=",
+        'aria-live="polite"',
+        "not a universal satellite classifier",
+    ):
+        if token not in web_app_source:
+            report.errors.append(f"Browser application contract token is missing: {token}")
+    if not web_package_path.is_file():
+        report.errors.append("Browser application package manifest is missing")
+        web_package: dict[str, Any] = {}
+    else:
+        web_package = json.loads(web_package_path.read_text(encoding="utf-8"))
+        if web_package.get("name") != "terraclass-web":
+            report.errors.append("Browser package name is not terraclass-web")
+        if web_package.get("scripts", {}).get("test") != (
+            "vinext build && node --test tests/rendered-html.test.mjs"
+        ):
+            report.errors.append("Browser test command does not build before render testing")
+        forbidden_web_dependencies = {"react-loading-skeleton", "drizzle-orm", "drizzle-kit"}
+        declared_web_dependencies = {
+            *web_package.get("dependencies", {}),
+            *web_package.get("devDependencies", {}),
+        }
+        unexpected_web_dependencies = forbidden_web_dependencies & declared_web_dependencies
+        if unexpected_web_dependencies:
+            report.errors.append(
+                "Unused starter dependency remains: "
+                + ", ".join(sorted(unexpected_web_dependencies))
+            )
+    if not web_test_path.is_file():
+        report.errors.append("Browser server-render tests are missing")
+    else:
+        web_test_source = web_test_path.read_text(encoding="utf-8")
+        web_test_count = len(re.findall(r'^test\("', web_test_source, re.MULTILINE))
+        if web_test_count != 2:
+            report.errors.append("Browser suite must contain two focused render tests")
+    if not web_hosting_path.is_file():
+        report.errors.append("Sites hosting configuration is missing")
+    else:
+        hosting_config = json.loads(web_hosting_path.read_text(encoding="utf-8"))
+        unexpected_hosting_keys = set(hosting_config) - {"project_id", "d1", "r2"}
+        if unexpected_hosting_keys:
+            report.errors.append("Sites hosting configuration contains unexpected keys")
+
     download_metadata_path = root / "data/raw/DOWNLOAD_METADATA.json"
     if download_metadata_path.is_file():
         download_metadata = json.loads(download_metadata_path.read_text(encoding="utf-8"))
@@ -494,6 +597,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         inference_document = ""
     else:
         inference_document = inference_document_path.read_text(encoding="utf-8")
+    if not api_document_path.is_file():
+        report.errors.append("docs/API_AND_WEB_APP.md is missing")
+        api_document = ""
+    else:
+        api_document = api_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -517,6 +625,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             colab_handoff,
             iit_checklist,
             inference_document,
+            api_document,
         )
     )
     for token in required_documentation_tokens:
@@ -534,6 +643,20 @@ def audit_project(project_root: str | Path) -> AuditReport:
         for token in inference_documentation_tokens:
             if token not in inference_document:
                 report.errors.append(f"Inference documentation token is missing: {token}")
+    for token in (
+        "Submitted 15 July 2026",
+        "submitted by email on 15 July 2026",
+    ):
+        if token not in "\n".join((iit_criteria, iit_checklist)):
+            report.errors.append(f"IIT submission status token is missing: {token}")
+    for token in (
+        "FastAPI",
+        "request ID",
+        "NEXT_PUBLIC_TERRACLASS_API_URL",
+        "not yet claimed as a deployed integrated system",
+    ):
+        if token not in api_document:
+            report.errors.append(f"Application documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -624,6 +747,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "throughput_requests_per_second": inference_benchmark.get(
                 "throughput_requests_per_second"
             ),
+        },
+        "application_layer": {
+            "api_routes": list(expected_api_routes),
+            "api_contract_tests": api_test_count,
+            "web_render_tests": web_test_count,
+            "browser_package": web_package.get("name"),
+            "deployment_claimed": False,
         },
     }
     return report

@@ -2,7 +2,8 @@
 
 ## Submission file
 
-- Submit `notebooks/Improved_Land_Use_Classification_IITK.ipynb` by 20 July 2026.
+- **Status: submitted by email on 15 July 2026, before the 20 July 2026 deadline.**
+- Submitted `notebooks/Improved_Land_Use_Classification_IITK.ipynb` as the email attachment.
 - The notebook is the updated version of the official Land Use Classification sample project.
 
 ## Internal verification record

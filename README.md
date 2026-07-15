@@ -7,10 +7,10 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **12 July 2026 — complete:** credential audit, repository setup, immutable baseline, verified dataset provenance, deterministic historical manifest, controlled CPU reproduction, tests, and consistency audit.
 - **13 July 2026 milestone — complete for model selection:** conservative reviewed-scene groups, group-aware five-class manifest, transfer-learning infrastructure, and completed ResNet18 historical/group-aware experiments. ResNet18 is frozen as the selected model.
 - **14 July 2026 collaboration milestone — complete:** self-contained IIT Kanpur Colab notebook, four-entry GPU matrix, secure results export, notebook tests, and local pre-training verification.
-- **15 July 2026 submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and IIT submission evidence finalized.
+- **15 July 2026 IIT submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and the executed notebook emailed to IIT Kanpur before the deadline.
 - **15 July 2026 inference-foundation milestone — complete:** hash-verified checkpoint promotion, restricted weights-only serving artifact, bounded and thread-safe inference layer, tests, and a 75-image local CPU latency benchmark.
-- **Pending external action:** email the executed notebook to IIT Kanpur by 20 July 2026.
-- **Next engineering phase:** add the typed HTTP API and browser interface, then containerization, CI, observability, and deployment validation.
+- **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive browser interface, server-render tests, and production web build.
+- **Next engineering phase:** containerize the model API, add CI and concurrency/load tests, publish the serving artifact through a verified release path, then deploy the integrated application with production observability.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -46,14 +46,17 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/figures/training_and_confusion_colab_l4.png` preserves the verified curves and confusion matrices.
 - `configs/serving/resnet18_group_aware_v1.json` is the model identity, provenance, input-limit, and artifact-hash contract for inference.
 - `src/terraclass/inference.py` is the reusable image-validation and prediction boundary for the web application.
+- `src/terraclass/api.py` exposes the model through a typed, versioned FastAPI contract.
+- `web/` contains the responsive TerraClass browser interface and its production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
+- `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and remaining deployment boundary.
 
 ## Local setup
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install -e '.[dev,web]'
 ```
 
 Run the repository audit and tests:
@@ -102,6 +105,23 @@ PYTHONPATH=src python scripts/export_serving_model.py \
   --model-version 1.0.0
 PYTHONPATH=src python scripts/benchmark_inference.py --project-root . --device cpu
 ```
+
+Start the model API after creating the hash-verified serving artifact:
+
+```bash
+terraclass-api
+```
+
+Then start the browser interface in a second terminal:
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+The interface uses `http://localhost:8000` by default. A hosted build must set
+`NEXT_PUBLIC_TERRACLASS_API_URL` to the deployed API origin; see `docs/API_AND_WEB_APP.md`.
 
 Create and verify the leakage-controlled manifest:
 

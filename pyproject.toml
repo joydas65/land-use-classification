@@ -17,12 +17,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5"]
+dev = ["httpx2>=2.7", "pytest>=8", "ruff>=0.5"]
+web = [
+  "fastapi>=0.115",
+  "python-multipart>=0.0.9",
+  "uvicorn>=0.30"
+]
 
 [project.scripts]
 terraclass-baseline = "terraclass.training:main"
 terraclass-transfer = "terraclass.transfer_training:main"
 terraclass-audit = "terraclass.audit:main"
+terraclass-api = "terraclass.api:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

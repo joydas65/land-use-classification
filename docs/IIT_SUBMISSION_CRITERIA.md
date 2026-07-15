@@ -11,7 +11,7 @@ This repository does not invent additional college rules. The items below are en
 | Use an official sample project | Immutable supplied notebook and its SHA-256 | Complete |
 | Improve or modify model/performance | Selected ResNet18 replaces the custom CNN and improves historical test accuracy from 74.67% to 100.00% and macro F1 from 0.733 to 1.000 | Complete |
 | Submit an updated Jupyter Notebook | Self-contained notebook contains verified acquisition, deterministic manifests, four GPU experiments, embedded results, training curves, confusion matrices, multi-metric evaluation, and limitations | Complete |
-| Submit by 20 July 2026 | Final notebook and evidence were completed before the deadline | Ready to submit |
+| Submit by 20 July 2026 | Executed notebook emailed to the stated IIT Kanpur address on 15 July 2026 | Submitted 15 July 2026 |
 
 ## Acceptance evidence for the final notebook
 

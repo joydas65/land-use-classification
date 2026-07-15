@@ -7,6 +7,8 @@ __pycache__/
 .cache/
 dist/
 build/
+!web/build/
+!web/build/**
 data/raw/*
 !data/raw/.gitkeep
 artifacts/*
@@ -14,3 +16,4 @@ artifacts/*
 *.pth
 *.pt
 *.onnx
+*.egg-info/

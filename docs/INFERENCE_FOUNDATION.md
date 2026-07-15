@@ -83,7 +83,7 @@ PYTHONPATH=src python scripts/benchmark_inference.py \
 
 ## Next phase
 
-Build a typed HTTP API and browser interface around this inference boundary, then add request IDs,
-structured logs, health/readiness probes, containerization, CI, concurrency/load tests, and
-privacy-conscious telemetry. None of those later capabilities should be claimed until implemented
-and verified.
+The 15 July application phase added a typed HTTP API, responsive browser interface, request IDs,
+structured logs, and health/readiness probes; see `docs/API_AND_WEB_APP.md`. The next phase is to
+containerize the API, publish the model artifact through a hash-verified release path, add CI and
+concurrency/load tests, and collect production deployment evidence and privacy-conscious telemetry.

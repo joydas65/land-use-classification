@@ -3,8 +3,9 @@
 The quality gate contains three layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
-2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, and benchmark statistics.
-3. `python -m compileall src scripts tests` catches syntax/import compilation failures.
+2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, benchmark statistics, and the versioned FastAPI contract.
+3. The web gate runs ESLint, a production vinext build, and server-rendered HTML/contract tests.
+4. `python -m compileall src scripts tests` catches syntax/import compilation failures.
 
 The complete local gate is:
 
@@ -14,7 +15,14 @@ PYTHONPATH=src pytest
 ruff check .
 ruff format --check .
 python -m compileall -q src scripts tests
+cd web && npm ci && npm run lint && npm test
 ```
+
+The 15 July dependency review also ran `npm audit --omit=dev --audit-level=high`. It found no high
+or critical production advisory. Two moderate findings are inherited from Next.js's embedded
+PostCSS version; npm offered only a breaking downgrade, so they are documented rather than hidden or
+force-fixed. TerraClass does not accept user-authored CSS, but the advisory must be reviewed again
+before public deployment.
 
 Verify the submission notebook's acquisition and manifest cells against the real local dataset without running training:
 
