@@ -280,7 +280,6 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "EfficientNet-B0",
             "validation macro F1",
             "classification_report",
-            "terraclass_colab_results.zip",
             "2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae",
             "414233c8471ea961bfd9406a33f54b427e75ab49",
             "NVIDIA L4",

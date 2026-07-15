@@ -26,7 +26,6 @@ def test_submission_notebook_has_required_iit_and_ml_evidence(project_root: Path
     notebook = json.loads((project_root / "notebooks" / NOTEBOOK_NAME).read_text(encoding="utf-8"))
     source = _source(notebook)
     required = (
-        "20 July 2026",
         "74.67%",
         "0.733",
         "ResNet18",
@@ -38,8 +37,7 @@ def test_submission_notebook_has_required_iit_and_ml_evidence(project_root: Path
         "classification_report",
         "historical",
         "group-aware",
-        "limitations",
-        "terraclass_colab_results.zip",
+        "Limitations and scope",
         "files.download",
         "73d19e048e742fdf616cbbc1f037efa009ea329ec600acef329f2a5bc7df87ea",
         "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
@@ -51,6 +49,11 @@ def test_submission_notebook_has_required_iit_and_ml_evidence(project_root: Path
     for token in required:
         assert token in source
     assert source.count("test_metrics = evaluate(model, test_loader, criterion)") == 1
+    assert "Submission target:" not in source
+    assert "Deadline:" not in source
+    assert "GPU experiment matrix" not in source
+    assert "Use only the generated comparison table" not in source
+    assert "Collaboration hand-off" not in source
     attachments = [cell.get("attachments", {}) for cell in notebook["cells"]]
     assert sum(bool(value) for value in attachments) == 1
     assert "training_and_confusion_colab_l4.png" in next(value for value in attachments if value)

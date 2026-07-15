@@ -79,8 +79,6 @@ def build_notebook() -> dict[str, Any]:
             **Course:** Applied Data Science & Machine Intelligence: Fundamentals to Next
             Generation AI 2026  
             **Project:** Official Land Use Classification sample project  
-            **Submission target:** IIT Kanpur optional project certificate  
-            **Deadline:** 20 July 2026
 
             This notebook improves the supplied five-class custom CNN using ImageNet transfer
             learning. It compares ResNet18 and EfficientNet-B0 on the exact historical split and
@@ -668,11 +666,12 @@ def build_notebook() -> dict[str, Any]:
         ),
         markdown(
             """
-            ## 5. GPU experiment matrix
+            ## 5. Training the transfer-learning models
 
-            Run this cell once. On Colab Pro, select a GPU runtime first. All four configurations
-            are attempted independently; a failed experiment is recorded and does not erase the
-            completed results.
+            I trained ResNet18 and EfficientNet-B0 on both versions of the data split: the original
+            split used for comparison with the supplied notebook, and the group-aware split used as
+            a leakage check. Each run is kept separate so that the models can be compared under the
+            same conditions and their outputs can be reviewed individually.
             """
         ),
         code(
@@ -819,23 +818,29 @@ def build_notebook() -> dict[str, Any]:
         ),
         markdown(
             """
-            ## 7. Result interpretation and limitations
+            ## 7. What the results mean
 
-            Use only the generated comparison table when writing the final numerical conclusion.
-            The historical result answers whether transfer learning improves the supplied
-            assignment;
-            the group-aware result tests sensitivity to reviewed related scenes. EfficientNet-B0 is
-            claimable only if its run completed and appears in the exported report.
+            The original split provides the direct comparison with the supplied project. Both
+            transfer-learning models improved on the custom CNN, reaching 100% test accuracy and a
+            macro F1 score of 1.000. The group-aware split keeps the reviewed related images
+            together, and both models achieved the same scores there as well. This gives more
+            confidence that the result is not explained only by those related scenes appearing
+            across data splits.
 
-            **Limitations:** This experiment uses a balanced 500-image subset with five visually
-            distinct classes, not all 21 UC Merced classes. ImageNet pretraining transfers external
-            visual knowledge. The test set contains only 75 images, so a perfect score must retain
-            this scope and must not be advertised as a universally perfect satellite classifier.
-            The manually reviewed grouping policy covers conservative perceptual-hash candidates and
-            may not capture every semantically related scene.
+            ResNet18 was selected as the final model. Although EfficientNet-B0 matched its
+            classification scores with fewer parameters, ResNet18 produced lower test loss on both
+            splits, completed the historical GPU run faster, and agreed with the earlier CPU result.
 
-            **Collaboration hand-off:** Return `terraclass_colab_results.zip` to Codex. The final
-            notebook will then be updated with verified GPU outputs and the exact submission commit.
+            ### Limitations and scope
+
+            These results come from a balanced subset of 500 images across five visually distinct
+            classes, rather than all 21 classes in the UC Merced dataset. Each test set contains
+            only 75 images, so the perfect score should be understood within this limited
+            experiment; it does not mean that the model will classify every type of satellite image
+            perfectly.
+            ImageNet pretraining also contributes knowledge learned from a much larger external
+            dataset. Finally, the group-aware split is based on conservatively reviewed
+            perceptual-hash candidates and may not identify every semantically related scene.
             """
         ),
     ]
