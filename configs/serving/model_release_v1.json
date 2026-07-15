@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "model_id": "terraclass-resnet18-group-aware",
+  "model_version": "1.0.0",
+  "asset_name": "resnet18_group_aware_v1.pt",
+  "url": "https://github.com/joydas65/land-use-classification/releases/download/model-v1.0.0/resnet18_group_aware_v1.pt",
+  "sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523",
+  "size_bytes": 44795275
+}

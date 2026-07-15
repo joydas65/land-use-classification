@@ -34,6 +34,11 @@ Errors use one shape: an error code, safe message, and request ID. Unexpected fa
 stack traces to callers. CORS is restricted to explicit origins from
 `TERRACLASS_ALLOWED_ORIGINS`; it does not use a wildcard with credentials.
 
+Model execution is protected by a configurable asynchronous semaphore. The initial production
+contract permits one inference at a time per model copy and bounds queue waiting at five seconds.
+Requests that cannot enter that slot receive a structured `429 inference_capacity_exceeded` response
+with `Retry-After: 1`; they do not accumulate without limit.
+
 ## Browser interface
 
 The `web/` application uses Next.js and Tailwind CSS. It provides drag-and-drop and file-picker
@@ -46,8 +51,8 @@ defaults to `http://localhost:8000`.
 
 ## Verification
 
-- Five API tests cover typed metadata, top-k inference, media/parameter errors, model-unavailable
-  behavior, request IDs, and the OpenAPI route contract.
+- Six API tests cover typed metadata, top-k inference, media/parameter errors, model-unavailable
+  behavior, request IDs, the OpenAPI route contract, and bounded-capacity retry behavior.
 - Two web tests build and render the production worker, verify core content and model-scope language,
   and protect the API paths and accessibility controls.
 - ESLint, the production vinext build, and the native Next.js build used by Vercel pass.
@@ -58,6 +63,9 @@ defaults to `http://localhost:8000`.
   moderate transitive findings. The production-only tree has two moderate findings in the
   Next.js-embedded PostCSS version; npm offers no non-breaking resolution. The findings are recorded
   in `docs/TESTING.md` for integrated-deployment review.
+- The 16 July real-model HTTP probe completed 60 measured requests with zero failures. Peak local
+  throughput was 52.9 requests/second at concurrency 2; concurrency-4 p95 end-to-end latency was
+  84.1 ms. This is local steady-state evidence, not a production SLO.
 
 ## Deployment boundary
 
@@ -69,7 +77,8 @@ model API does not exist yet. The project is therefore not yet claimed as a depl
 system.
 
 The serving artifact remains intentionally outside Git. Integrated deployment requires a container
-image for the API, a hash-verified artifact distribution path, an HTTPS API origin, updated CORS
-origins, and environment-specific concurrency, memory, latency, and cold-start evidence. The public
-frontend may be presented as a deployed UI, but it must not be presented as a working end-to-end
-classifier until that work passes.
+image for the API, a hash-verified artifact distribution path, an HTTPS API origin, and
+environment-specific concurrency, memory, latency, and cold-start evidence. The repository now has
+the container, release, CI, capacity, and Cloud Run configuration contracts, but the release asset,
+image, and API are not yet deployed. The public frontend may be presented as a deployed UI, but it
+must not be presented as a working end-to-end classifier until that work passes.

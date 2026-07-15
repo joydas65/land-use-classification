@@ -10,7 +10,8 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **15 July 2026 IIT submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and the executed notebook emailed to IIT Kanpur before the deadline.
 - **15 July 2026 inference-foundation milestone — complete:** hash-verified checkpoint promotion, restricted weights-only serving artifact, bounded and thread-safe inference layer, tests, and a 75-image local CPU latency benchmark.
 - **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive Tailwind CSS/Next.js interface, server-render tests, native production build, and public frontend deployment at [terraclass-land-use-classification.vercel.app](https://terraclass-land-use-classification.vercel.app). The integrated model API is not deployed yet.
-- **Next engineering phase:** containerize and deploy the model API, add CI and concurrency/load tests, publish the serving artifact through a verified release path, connect the Vercel frontend to the HTTPS API, and add production observability.
+- **16 July 2026 production-readiness milestone — locally complete:** non-root CPU container contract, checksum-pinned model-release configuration, bounded inference queue, Python/web/container CI definitions, Cloud Run template, and a zero-failure 60-request HTTP load benchmark. The public model asset, container image, Cloud Run API, and end-to-end connection are not deployed yet.
+- **Next production handoff:** publish the approved model release, observe CI, build and publish the image with provenance and an SBOM, deploy its exact digest to Cloud Run, validate production load/cold starts, and then connect and redeploy the Vercel frontend.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -45,11 +46,17 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/colab/VERIFICATION.json` is the canonical audited NVIDIA L4 evidence.
 - `reports/figures/training_and_confusion_colab_l4.png` preserves the verified curves and confusion matrices.
 - `configs/serving/resnet18_group_aware_v1.json` is the model identity, provenance, input-limit, and artifact-hash contract for inference.
+- `configs/serving/model_release_v1.json` is the HTTPS release URL, byte-count, and SHA-256 distribution contract.
 - `src/terraclass/inference.py` is the reusable image-validation and prediction boundary for the web application.
 - `src/terraclass/api.py` exposes the model through a typed, versioned FastAPI contract.
+- `Dockerfile` defines artifact-free CI and checksum-fetched production container targets.
+- `.github/workflows/` defines Python, web, container-contract, provenance, and SBOM automation.
+- `deploy/cloud-run-service.template.yaml` records the initial Cloud Run resources, capacity, CORS, and probe policy.
 - `web/` contains the responsive Tailwind CSS/Next.js TerraClass interface, Vercel configuration, and production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
+- `reports/api_load_test_2026-07-16.json` records the real-model HTTP benchmark at concurrency 1, 2, and 4.
 - `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and remaining deployment boundary.
+- `docs/PRODUCTION_INFERENCE.md` documents the 16 July container, model-release, CI, and load-test evidence.
 
 ## Local setup
 
@@ -110,6 +117,17 @@ Start the model API after creating the hash-verified serving artifact:
 
 ```bash
 terraclass-api
+```
+
+Run the versioned HTTP load probe against that local service:
+
+```bash
+PYTHONPATH=src python scripts/load_test_api.py \
+  --base-url http://127.0.0.1:8000 \
+  --image data/raw/UCMerced_LandUse/Images/agricultural/agricultural06.tif \
+  --concurrency 1 2 4 \
+  --warmup-requests 5 \
+  --requests-per-level 20
 ```
 
 Then start the browser interface in a second terminal:

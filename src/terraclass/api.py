@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -46,6 +47,10 @@ class ModelUnavailableError(RuntimeError):
     """Raised when a request requires a model that did not become ready."""
 
 
+class InferenceCapacityError(RuntimeError):
+    """Raised when the bounded inference queue cannot accept another request."""
+
+
 @dataclass(frozen=True)
 class ApiSettings:
     project_root: Path
@@ -54,6 +59,14 @@ class ApiSettings:
     device: str
     allowed_origins: tuple[str, ...]
     fail_on_model_error: bool = False
+    max_concurrent_inferences: int = 1
+    queue_timeout_seconds: float = 5.0
+
+    def __post_init__(self) -> None:
+        if self.max_concurrent_inferences <= 0:
+            raise ValueError("max_concurrent_inferences must be positive")
+        if self.queue_timeout_seconds <= 0:
+            raise ValueError("queue_timeout_seconds must be positive")
 
     @classmethod
     def from_environment(cls) -> ApiSettings:
@@ -75,6 +88,8 @@ class ApiSettings:
             allowed_origins=origins,
             fail_on_model_error=os.getenv("TERRACLASS_FAIL_ON_MODEL_ERROR", "false").lower()
             in {"1", "true", "yes"},
+            max_concurrent_inferences=int(os.getenv("TERRACLASS_MAX_CONCURRENT_INFERENCES", "1")),
+            queue_timeout_seconds=float(os.getenv("TERRACLASS_QUEUE_TIMEOUT_SECONDS", "5")),
         )
 
 
@@ -199,6 +214,7 @@ def create_app(
         version=SERVICE_VERSION,
         lifespan=lifespan,
     )
+    app.state.inference_slots = asyncio.Semaphore(settings.max_concurrent_inferences)
     if settings.allowed_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -242,6 +258,17 @@ def create_app(
             "model_unavailable",
             "The inference model is not ready. Please try again shortly.",
         )
+
+    @app.exception_handler(InferenceCapacityError)
+    async def capacity_handler(request: Request, _: InferenceCapacityError):
+        response = _error_response(
+            request,
+            429,
+            "inference_capacity_exceeded",
+            "The inference service is busy. Please retry shortly.",
+        )
+        response.headers["Retry-After"] = "1"
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, _: RequestValidationError):
@@ -326,6 +353,7 @@ def create_app(
         "/api/v1/predictions",
         response_model=PredictionResponse,
         responses={
+            429: {"model": ErrorResponse},
             415: {"model": ErrorResponse},
             422: {"model": ErrorResponse},
             503: {"model": ErrorResponse},
@@ -351,11 +379,21 @@ def create_app(
             raise InferenceInputError(
                 f"Image exceeds the {serving_config.limits.max_image_bytes}-byte limit"
             )
-        prediction: Prediction = await run_in_threadpool(
-            loaded_predictor.predict_bytes,
-            payload,
-            top_k=top_k,
-        )
+        try:
+            await asyncio.wait_for(
+                request.app.state.inference_slots.acquire(),
+                timeout=settings.queue_timeout_seconds,
+            )
+        except TimeoutError as error:
+            raise InferenceCapacityError from error
+        try:
+            prediction: Prediction = await run_in_threadpool(
+                loaded_predictor.predict_bytes,
+                payload,
+                top_k=top_k,
+            )
+        finally:
+            request.app.state.inference_slots.release()
         return PredictionResponse(
             request_id=_request_id(request),
             **prediction.to_dict(),
@@ -373,7 +411,7 @@ def main() -> None:
     uvicorn.run(
         "terraclass.api:app",
         host=os.getenv("TERRACLASS_HOST", "127.0.0.1"),
-        port=int(os.getenv("TERRACLASS_PORT", "8000")),
+        port=int(os.getenv("TERRACLASS_PORT", os.getenv("PORT", "8000"))),
         reload=False,
     )
 

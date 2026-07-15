@@ -23,6 +23,7 @@ from terraclass.data import (
     stratified_split,
     write_manifest,
 )
+from terraclass.devices import select_device
 from terraclass.model import LandUseCNN, count_trainable_parameters
 from terraclass.transforms import build_eval_transform, build_train_transform
 
@@ -226,16 +227,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     parser.add_argument("--num-workers", type=int, default=0)
     return parser.parse_args()
-
-
-def select_device(requested: str) -> torch.device:
-    if requested != "auto":
-        return torch.device(requested)
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    if torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
 
 
 def main() -> None:

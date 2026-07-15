@@ -13,6 +13,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+from terraclass.artifact_distribution import ModelRelease, load_model_release
 from terraclass.colab_results import BundleValidationError, audit_versioned_evidence
 from terraclass.config import load_config
 from terraclass.inference import ServingConfig, load_serving_config
@@ -98,9 +99,12 @@ def audit_project(project_root: str | Path) -> AuditReport:
     colab_report_dir = root / "reports/colab"
     colab_figure_path = root / "reports/figures/training_and_confusion_colab_l4.png"
     serving_config_path = root / "configs/serving/resnet18_group_aware_v1.json"
+    model_release_path = root / "configs/serving/model_release_v1.json"
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
+    api_load_report_path = root / "reports/api_load_test_2026-07-16.json"
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
     api_document_path = root / "docs/API_AND_WEB_APP.md"
+    production_document_path = root / "docs/PRODUCTION_INFERENCE.md"
     api_source_path = root / "src/terraclass/api.py"
     api_test_path = root / "tests/test_api.py"
     pyproject_path = root / "pyproject.toml"
@@ -110,6 +114,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
     web_test_path = root / "web/tests/rendered-html.test.mjs"
     web_hosting_path = root / "web/.openai/hosting.json"
     web_vercel_path = root / "web/vercel.json"
+    dockerfile_path = root / "Dockerfile"
+    dockerignore_path = root / ".dockerignore"
+    cloud_run_template_path = root / "deploy/cloud-run-service.template.yaml"
+    ci_workflow_path = root / ".github/workflows/ci.yml"
+    container_workflow_path = root / ".github/workflows/container-release.yml"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -396,6 +405,34 @@ def audit_project(project_root: str | Path) -> AuditReport:
                 if serving_artifact_hash != serving_config.serving_artifact.sha256:
                     report.errors.append("Local serving artifact differs from serving config")
 
+    model_release: ModelRelease | None = None
+    if not model_release_path.is_file():
+        report.errors.append("Versioned model-release contract is missing")
+    else:
+        try:
+            model_release = load_model_release(model_release_path)
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            report.errors.append(f"Model-release contract is invalid: {error}")
+        if model_release is not None and serving_config is not None:
+            if (
+                model_release.model_id,
+                model_release.model_version,
+                model_release.sha256,
+            ) != (
+                serving_config.model_id,
+                serving_config.model_version,
+                serving_config.serving_artifact.sha256,
+            ):
+                report.errors.append("Model-release identity differs from serving config")
+            if model_release.asset_name != Path(serving_config.serving_artifact.path).name:
+                report.errors.append("Model-release asset name differs from serving config")
+            if serving_artifact_hash is not None:
+                serving_artifact_path = root / serving_config.serving_artifact.path
+                if serving_artifact_path.stat().st_size != model_release.size_bytes:
+                    report.errors.append(
+                        "Local serving artifact size differs from release contract"
+                    )
+
     if not inference_benchmark_path.is_file():
         report.errors.append("Versioned inference benchmark is missing")
         inference_benchmark: dict[str, Any] = {}
@@ -429,6 +466,42 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if inference_benchmark.get("throughput_requests_per_second", 0) <= 0:
             report.errors.append("Inference benchmark throughput must be positive")
 
+    load_levels: list[dict[str, Any]] = []
+    if not api_load_report_path.is_file():
+        report.errors.append("Versioned HTTP load report is missing")
+        api_load_report: dict[str, Any] = {}
+    else:
+        api_load_report = json.loads(api_load_report_path.read_text(encoding="utf-8"))
+        if api_load_report.get("schema_version") != 1:
+            report.errors.append("HTTP load report schema version differs from 1")
+        load_model = api_load_report.get("model", {})
+        if serving_config is not None and load_model != {
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+        }:
+            report.errors.append("HTTP load report model identity differs from serving config")
+        load_protocol = api_load_report.get("protocol", {})
+        if load_protocol.get("concurrency_levels") != [1, 2, 4]:
+            report.errors.append("HTTP load report must cover concurrency 1, 2, and 4")
+        if load_protocol.get("warmup_requests") != 5:
+            report.errors.append("HTTP load report must contain five warm-up requests")
+        if load_protocol.get("requests_per_level") != 20:
+            report.errors.append("HTTP load report must contain 20 requests per level")
+        load_levels = api_load_report.get("levels", [])
+        if len(load_levels) != 3:
+            report.errors.append("HTTP load report must contain three concurrency levels")
+        elif any(level.get("failures") != 0 for level in load_levels):
+            report.errors.append("HTTP load report contains a failed request")
+        for level in load_levels:
+            if level.get("requests") != 20:
+                report.errors.append("HTTP load level does not contain 20 measured requests")
+            latency = level.get("total_latency_ms", {})
+            if not 0 < latency.get("p50", 0) <= latency.get("p95", 0):
+                report.errors.append("HTTP load level p50/p95 latency is inconsistent")
+            if level.get("throughput_requests_per_second", 0) <= 0:
+                report.errors.append("HTTP load level throughput must be positive")
+
     if not api_source_path.is_file():
         report.errors.append("Typed inference API source is missing")
         api_source = ""
@@ -449,6 +522,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "RequestValidationError",
         "run_in_threadpool",
         "max_image_bytes",
+        "InferenceCapacityError",
+        "asyncio.Semaphore",
+        "TERRACLASS_MAX_CONCURRENT_INFERENCES",
     ):
         if token not in api_source:
             report.errors.append(f"API safety/operability token is missing: {token}")
@@ -459,8 +535,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
     else:
         api_test_source = api_test_path.read_text(encoding="utf-8")
         api_test_count = len(re.findall(r"^def test_", api_test_source, re.MULTILINE))
-        if api_test_count != 5:
-            report.errors.append("API contract suite must contain five focused tests")
+        if api_test_count != 6:
+            report.errors.append("API contract suite must contain six focused tests")
 
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
@@ -470,6 +546,53 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "terraclass.api:main"
     ):
         report.errors.append("terraclass-api command does not target terraclass.api:main")
+
+    deployment_contracts = (
+        (
+            dockerfile_path,
+            (
+                "AS runtime-base",
+                "https://download.pytorch.org/whl/cpu",
+                "USER terraclass",
+                "fetch_serving_artifact.py",
+                "HEALTHCHECK",
+            ),
+        ),
+        (dockerignore_path, ("artifacts", "data/raw", "*.pt")),
+        (
+            cloud_run_template_path,
+            (
+                "containerConcurrency: 4",
+                "memory: 2Gi",
+                "TERRACLASS_MAX_CONCURRENT_INFERENCES",
+                "/api/v1/health/ready",
+            ),
+        ),
+        (
+            ci_workflow_path,
+            (
+                "audit_consistency.py",
+                "python -m pip_audit",
+                "pytest -q",
+                "npm test",
+                "target: runtime-base",
+            ),
+        ),
+        (
+            container_workflow_path,
+            ("registry: ghcr.io", "target: production", "provenance: mode=max", "sbom: true"),
+        ),
+    )
+    for path, tokens in deployment_contracts:
+        if not path.is_file():
+            report.errors.append(f"Deployment contract is missing: {path.relative_to(root)}")
+            continue
+        contract = path.read_text(encoding="utf-8")
+        for token in tokens:
+            if token not in contract:
+                report.errors.append(
+                    f"Deployment contract token is missing from {path.relative_to(root)}: {token}"
+                )
 
     web_test_count = 0
     if not web_app_path.is_file():
@@ -631,6 +754,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         api_document = ""
     else:
         api_document = api_document_path.read_text(encoding="utf-8")
+    if not production_document_path.is_file():
+        report.errors.append("docs/PRODUCTION_INFERENCE.md is missing")
+        production_document = ""
+    else:
+        production_document = production_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -655,6 +783,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             iit_checklist,
             inference_document,
             api_document,
+            production_document,
         )
     )
     for token in required_documentation_tokens:
@@ -689,6 +818,17 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         if token not in api_document_normalized:
             report.errors.append(f"Application documentation token is missing: {token}")
+    production_document_normalized = " ".join(production_document.split())
+    for token in (
+        "16 July 2026",
+        "60 measured requests",
+        "52.9 requests/second",
+        "84.1 ms",
+        "not yet deployed",
+        "model-v1.0.0",
+    ):
+        if token not in production_document_normalized:
+            report.errors.append(f"Production documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -780,6 +920,32 @@ def audit_project(project_root: str | Path) -> AuditReport:
                 "throughput_requests_per_second"
             ),
         },
+        "production_readiness": {
+            "model_release_url": model_release.url if model_release else None,
+            "model_release_size_bytes": model_release.size_bytes if model_release else None,
+            "container_contract": dockerfile_path.is_file(),
+            "ci_workflows": ci_workflow_path.is_file() and container_workflow_path.is_file(),
+            "local_http_warmup_requests": api_load_report.get("protocol", {}).get(
+                "warmup_requests"
+            ),
+            "local_http_measured_requests": sum(
+                int(level.get("requests", 0)) for level in load_levels
+            ),
+            "local_http_concurrency_levels": [level.get("concurrency") for level in load_levels],
+            "local_http_peak_throughput_rps": max(
+                (level.get("throughput_requests_per_second", 0) for level in load_levels),
+                default=0,
+            ),
+            "local_http_concurrency_4_p95_ms": next(
+                (
+                    level.get("total_latency_ms", {}).get("p95")
+                    for level in load_levels
+                    if level.get("concurrency") == 4
+                ),
+                None,
+            ),
+            "production_api_deployed": False,
+        },
         "application_layer": {
             "api_routes": list(expected_api_routes),
             "api_contract_tests": api_test_count,
@@ -788,6 +954,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "tailwind_css": True,
             "private_frontend_preview": True,
             "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
+            "production_api_deployed": False,
             "integrated_deployment_claimed": False,
         },
     }

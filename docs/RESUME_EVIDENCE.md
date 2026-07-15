@@ -20,6 +20,10 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Typed, versioned FastAPI inference service with bounded multipart uploads, structured errors, CORS, request IDs, structured request logs, and liveness/readiness probes
 - Responsive Tailwind CSS/Next.js browser interface with client-side validation, model readiness, ranked confidence visualization, request provenance, and explicit model-scope communication
 - Public Vercel frontend deployment, native Next.js and worker builds, server-render contract tests, API integration tests, and dependency security review
+- Checksum-pinned HTTPS model distribution with bounded streaming, byte-count verification, atomic promotion, and a reserved versioned GitHub release
+- Non-root CPU container and Cloud Run resource/probe contracts with explicit CORS and bounded inference capacity
+- Real-model HTTP concurrency testing across 60 measured requests with unique request tracing and zero failures
+- Separate Python, web, container-contract, image-provenance, and SBOM workflow definitions
 
 ## Supported numerical claim
 
@@ -37,11 +41,16 @@ Optional application bullet:
 
 > Engineered a versioned FastAPI inference service around a PyTorch ResNet18 model and deployed its responsive Tailwind CSS/Next.js frontend to Vercel, with bounded uploads, structured errors, health probes, request tracing, ranked probabilities, and automated API/render tests.
 
+Optional production-readiness bullet:
+
+> Hardened a PyTorch inference API with checksum-pinned model distribution, a non-root CPU container contract, bounded asynchronous capacity, and repeatable HTTP load testing; completed 60 steady-state requests without failures and measured 52.9 requests/second peak local throughput.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
 
-The model/version contract, input validation, restricted artifact loading, local latency benchmark,
-typed HTTP service, structured API errors, request tracing, health probes, and public Vercel frontend
-are complete. Containerization, CI, concurrency/load tests, deployed API evidence, production SLOs,
-and drift-ready telemetry remain future deliverables and must not yet be claimed.
+The model/version contract, input validation, restricted artifact loading, local sequential and HTTP
+concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
+workflow definitions, health probes, and public Vercel frontend are complete. The container has not
+yet been built by CI, and the release asset, production image, Cloud Run API, production SLOs, and
+drift-ready telemetry remain future deliverables and must not yet be claimed.

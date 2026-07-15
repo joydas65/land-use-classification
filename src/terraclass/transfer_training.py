@@ -24,7 +24,8 @@ from torch import nn, optim
 
 from terraclass.config import ExperimentConfig, load_config
 from terraclass.data import ImagePathDataset, file_sha256, load_manifest
-from terraclass.training import build_loader, select_device, set_reproducibility, train_one_epoch
+from terraclass.devices import select_device
+from terraclass.training import build_loader, set_reproducibility, train_one_epoch
 from terraclass.transfer import (
     build_transfer_model,
     set_backbone_trainable,

@@ -16,6 +16,14 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         report.observed["serving_foundation"]["request_latency_p95_ms"]
         >= (report.observed["serving_foundation"]["request_latency_p50_ms"])
     )
+    assert report.observed["production_readiness"]["container_contract"] is True
+    assert report.observed["production_readiness"]["ci_workflows"] is True
+    assert report.observed["production_readiness"]["local_http_warmup_requests"] == 5
+    assert report.observed["production_readiness"]["local_http_measured_requests"] == 60
+    assert report.observed["production_readiness"]["local_http_concurrency_levels"] == [1, 2, 4]
+    assert report.observed["production_readiness"]["local_http_peak_throughput_rps"] > 0
+    assert report.observed["production_readiness"]["local_http_concurrency_4_p95_ms"] > 0
+    assert report.observed["production_readiness"]["production_api_deployed"] is False
     assert report.observed["application_layer"] == {
         "api_routes": [
             "/api/v1/health/live",
@@ -23,11 +31,12 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
             "/api/v1/model",
             "/api/v1/predictions",
         ],
-        "api_contract_tests": 5,
+        "api_contract_tests": 6,
         "web_render_tests": 2,
         "browser_package": "terraclass-web",
         "tailwind_css": True,
         "private_frontend_preview": True,
         "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
+        "production_api_deployed": False,
         "integrated_deployment_claimed": False,
     }

@@ -1,0 +1,49 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: terraclass-api
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      containerConcurrency: 4
+      timeoutSeconds: 30
+      containers:
+        - image: IMAGE_URI@sha256:IMAGE_DIGEST
+          ports:
+            - name: http1
+              containerPort: 8080
+          env:
+            - name: TERRACLASS_ALLOWED_ORIGINS
+              value: https://terraclass-land-use-classification.vercel.app
+            - name: TERRACLASS_DEVICE
+              value: cpu
+            - name: TERRACLASS_FAIL_ON_MODEL_ERROR
+              value: "true"
+            - name: TERRACLASS_MAX_CONCURRENT_INFERENCES
+              value: "1"
+            - name: TERRACLASS_QUEUE_TIMEOUT_SECONDS
+              value: "5"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: 8080
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health/live
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3

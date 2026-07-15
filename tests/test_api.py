@@ -1,5 +1,8 @@
 import io
+import threading
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -136,3 +139,37 @@ def test_openapi_exposes_versioned_contract(project_root: Path) -> None:
     assert schema["info"]["version"] == "1.0.0"
     assert "/api/v1/predictions" in schema["paths"]
     assert config.model_version == "1.0.0"
+
+
+def test_inference_capacity_is_bounded_and_returns_retry_contract(project_root: Path) -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    class SlowPredictor(FakePredictor):
+        def predict_bytes(self, payload: bytes, *, top_k: int | None = None) -> Prediction:
+            started.set()
+            assert release.wait(timeout=2)
+            return super().predict_bytes(payload, top_k=top_k)
+
+    settings = replace(_settings(project_root), queue_timeout_seconds=0.02)
+    app = create_app(
+        settings,
+        predictor_loader=lambda config, root, device: SlowPredictor(),
+    )
+    with TestClient(app) as client, ThreadPoolExecutor(max_workers=1) as executor:
+        first = executor.submit(
+            client.post,
+            "/api/v1/predictions",
+            files={"file": ("scene.png", _png_bytes(), "image/png")},
+        )
+        assert started.wait(timeout=1)
+        busy = client.post(
+            "/api/v1/predictions",
+            files={"file": ("scene.png", _png_bytes(), "image/png")},
+        )
+        release.set()
+        completed = first.result(timeout=2)
+    assert completed.status_code == 200
+    assert busy.status_code == 429
+    assert busy.json()["error"]["code"] == "inference_capacity_exceeded"
+    assert busy.headers["Retry-After"] == "1"

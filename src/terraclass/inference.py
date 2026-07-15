@@ -18,7 +18,7 @@ from PIL import Image, UnidentifiedImageError
 from torch import nn
 
 from terraclass.config import load_config
-from terraclass.training import select_device
+from terraclass.devices import select_device
 from terraclass.transfer import SUPPORTED_ARCHITECTURES, build_transfer_model
 from terraclass.transforms import build_eval_transform
 

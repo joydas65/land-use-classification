@@ -21,8 +21,9 @@ artifact atomically and proves that the result can be loaded with the default re
 | Group-aware training checkpoint | `d3c22a5cf0e3f96c124f4c9e5b7b1200f696fb9b8bd95d6d79d8330035bf4067` |
 | ResNet18 serving artifact v1.0.0 | `b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523` |
 
-The binary artifacts remain excluded from Git. A later deployment phase must publish the serving
-artifact through a versioned release or model registry and verify the same hash after download.
+The binary artifacts remain excluded from Git. The 16 July phase added a versioned GitHub release
+contract and an atomic downloader that verifies HTTPS, byte count, and the same SHA-256 before the
+model can enter a production image. Public release publication is still pending approval.
 
 Recreate the local serving artifact from the audited training checkpoint:
 
@@ -81,9 +82,10 @@ PYTHONPATH=src python scripts/benchmark_inference.py \
   --iterations 75
 ```
 
-## Next phase
+## Production-readiness continuation
 
 The 15 July application phase added a typed HTTP API, responsive browser interface, request IDs,
-structured logs, and health/readiness probes; see `docs/API_AND_WEB_APP.md`. The next phase is to
-containerize the API, publish the model artifact through a hash-verified release path, add CI and
-concurrency/load tests, and collect production deployment evidence and privacy-conscious telemetry.
+structured logs, and health/readiness probes. The 16 July phase added the non-root container
+contract, bounded inference queue, release manifest, CI definitions, Cloud Run template, and real
+HTTP concurrency benchmark; see `docs/PRODUCTION_INFERENCE.md`. Publishing the release and image,
+deploying the API, collecting Cloud Run evidence, and connecting Vercel remain the next handoff.

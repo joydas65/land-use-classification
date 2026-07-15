@@ -1,18 +1,22 @@
 # Testing and Audit Guide
 
-The quality gate contains four layers:
+The quality gate contains five layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
-2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, benchmark statistics, and the versioned FastAPI contract.
+2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, artifact distribution, benchmark statistics, bounded API capacity, deployment contracts, and the versioned FastAPI contract.
 3. The web gate runs ESLint, a production vinext build, server-rendered HTML/contract tests, and the
    native Next.js build used by Vercel.
 4. `python -m compileall src scripts tests` catches syntax/import compilation failures.
+5. GitHub CI builds the artifact-free container target; the production workflow separately fetches
+   the checksum-pinned model and publishes an image with provenance and an SBOM.
 
 The complete local gate is:
 
 ```bash
 PYTHONPATH=src python scripts/audit_consistency.py --project-root .
 PYTHONPATH=src pytest
+python -m pip check
+python -m pip_audit
 ruff check .
 ruff format --check .
 python -m compileall -q src scripts tests
@@ -23,6 +27,16 @@ npm test
 npm run build:vercel
 ```
 
+The container contract can be built without publishing or downloading the model:
+
+```bash
+docker build --target runtime-base --tag terraclass-api:contract-test .
+```
+
+Docker is not installed in the 16 July local environment, so that build is defined and
+machine-checked but is not recorded as locally executed. It must pass in GitHub CI before the
+production image is published.
+
 The 15 July dependency review ran `npm audit --audit-level=high` for the complete tree and
 `npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or
 critical advisory. The complete tree reports one low and three moderate transitive findings. The
@@ -30,6 +44,12 @@ production tree reports two moderate findings inherited from Next.js's embedded 
 npm offered only a breaking downgrade, so they are documented rather than hidden or force-fixed.
 TerraClass does not accept user-authored CSS, but the advisory must be reviewed again before the
 integrated model API is deployed.
+
+The 16 July Python audit initially identified the virtual environment's pip 25.1.1 as vulnerable.
+After upgrading to pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities;
+the local `terraclass` package was skipped because it is not published on PyPI and is instead
+covered by the repository's source, contract, and integration tests. The container pins the same
+patched pip release.
 
 Verify the submission notebook's acquisition and manifest cells against the real local dataset without running training:
 
@@ -65,3 +85,20 @@ PYTHONPATH=src python scripts/benchmark_inference.py --project-root . --device c
 ```
 
 A dataset-free test pass proves internal consistency; it does not reproduce the reported 74.67% accuracy. Reproduction is complete only after a full dataset run generates a hashed manifest and new `metrics.json`.
+
+The real-model HTTP load report is reproducible after starting `terraclass-api`:
+
+```bash
+PYTHONPATH=src python scripts/load_test_api.py \
+  --base-url http://127.0.0.1:8000 \
+  --image data/raw/UCMerced_LandUse/Images/agricultural/agricultural06.tif \
+  --content-type image/tiff \
+  --concurrency 1 2 4 \
+  --warmup-requests 5 \
+  --requests-per-level 20 \
+  --output reports/api_load_test_2026-07-16.json
+```
+
+The committed 16 July report contains 60 measured requests, zero failures, 52.9 requests/second
+peak throughput, and 84.1 ms p95 latency at concurrency 4. It is local Apple Silicon steady-state
+evidence and must not be described as a Cloud Run benchmark or production SLO.
