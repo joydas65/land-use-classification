@@ -26,5 +26,6 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         "api_contract_tests": 5,
         "web_render_tests": 2,
         "browser_package": "terraclass-web",
-        "deployment_claimed": False,
+        "private_frontend_preview": True,
+        "integrated_deployment_claimed": False,
     }

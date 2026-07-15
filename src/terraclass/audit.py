@@ -753,7 +753,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "api_contract_tests": api_test_count,
             "web_render_tests": web_test_count,
             "browser_package": web_package.get("name"),
-            "deployment_claimed": False,
+            "private_frontend_preview": True,
+            "integrated_deployment_claimed": False,
         },
     }
     return report

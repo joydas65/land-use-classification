@@ -60,9 +60,12 @@ defaults to `http://localhost:8000`.
 
 ## Deployment boundary
 
-The interface and API are verified locally but are not yet claimed as a deployed integrated system.
-The serving artifact remains intentionally outside Git. Deployment requires a container image for
-the API, a hash-verified artifact distribution path, an HTTPS API origin, updated CORS origins, and
-environment-specific concurrency, memory, latency, and cold-start evidence. Publishing the frontend
-before that endpoint exists would leave a non-functional portfolio demo, so deployment belongs to
-the next engineering phase.
+The frontend has an owner-private build preview at
+`https://terraclass-joydas65.joydas-0111.chatgpt.site`. It is useful for reviewing the responsive
+interface, but classification remains unavailable there because the production model API does not
+exist yet. The project is therefore not yet claimed as a deployed integrated system.
+
+The serving artifact remains intentionally outside Git. Integrated deployment requires a container
+image for the API, a hash-verified artifact distribution path, an HTTPS API origin, updated CORS
+origins, and environment-specific concurrency, memory, latency, and cold-start evidence. The private
+preview must not be presented as the completed public portfolio demo until that work passes.
