@@ -4,6 +4,12 @@
 
 - Submit `notebooks/Improved_Land_Use_Classification_IITK.ipynb` by 20 July 2026.
 - The notebook is the updated version of the official Land Use Classification sample project.
+
+## Internal verification record
+
+These identifiers preserve traceability in the repository and are not required in the notebook or
+submission email.
+
 - Evidence commit: `414233c8471ea961bfd9406a33f54b427e75ab49`.
 - Returned Colab bundle SHA-256: `2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae`.
 

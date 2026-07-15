@@ -32,11 +32,7 @@ def code(source: str, *, tags: list[str] | None = None) -> dict[str, Any]:
 
 
 def verified_results_cell() -> dict[str, Any]:
-    figure_path = (
-        Path(__file__).resolve().parents[1] / "reports/figures/training_and_confusion_colab_l4.png"
-    )
-    encoded_figure = base64.b64encode(figure_path.read_bytes()).decode("ascii")
-    cell = markdown(
+    return markdown(
         """
         ## Verified Colab Pro GPU results — 13 July 2026
 
@@ -56,18 +52,32 @@ def verified_results_cell() -> dict[str, Any]:
         produced lower loss on both manifests, completed the historical L4 run faster, and matched
         the independently obtained local CPU evidence. EfficientNet-B0 is retained as the
         parameter-efficient alternative.
-
-        Evidence bundle SHA-256:
-        `2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae`
-        Evidence commit: `414233c8471ea961bfd9406a33f54b427e75ab49`
-
-        ![Verified training curves and test confusion matrices][verified-figure]
-
-        [verified-figure]: attachment:training_and_confusion_colab_l4.png
         """
     )
-    cell["attachments"] = {"training_and_confusion_colab_l4.png": {"image/png": encoded_figure}}
-    return cell
+
+
+def verified_figure_output_cell() -> dict[str, Any]:
+    """Embed the verified figure as a standard Jupyter display output for Colab."""
+    figure_path = (
+        Path(__file__).resolve().parents[1] / "reports/figures/training_and_confusion_colab_l4.png"
+    )
+    encoded_figure = base64.b64encode(figure_path.read_bytes()).decode("ascii")
+    return {
+        "cell_type": "code",
+        "execution_count": 1,
+        "metadata": {"tags": ["verified-gpu-output"]},
+        "outputs": [
+            {
+                "data": {
+                    "image/png": encoded_figure,
+                    "text/plain": "Verified training curves and test confusion matrices",
+                },
+                "metadata": {},
+                "output_type": "display_data",
+            }
+        ],
+        "source": "# Verified NVIDIA L4 training curves and test confusion matrices.\n",
+    }
 
 
 def build_notebook() -> dict[str, Any]:
@@ -102,6 +112,7 @@ def build_notebook() -> dict[str, Any]:
             """
         ),
         verified_results_cell(),
+        verified_figure_output_cell(),
         code(
             """
             %pip -q install "scikit-learn>=1.4" "seaborn>=0.13" "Pillow>=10"
@@ -170,8 +181,6 @@ def build_notebook() -> dict[str, Any]:
             )
             ARCHIVE_SIZE_BYTES = 332_468_434
             SUPPLIED_BASELINE = {"accuracy": 0.7467, "macro_f1": 0.733}
-            RESULTS_EVIDENCE_COMMIT = "414233c8471ea961bfd9406a33f54b427e75ab49"
-
             WORK_DIR = Path.cwd() / "terraclass_colab"
             DATA_DIR = WORK_DIR / "data"
             OUTPUT_DIR = WORK_DIR / "outputs"
@@ -780,7 +789,6 @@ def build_notebook() -> dict[str, Any]:
             """
             run_report = {
                 "schema_version": 1,
-                "results_evidence_commit": RESULTS_EVIDENCE_COMMIT,
                 "hardware": {
                     "device": str(DEVICE),
                     "gpu": torch.cuda.get_device_name(0) if DEVICE.type == "cuda" else None,

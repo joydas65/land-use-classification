@@ -280,8 +280,6 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "EfficientNet-B0",
             "validation macro F1",
             "classification_report",
-            "2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae",
-            "414233c8471ea961bfd9406a33f54b427e75ab49",
             "NVIDIA L4",
             "Selected final architecture: ResNet18",
         )
@@ -295,27 +293,49 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "GITHUB_TOKEN",
             "ghp_",
             "TO_BE_FILLED",
+            "2c834a31ad37e07de11681f0e3596040d60f1c18e31142dfcdaa97b7a38837ae",
+            "414233c8471ea961bfd9406a33f54b427e75ab49",
         ):
             if forbidden in submission_source:
                 report.errors.append(f"Submission notebook contains forbidden token: {forbidden}")
-        attachment_payloads = [
-            encoded
+        attachment_count = sum(
+            len(cell.get("attachments", {})) for cell in submission_notebook.get("cells", [])
+        )
+        if attachment_count:
+            report.errors.append("Submission notebook contains a Colab-incompatible attachment")
+        verified_output_cells = [
+            cell
             for cell in submission_notebook.get("cells", [])
-            for attachment in cell.get("attachments", {}).values()
-            for encoded in attachment.values()
+            if "verified-gpu-output" in cell.get("metadata", {}).get("tags", [])
         ]
-        if len(attachment_payloads) != 1:
-            report.errors.append(
-                "Submission notebook must contain one verified evidence attachment"
+        if len(verified_output_cells) != 1:
+            report.errors.append("Submission notebook must contain one verified GPU image output")
+        else:
+            verified_output_cell = verified_output_cells[0]
+            verified_outputs = verified_output_cell.get("outputs", [])
+            image_payload = (
+                verified_outputs[0].get("data", {}).get("image/png")
+                if len(verified_outputs) == 1
+                and verified_outputs[0].get("output_type") == "display_data"
+                else None
             )
-        elif hashlib.sha256(base64.b64decode(attachment_payloads[0])).hexdigest() != (
-            colab_verification.get("figure", {}).get("sha256")
-        ):
-            report.errors.append("Submission notebook attachment differs from verified GPU figure")
+            if not image_payload:
+                report.errors.append("Verified GPU output is not a standard PNG display output")
+            elif hashlib.sha256(base64.b64decode(image_payload)).hexdigest() != (
+                colab_verification.get("figure", {}).get("sha256")
+            ):
+                report.errors.append("Submission notebook output differs from verified GPU figure")
         for index, cell in enumerate(submission_notebook.get("cells", [])):
             if cell.get("cell_type") != "code":
                 continue
-            if cell.get("outputs") or cell.get("execution_count") is not None:
+            is_verified_output = "verified-gpu-output" in cell.get("metadata", {}).get("tags", [])
+            if is_verified_output:
+                if cell.get("execution_count") != 1:
+                    report.errors.append(
+                        "Submission notebook verified output cell "
+                        f"{index} has invalid execution count"
+                    )
+            elif cell.get("outputs") or cell.get("execution_count") is not None:
                 report.errors.append(
                     f"Submission notebook cell {index} contains saved execution state"
                 )
@@ -496,6 +516,10 @@ def audit_project(project_root: str | Path) -> AuditReport:
             ),
             "attachments": sum(
                 len(cell.get("attachments", {})) for cell in submission_notebook.get("cells", [])
+            ),
+            "verified_image_outputs": sum(
+                "verified-gpu-output" in cell.get("metadata", {}).get("tags", [])
+                for cell in submission_notebook.get("cells", [])
             ),
         },
     }
