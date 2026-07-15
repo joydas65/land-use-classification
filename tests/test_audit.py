@@ -10,3 +10,9 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["test_macro_f1"] == 0.733
     assert report.observed["parameter_count"] == 102_277
     assert report.observed["known_issue_ids"] == list(KNOWN_ISSUE_IDS)
+    assert report.observed["serving_foundation"]["model_version"] == "1.0.0"
+    assert report.observed["serving_foundation"]["request_latency_p50_ms"] > 0
+    assert (
+        report.observed["serving_foundation"]["request_latency_p95_ms"]
+        >= (report.observed["serving_foundation"]["request_latency_p50_ms"])
+    )

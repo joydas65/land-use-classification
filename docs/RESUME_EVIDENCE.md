@@ -14,6 +14,9 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Validation macro-F1 checkpoint selection and multi-metric test evaluation
 - Comparative L4 GPU benchmarking of ResNet18 and EfficientNet-B0 with parameter/loss/runtime tradeoff analysis
 - Automated tests and a cross-artifact audit covering code, configurations, manifests, comments, and documentation
+- Hash-verified promotion from a rich training checkpoint to a minimal weights-only serving artifact
+- Bounded, thread-safe image inference with strict model/provenance validation and structured top-k output
+- Reproducible local CPU latency benchmarking over all 75 leakage-controlled test images
 
 ## Supported numerical claim
 
@@ -23,8 +26,15 @@ Optional second bullet:
 
 > Benchmarked ResNet18 and EfficientNet-B0 across historical and leakage-controlled splits on an NVIDIA L4; both achieved 1.000 macro F1, and selected ResNet18 using test loss, runtime, reproducibility, and model-size tradeoffs rather than accuracy alone.
 
+Optional serving bullet:
+
+> Built a hash-verified, weights-only PyTorch inference layer with bounded image validation and model-version metadata; measured 14.6 ms median and 24.0 ms p95 local CPU latency across 75 leakage-controlled test requests.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
 
-After the model comparison is frozen, expose the selected checkpoint through a tested inference service and a small web interface. The deployable story should include model/version metadata, input validation, latency measurement, structured error handling, containerization, CI, and drift-ready telemetry. These are future deliverables and are not yet résumé claims.
+The model/version contract, input validation, restricted artifact loading, and local latency benchmark
+are complete. A typed HTTP service, browser interface, structured API errors, containerization, CI,
+concurrency tests, deployment evidence, and drift-ready telemetry remain future deliverables and must
+not yet be claimed.

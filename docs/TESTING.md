@@ -3,7 +3,7 @@
 The quality gate contains three layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
-2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, and deterministic notebook generation, compilation, security, and IIT evidence.
+2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, and benchmark statistics.
 3. `python -m compileall src scripts tests` catches syntax/import compilation failures.
 
 The complete local gate is:
@@ -34,6 +34,19 @@ PYTHONPATH=src python scripts/import_colab_results.py \
   --verified-date 2026-07-13
 ```
 
-`pytest` and `terraclass-audit` subsequently revalidate the committed report, comparison CSV, figure, manifests, bundle provenance, completed experiment matrix, and notebook attachment without requiring the original ZIP.
+`pytest` and `terraclass-audit` subsequently revalidate the committed report, comparison CSV, figure, manifests, bundle provenance, completed experiment matrix, and notebook PNG output without requiring the original ZIP.
+
+The serving artifact is intentionally excluded from Git. When the local training checkpoint exists,
+promote it through the verified export path and then run the recorded inference benchmark:
+
+```bash
+PYTHONPATH=src python scripts/export_serving_model.py \
+  --source artifacts/resnet18_group_aware/best_model.pth \
+  --output artifacts/serving/resnet18_group_aware_v1.pt \
+  --expected-source-sha256 d3c22a5cf0e3f96c124f4c9e5b7b1200f696fb9b8bd95d6d79d8330035bf4067 \
+  --model-id terraclass-resnet18-group-aware \
+  --model-version 1.0.0
+PYTHONPATH=src python scripts/benchmark_inference.py --project-root . --device cpu
+```
 
 A dataset-free test pass proves internal consistency; it does not reproduce the reported 74.67% accuracy. Reproduction is complete only after a full dataset run generates a hashed manifest and new `metrics.json`.

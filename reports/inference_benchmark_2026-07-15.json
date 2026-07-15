@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "measured_at": "2026-07-15T16:48:26.351551+00:00",
+  "model": {
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "architecture": "resnet18",
+    "serving_artifact_sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523",
+    "training_manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d"
+  },
+  "environment": {
+    "device": "cpu",
+    "python": "3.13.5",
+    "torch": "2.12.0",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "torch_threads": 10
+  },
+  "protocol": {
+    "warmup_requests": 10,
+    "measured_requests": 75,
+    "unique_test_images": 75,
+    "input_mode": "in-memory encoded image bytes",
+    "request_latency_scope": "decode, validation, preprocessing, and model inference",
+    "model_pipeline_scope": "preprocessing and model inference"
+  },
+  "model_load_ms": 180.45170814730227,
+  "request_latency_ms": {
+    "mean": 16.243384362508852,
+    "p50": 14.555708039551973,
+    "p95": 24.027674878016114,
+    "minimum": 11.156040942296386,
+    "maximum": 32.84145798534155
+  },
+  "model_pipeline_latency_ms": {
+    "mean": 15.772190013279518,
+    "p50": 14.110333984717727,
+    "p95": 23.46408769953996,
+    "minimum": 10.749666951596737,
+    "maximum": 31.973500037565827
+  },
+  "throughput_requests_per_second": 61.55722963893992,
+  "prediction_accuracy_sanity_check": 1.0
+}

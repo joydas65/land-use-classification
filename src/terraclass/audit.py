@@ -14,6 +14,7 @@ from typing import Any
 
 from terraclass.colab_results import BundleValidationError, audit_versioned_evidence
 from terraclass.config import load_config
+from terraclass.inference import ServingConfig, load_serving_config
 from terraclass.transfer_config import load_transfer_config
 
 KNOWN_ISSUE_IDS = (
@@ -95,6 +96,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
     iit_checklist_path = root / "docs/IIT_SUBMISSION_CHECKLIST.md"
     colab_report_dir = root / "reports/colab"
     colab_figure_path = root / "reports/figures/training_and_confusion_colab_l4.png"
+    serving_config_path = root / "configs/serving/resnet18_group_aware_v1.json"
+    inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
+    inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
 
     expected_checksum = checksum_path.read_text(encoding="utf-8").split()[0]
     actual_checksum = _sha256(notebook_path)
@@ -349,6 +353,71 @@ def audit_project(project_root: str | Path) -> AuditReport:
             except SyntaxError as error:
                 report.errors.append(f"Submission notebook cell {index} does not compile: {error}")
 
+    serving_config: ServingConfig | None = None
+    serving_source_hash: str | None = None
+    serving_artifact_hash: str | None = None
+    if not serving_config_path.is_file():
+        report.errors.append("Versioned serving configuration is missing")
+    else:
+        try:
+            serving_config = load_serving_config(serving_config_path)
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            report.errors.append(f"Serving configuration is invalid: {error}")
+        if serving_config is not None:
+            if serving_config.architecture != "resnet18":
+                report.errors.append("Serving configuration does not select ResNet18")
+            if serving_config.class_names != config.dataset.selected_classes:
+                report.errors.append("Serving class order differs from the experiment config")
+            if serving_config.training_manifest_sha256 != group_audit.get("manifest_sha256"):
+                report.errors.append("Serving manifest differs from the group-aware audit")
+            if serving_config.selected_epoch != 4:
+                report.errors.append("Serving configuration does not select verified epoch 4")
+            if serving_config.test_accuracy != 1.0 or serving_config.test_macro_f1 != 1.0:
+                report.errors.append("Serving metrics differ from the verified group-aware result")
+            source_checkpoint_path = root / serving_config.source_checkpoint.path
+            if source_checkpoint_path.is_file():
+                serving_source_hash = _sha256(source_checkpoint_path)
+                if serving_source_hash != serving_config.source_checkpoint.sha256:
+                    report.errors.append("Local training checkpoint differs from serving config")
+            serving_artifact_path = root / serving_config.serving_artifact.path
+            if serving_artifact_path.is_file():
+                serving_artifact_hash = _sha256(serving_artifact_path)
+                if serving_artifact_hash != serving_config.serving_artifact.sha256:
+                    report.errors.append("Local serving artifact differs from serving config")
+
+    if not inference_benchmark_path.is_file():
+        report.errors.append("Versioned inference benchmark is missing")
+        inference_benchmark: dict[str, Any] = {}
+    else:
+        inference_benchmark = json.loads(inference_benchmark_path.read_text(encoding="utf-8"))
+        if serving_config is not None:
+            benchmark_model = inference_benchmark.get("model", {})
+            expected_benchmark_model = {
+                "model_id": serving_config.model_id,
+                "model_version": serving_config.model_version,
+                "architecture": serving_config.architecture,
+                "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+                "training_manifest_sha256": serving_config.training_manifest_sha256,
+            }
+            if benchmark_model != expected_benchmark_model:
+                report.errors.append("Inference benchmark model identity differs from config")
+        benchmark_protocol = inference_benchmark.get("protocol", {})
+        if benchmark_protocol.get("measured_requests") != 75:
+            report.errors.append("Inference benchmark must contain 75 measured requests")
+        if benchmark_protocol.get("unique_test_images") != 75:
+            report.errors.append("Inference benchmark must cover all 75 group-aware test images")
+        if inference_benchmark.get("prediction_accuracy_sanity_check") != 1.0:
+            report.errors.append("Inference benchmark prediction sanity check differs from 1.0")
+        request_latency = inference_benchmark.get("request_latency_ms", {})
+        p50 = request_latency.get("p50")
+        p95 = request_latency.get("p95")
+        if not isinstance(p50, (int, float)) or not isinstance(p95, (int, float)):
+            report.errors.append("Inference benchmark is missing numeric p50/p95 latency")
+        elif not 0 < p50 <= p95:
+            report.errors.append("Inference benchmark p50/p95 latency is inconsistent")
+        if inference_benchmark.get("throughput_requests_per_second", 0) <= 0:
+            report.errors.append("Inference benchmark throughput must be positive")
+
     download_metadata_path = root / "data/raw/DOWNLOAD_METADATA.json"
     if download_metadata_path.is_file():
         download_metadata = json.loads(download_metadata_path.read_text(encoding="utf-8"))
@@ -420,6 +489,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         iit_checklist = ""
     else:
         iit_checklist = iit_checklist_path.read_text(encoding="utf-8")
+    if not inference_document_path.is_file():
+        report.errors.append("docs/INFERENCE_FOUNDATION.md is missing")
+        inference_document = ""
+    else:
+        inference_document = inference_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -442,11 +516,24 @@ def audit_project(project_root: str | Path) -> AuditReport:
             transfer_results_document,
             colab_handoff,
             iit_checklist,
+            inference_document,
         )
     )
     for token in required_documentation_tokens:
         if token not in combined_documentation:
             report.errors.append(f"Required baseline documentation token is missing: {token}")
+    if serving_config is not None and inference_benchmark:
+        inference_documentation_tokens = (
+            serving_config.model_id,
+            serving_config.source_checkpoint.sha256,
+            serving_config.serving_artifact.sha256,
+            f"{inference_benchmark['request_latency_ms']['p50']:.1f} ms",
+            f"{inference_benchmark['request_latency_ms']['p95']:.1f} ms",
+            "weights-only",
+        )
+        for token in inference_documentation_tokens:
+            if token not in inference_document:
+                report.errors.append(f"Inference documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -520,6 +607,22 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "verified_image_outputs": sum(
                 "verified-gpu-output" in cell.get("metadata", {}).get("tags", [])
                 for cell in submission_notebook.get("cells", [])
+            ),
+        },
+        "serving_foundation": {
+            "model_id": serving_config.model_id if serving_config else None,
+            "model_version": serving_config.model_version if serving_config else None,
+            "training_manifest_sha256": (
+                serving_config.training_manifest_sha256 if serving_config else None
+            ),
+            "source_checkpoint_present": serving_source_hash is not None,
+            "source_checkpoint_sha256": serving_source_hash,
+            "serving_artifact_present": serving_artifact_hash is not None,
+            "serving_artifact_sha256": serving_artifact_hash,
+            "request_latency_p50_ms": inference_benchmark.get("request_latency_ms", {}).get("p50"),
+            "request_latency_p95_ms": inference_benchmark.get("request_latency_ms", {}).get("p95"),
+            "throughput_requests_per_second": inference_benchmark.get(
+                "throughput_requests_per_second"
             ),
         },
     }

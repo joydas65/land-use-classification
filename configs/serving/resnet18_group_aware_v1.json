@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "model_id": "terraclass-resnet18-group-aware",
+  "model_version": "1.0.0",
+  "baseline_config_path": "configs/baseline_5class.json",
+  "training_manifest_path": "data/manifests/five_class_group_aware_seed42.csv",
+  "training_manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d",
+  "model": {
+    "architecture": "resnet18",
+    "dropout": 0.2,
+    "class_names": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ]
+  },
+  "source_checkpoint": {
+    "path": "artifacts/resnet18_group_aware/best_model.pth",
+    "sha256": "d3c22a5cf0e3f96c124f4c9e5b7b1200f696fb9b8bd95d6d79d8330035bf4067"
+  },
+  "serving_artifact": {
+    "path": "artifacts/serving/resnet18_group_aware_v1.pt",
+    "sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523"
+  },
+  "selected_epoch": 4,
+  "verified_test_metrics": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+  },
+  "limits": {
+    "max_image_bytes": 10485760,
+    "max_image_pixels": 25000000,
+    "default_top_k": 3
+  }
+}
