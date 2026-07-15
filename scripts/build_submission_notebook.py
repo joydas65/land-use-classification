@@ -862,7 +862,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("notebooks/TerraClass_IITK_Colab_Submission.ipynb"),
+        default=Path("notebooks/Improved_Land_Use_Classification_IITK.ipynb"),
     )
     return parser.parse_args()
 

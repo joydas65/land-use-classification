@@ -37,7 +37,7 @@ line-length = 100
 target-version = "py311"
 extend-exclude = [
   "notebooks/original",
-  "notebooks/TerraClass_IITK_Colab_Submission.ipynb"
+  "notebooks/Improved_Land_Use_Classification_IITK.ipynb"
 ]
 
 [tool.ruff.lint]

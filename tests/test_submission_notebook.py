@@ -3,7 +3,7 @@ from pathlib import Path
 
 from scripts.build_submission_notebook import build_notebook
 
-NOTEBOOK_NAME = "TerraClass_IITK_Colab_Submission.ipynb"
+NOTEBOOK_NAME = "Improved_Land_Use_Classification_IITK.ipynb"
 
 
 def _source(notebook: dict) -> str:

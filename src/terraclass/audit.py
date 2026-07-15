@@ -90,7 +90,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
     resume_evidence_path = root / "docs/RESUME_EVIDENCE.md"
     transfer_results_document_path = root / "docs/TRANSFER_RESULTS.md"
     transfer_results_report_path = root / "reports/transfer_learning_results_2026-07-12.json"
-    submission_notebook_path = root / "notebooks/TerraClass_IITK_Colab_Submission.ipynb"
+    submission_notebook_path = root / "notebooks/Improved_Land_Use_Classification_IITK.ipynb"
     colab_handoff_path = root / "docs/COLAB_HANDOFF.md"
     iit_checklist_path = root / "docs/IIT_SUBMISSION_CHECKLIST.md"
     colab_report_dir = root / "reports/colab"

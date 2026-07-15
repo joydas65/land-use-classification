@@ -38,7 +38,7 @@ These are observed values from the original notebook, not newly reproduced resul
 - `tests/` protects consistency among code, configuration, documentation, and the original notebook.
 - `docs/BASELINE_AUDIT.md` records known defects in the supplied notebook.
 - `docs/EXPERIMENT_PROTOCOL.md` defines the fair comparison required for the IIT submission.
-- `notebooks/TerraClass_IITK_Colab_Submission.ipynb` is the self-contained GPU collaboration and submission candidate.
+- `notebooks/Improved_Land_Use_Classification_IITK.ipynb` is the self-contained GPU collaboration and submission notebook.
 - `docs/COLAB_HANDOFF.md` defines the credential-free user/Codex results handoff.
 - `reports/colab/VERIFICATION.json` is the canonical audited NVIDIA L4 evidence.
 - `reports/figures/training_and_confusion_colab_l4.png` preserves the verified curves and confusion matrices.
