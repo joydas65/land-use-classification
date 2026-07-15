@@ -64,13 +64,16 @@ production measurements must still test cold starts, memory, scaling, and networ
 `.github/workflows/ci.yml` defines independent Python, frontend, and container-contract jobs. The
 Python job also checks dependency consistency and known vulnerabilities before tests.
 `.github/workflows/container-release.yml` builds the production image only after the model release is
-available, publishes to GHCR, and requests provenance and an SBOM. These workflows are versioned but
-cannot be called successful until their first GitHub runs complete.
+available, publishes to GHCR, and requests provenance and an SBOM. GitHub CI run
+[`29455400219`](https://github.com/joydas65/land-use-classification/actions/runs/29455400219)
+completed successfully on 16 July: the Python, web, and artifact-free `runtime-base` container jobs
+all passed. The model-bearing production image remains deliberately unbuilt until the approved
+release asset exists.
 
 ## Remaining production handoff
 
 1. Publish the checksum-pinned `model-v1.0.0` GitHub release asset.
-2. Observe all CI jobs on the pushed commit.
+2. Download the published asset through the release contract and verify its byte count and SHA-256.
 3. Build and publish the production image, then deploy its exact digest to Cloud Run.
 4. Run the same load probe against the HTTPS Cloud Run URL and record cold-start behavior.
 5. Set `NEXT_PUBLIC_TERRACLASS_API_URL`, redeploy Vercel, verify CORS and predictions, and only then

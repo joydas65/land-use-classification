@@ -51,6 +51,7 @@ Keep the dataset scope in the same bullet as the perfect score. Do not shorten t
 
 The model/version contract, input validation, restricted artifact loading, local sequential and HTTP
 concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
-workflow definitions, health probes, and public Vercel frontend are complete. The container has not
-yet been built by CI, and the release asset, production image, Cloud Run API, production SLOs, and
-drift-ready telemetry remain future deliverables and must not yet be claimed.
+workflow definitions, health probes, and public Vercel frontend are complete. GitHub CI has built the
+artifact-free runtime container and passed the Python and web gates. The release asset, model-bearing
+production image, Cloud Run API, production SLOs, and drift-ready telemetry remain future
+deliverables and must not yet be claimed.

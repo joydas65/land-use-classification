@@ -34,8 +34,10 @@ docker build --target runtime-base --tag terraclass-api:contract-test .
 ```
 
 Docker is not installed in the 16 July local environment, so that build is defined and
-machine-checked but is not recorded as locally executed. It must pass in GitHub CI before the
-production image is published.
+machine-checked but is not recorded as locally executed. GitHub CI run
+[`29455400219`](https://github.com/joydas65/land-use-classification/actions/runs/29455400219)
+successfully built the artifact-free `runtime-base` target alongside passing Python and web jobs.
+The model-bearing production target remains gated on the approved release asset.
 
 The 15 July dependency review ran `npm audit --audit-level=high` for the complete tree and
 `npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or

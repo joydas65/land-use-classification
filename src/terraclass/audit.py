@@ -827,6 +827,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "84.1 ms",
         "not yet deployed",
         "model-v1.0.0",
+        "29455400219",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")

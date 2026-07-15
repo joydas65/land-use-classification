@@ -24,6 +24,9 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["production_readiness"]["local_http_peak_throughput_rps"] > 0
     assert report.observed["production_readiness"]["local_http_concurrency_4_p95_ms"] > 0
     assert report.observed["production_readiness"]["production_api_deployed"] is False
+    assert "29455400219" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
+        encoding="utf-8"
+    )
     assert report.observed["application_layer"] == {
         "api_routes": [
             "/api/v1/health/live",
