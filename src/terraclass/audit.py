@@ -120,6 +120,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
     web_css_path = root / "web/app/globals.css"
     web_package_path = root / "web/package.json"
     web_test_path = root / "web/tests/rendered-html.test.mjs"
+    web_preview_source_path = root / "web/lib/image-preview.ts"
+    web_preview_test_path = root / "web/tests/image-preview.test.mjs"
     web_hosting_path = root / "web/.openai/hosting.json"
     web_vercel_path = root / "web/vercel.json"
     dockerfile_path = root / "Dockerfile"
@@ -939,6 +941,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "NEXT_PUBLIC_TERRACLASS_API_URL",
         "/api/v1/health/ready",
         "/api/v1/predictions?top_k=",
+        "createImagePreviewUrl",
+        "Preparing preview",
         'aria-live="polite"',
         "not a universal satellite classifier",
     ):
@@ -954,9 +958,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if web_package.get("engines", {}).get("node") != "24.x":
             report.errors.append("Browser Node.js runtime is not pinned to the audited major")
         if web_package.get("scripts", {}).get("test") != (
-            "vinext build && node --test tests/rendered-html.test.mjs"
+            "vinext build && node --test tests/rendered-html.test.mjs tests/image-preview.test.mjs"
         ):
             report.errors.append("Browser test command does not build before render testing")
+        if web_package.get("dependencies", {}).get("tiff") != "7.1.3":
+            report.errors.append("Browser TIFF decoder is not pinned to the audited version")
         if web_package.get("scripts", {}).get("build:vercel") != "next build":
             report.errors.append("Vercel build command does not use the native Next.js build")
         forbidden_web_dependencies = {"react-loading-skeleton", "drizzle-orm", "drizzle-kit"}
@@ -977,6 +983,21 @@ def audit_project(project_root: str | Path) -> AuditReport:
         web_test_count = len(re.findall(r'^test\("', web_test_source, re.MULTILINE))
         if web_test_count != 2:
             report.errors.append("Browser suite must contain two focused render tests")
+    web_preview_test_count = 0
+    if not web_preview_source_path.is_file():
+        report.errors.append("Browser TIFF preview implementation is missing")
+    else:
+        web_preview_source = web_preview_source_path.read_text(encoding="utf-8")
+        for token in ("decode(new Uint8Array", "pages: [0]", '"image/png"', "25_000_000"):
+            if token not in web_preview_source:
+                report.errors.append(f"Browser TIFF preview contract token is missing: {token}")
+    if not web_preview_test_path.is_file():
+        report.errors.append("Browser TIFF preview tests are missing")
+    else:
+        web_preview_test_source = web_preview_test_path.read_text(encoding="utf-8")
+        web_preview_test_count = len(re.findall(r'^test\("', web_preview_test_source, re.MULTILINE))
+        if web_preview_test_count != 3:
+            report.errors.append("Browser TIFF preview suite must contain three focused tests")
     if not web_css_path.is_file():
         report.errors.append("Browser global stylesheet is missing")
         web_css_source = ""
@@ -1371,6 +1392,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "api_routes": list(expected_api_routes),
             "api_contract_tests": api_test_count,
             "web_render_tests": web_test_count,
+            "web_tiff_preview_tests": web_preview_test_count,
+            "tiff_preview_decoder": "tiff@7.1.3",
             "browser_package": web_package.get("name"),
             "tailwind_css": True,
             "private_frontend_preview": True,

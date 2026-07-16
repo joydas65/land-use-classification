@@ -10,13 +10,14 @@
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:vercel": "next build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "vinext build && node --test tests/rendered-html.test.mjs",
+    "test": "vinext build && node --test tests/rendered-html.test.mjs tests/image-preview.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {
     "next": "16.2.6",
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.6",
+    "tiff": "7.1.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.45.0",

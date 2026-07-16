@@ -1,6 +1,8 @@
 "use client";
 
-import { ChangeEvent, DragEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+
+import { createImagePreviewUrl } from "@/lib/image-preview";
 
 type Benchmark = {
   device: string;
@@ -69,11 +71,13 @@ export function TerraClassApp() {
   );
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreparingPreview, setIsPreparingPreview] = useState(false);
   const [topK, setTopK] = useState(3);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const previewRequestId = useRef(0);
 
   useEffect(() => {
     if (!API_BASE_URL) {
@@ -112,14 +116,25 @@ export function TerraClassApp() {
     };
   }, [previewUrl]);
 
+  useEffect(() => {
+    return () => {
+      previewRequestId.current += 1;
+    };
+  }, []);
+
   const allowedTypes = useMemo(
     () => new Set(["image/jpeg", "image/png", "image/tiff", "image/webp"]),
     [],
   );
 
-  function selectFile(candidate: File | null) {
+  async function selectFile(candidate: File | null) {
+    const requestId = previewRequestId.current + 1;
+    previewRequestId.current = requestId;
     setPrediction(null);
     setError(null);
+    setFile(null);
+    setPreviewUrl(null);
+    setIsPreparingPreview(false);
     if (!candidate) return;
 
     if (!allowedTypes.has(candidate.type)) {
@@ -133,17 +148,33 @@ export function TerraClassApp() {
     }
 
     setFile(candidate);
-    setPreviewUrl(URL.createObjectURL(candidate));
+    setIsPreparingPreview(true);
+    try {
+      const nextPreviewUrl = await createImagePreviewUrl(candidate);
+      if (previewRequestId.current !== requestId) {
+        URL.revokeObjectURL(nextPreviewUrl);
+        return;
+      }
+      setPreviewUrl(nextPreviewUrl);
+    } catch {
+      if (previewRequestId.current === requestId) {
+        setError("The image is ready for classification, but its preview could not be rendered.");
+      }
+    } finally {
+      if (previewRequestId.current === requestId) {
+        setIsPreparingPreview(false);
+      }
+    }
   }
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
-    selectFile(event.target.files?.[0] ?? null);
+    void selectFile(event.target.files?.[0] ?? null);
   }
 
   function handleDrop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault();
     setIsDragging(false);
-    selectFile(event.dataTransfer.files?.[0] ?? null);
+    void selectFile(event.dataTransfer.files?.[0] ?? null);
   }
 
   async function runPrediction(event: FormEvent<HTMLFormElement>) {
@@ -330,8 +361,13 @@ export function TerraClassApp() {
                 accept="image/png,image/jpeg,image/tiff,image/webp"
                 onChange={handleFileInput}
               />
-              {previewUrl ? (
-                // A blob URL is required for a local preview before upload.
+              {isPreparingPreview ? (
+                <span className="text-center text-muted" role="status">
+                  <strong className="mb-[7px] block font-serif text-2xl font-normal text-ink">Preparing preview…</strong>
+                  <span className="text-[13px]">The original image remains unchanged for classification.</span>
+                </span>
+              ) : previewUrl ? (
+                // Browser-compatible files use a local blob URL; TIFF files are decoded to a temporary PNG URL.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img className="size-full object-cover" src={previewUrl} alt="Selected satellite scene preview" />
               ) : (

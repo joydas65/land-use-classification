@@ -5,7 +5,8 @@ The quality gate contains five layers:
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, artifact distribution, benchmark statistics, bounded API capacity, deployment contracts, and the versioned FastAPI contract.
 3. The web gate runs ESLint, a production vinext build, server-rendered HTML/contract tests, and the
-   native Next.js build used by Vercel.
+   native Next.js build used by Vercel. Its browser contract includes decoding TIFF selections to a
+   temporary PNG preview while retaining the original TIFF bytes for model inference.
 4. `python -m compileall src scripts tests` catches syntax/import compilation failures.
 5. GitHub CI builds the artifact-free container target; the production workflow separately fetches
    the checksum-pinned model and publishes an image with provenance and an SBOM.

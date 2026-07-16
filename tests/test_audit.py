@@ -71,6 +71,8 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         ],
         "api_contract_tests": 6,
         "web_render_tests": 2,
+        "web_tiff_preview_tests": 3,
+        "tiff_preview_decoder": "tiff@7.1.3",
         "browser_package": "terraclass-web",
         "tailwind_css": True,
         "private_frontend_preview": True,

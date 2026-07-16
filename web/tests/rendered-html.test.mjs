@@ -29,9 +29,10 @@ test("server-renders the TerraClass application shell", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|Codex is building/i);
 });
 
-test("keeps Tailwind, Vercel, API, and accessibility contracts explicit", async () => {
-  const [app, css, packageJson, vercelConfig] = await Promise.all([
+test("keeps Tailwind, Vercel, API, TIFF preview, and accessibility contracts explicit", async () => {
+  const [app, imagePreview, css, packageJson, vercelConfig] = await Promise.all([
     readFile(new URL("../app/TerraClassApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/image-preview.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../vercel.json", import.meta.url), "utf8"),
@@ -42,7 +43,12 @@ test("keeps Tailwind, Vercel, API, and accessibility contracts explicit", async 
   assert.match(app, /\/api\/v1\/predictions\?top_k=/);
   assert.match(app, /aria-live="polite"/);
   assert.match(app, /role="alert"/);
+  assert.match(app, /createImagePreviewUrl/);
+  assert.match(app, /Preparing preview/);
   assert.match(app, /accept="image\/png,image\/jpeg,image\/tiff,image\/webp"/);
+  assert.match(imagePreview, /decode\(new Uint8Array/);
+  assert.match(imagePreview, /pages: \[0\]/);
+  assert.match(imagePreview, /"image\/png"/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /@import "tailwindcss"/);
   assert.match(css, /@theme/);
@@ -50,6 +56,8 @@ test("keeps Tailwind, Vercel, API, and accessibility contracts explicit", async 
   assert.match(app, /grid-cols-\[minmax\(0,1fr\)_minmax\(420px,0\.86fr\)\]/);
   assert.match(packageJson, /"name": "terraclass-web"/);
   assert.match(packageJson, /"node": "24\.x"/);
+  assert.match(packageJson, /"tiff": "7\.1\.3"/);
+  assert.match(packageJson, /tests\/image-preview\.test\.mjs/);
   assert.match(packageJson, /"build:vercel": "next build"/);
   assert.match(vercelConfig, /"framework": "nextjs"/);
   assert.match(vercelConfig, /"buildCommand": "npm run build:vercel"/);
