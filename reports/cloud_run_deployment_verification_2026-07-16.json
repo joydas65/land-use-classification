@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-07-16",
+  "cloud_run": {
+    "project_id": "land-use-classification-502614",
+    "project_number": "280836764570",
+    "region": "asia-south1",
+    "service": "terraclass-api",
+    "revision": "terraclass-api-v1-0-1",
+    "service_url": "https://terraclass-api-280836764570.asia-south1.run.app",
+    "ready": true,
+    "public_access": true,
+    "traffic_percent": 100,
+    "deployed_oci_index_digest": "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73",
+    "resolved_linux_amd64_digest": "sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e",
+    "runtime_identity": {
+      "service_account": "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com",
+      "project_roles": [],
+      "replaced_default_identity_role": "roles/editor"
+    },
+    "public_invoker_role": "roles/run.invoker",
+    "public_invoker_member": "allUsers",
+    "resources": {
+      "cpu": "2",
+      "memory": "2Gi",
+      "container_concurrency": 4,
+      "min_instances": 0,
+      "max_instances": 3,
+      "timeout_seconds": 30,
+      "cpu_throttling": true,
+      "startup_cpu_boost": true
+    },
+    "capacity": {
+      "max_concurrent_inferences": 1,
+      "queue_timeout_seconds": 5
+    },
+    "cors_allowed_origin": "https://terraclass-land-use-classification.vercel.app",
+    "probes": {
+      "startup_path": "/api/v1/health/ready",
+      "liveness_path": "/api/v1/health/live"
+    },
+    "initial_rollout": {
+      "revision_ready_seconds": 21.3,
+      "image_import_cached": true,
+      "container_healthy_seconds": 18.02,
+      "scale_to_zero_cold_request_measured": false
+    }
+  },
+  "api_verification": {
+    "readiness_status_code": 200,
+    "model_metadata_status_code": 200,
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "serving_artifact_sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523",
+    "prediction": {
+      "status_code": 200,
+      "sample_name": "agricultural06.tif",
+      "sample_sha256": "a9eac59d5d176cdd2099c2486c0938c5f12d6b507274f0ee90c1f212967a99f2",
+      "expected_class": "agricultural",
+      "predicted_class": "agricultural",
+      "confidence": 0.993049144744873,
+      "model_pipeline_latency_ms": 91.52147500000751,
+      "image_width": 256,
+      "image_height": 256
+    },
+    "cors_preflight": {
+      "status_code": 200,
+      "allowed_origin": "https://terraclass-land-use-classification.vercel.app",
+      "allowed_methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    "load_report": "reports/cloud_run_load_test_2026-07-16.json",
+    "warmup_requests": 5,
+    "measured_requests": 60,
+    "failures": 0,
+    "peak_throughput_requests_per_second": 13.337114778333472,
+    "concurrency_4_p95_total_latency_ms": 365.17565560061485
+  },
+  "vercel": {
+    "project": "terraclass-land-use-classification",
+    "deployment_id": "dpl_A7JEXaCo8BeHK5v7drCUFMeekWop",
+    "deployment_url": "https://terraclass-land-use-classification-n338zg675.vercel.app",
+    "production_alias": "https://terraclass-land-use-classification.vercel.app",
+    "target": "production",
+    "status": "ready",
+    "created_at": "2026-07-16T14:14:02Z",
+    "api_environment_variable": "NEXT_PUBLIC_TERRACLASS_API_URL",
+    "browser_model_status": "Model ready",
+    "browser_console_errors": 0,
+    "browser_console_warnings": 0
+  },
+  "claim_boundary": {
+    "cloud_run_api_deployed": true,
+    "integrated_public_classifier_deployed": true,
+    "production_load_probe_completed": true,
+    "production_slo_established": false,
+    "scale_to_zero_cold_request_measured": false
+  }
+}

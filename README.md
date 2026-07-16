@@ -9,10 +9,11 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **14 July 2026 collaboration milestone — complete:** self-contained IIT Kanpur Colab notebook, four-entry GPU matrix, secure results export, notebook tests, and local pre-training verification.
 - **15 July 2026 IIT submission milestone — complete:** returned NVIDIA L4 bundle validated, all four GPU runs verified, ResNet18 selected through documented tradeoff analysis, results embedded into the notebook, and the executed notebook emailed to IIT Kanpur before the deadline.
 - **15 July 2026 inference-foundation milestone — complete:** hash-verified checkpoint promotion, restricted weights-only serving artifact, bounded and thread-safe inference layer, tests, and a 75-image local CPU latency benchmark.
-- **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive Tailwind CSS/Next.js interface, server-render tests, native production build, and public frontend deployment at [terraclass-land-use-classification.vercel.app](https://terraclass-land-use-classification.vercel.app). The integrated model API is not deployed yet.
+- **15 July 2026 application milestone — complete:** versioned FastAPI service, structured errors and request IDs, health/readiness probes, responsive Tailwind CSS/Next.js interface, server-render tests, native production build, and public frontend deployment at [terraclass-land-use-classification.vercel.app](https://terraclass-land-use-classification.vercel.app).
 - **16 July 2026 production-readiness and model-distribution milestone — complete:** non-root CPU container contract, checksum-pinned model distribution, bounded inference queue, Python/web/container CI, Cloud Run template, a zero-failure 60-request HTTP load benchmark, and a publicly downloadable ResNet18 release verified by byte count and SHA-256.
-- **16 July 2026 production-container milestone — complete:** public Linux/AMD64 GHCR image, semantic and source-commit tags pinned to one immutable OCI digest, successful public-pull verification, an SPDX SBOM, and SLSA v1 provenance. The Cloud Run API and end-to-end connection are not deployed yet.
-- **Next production handoff:** configure a personal Google Cloud project, deploy the exact OCI digest to Cloud Run, validate production load and cold starts, and then connect and redeploy the Vercel frontend.
+- **16 July 2026 production-container milestone — complete:** public Linux/AMD64 GHCR image, semantic and source-commit tags pinned to one immutable OCI digest, successful public-pull verification, an SPDX SBOM, and SLSA v1 provenance.
+- **16 July 2026 integrated-production milestone — complete:** the exact released digest is deployed to Google Cloud Run in Mumbai as revision `terraclass-api-v1-0-1` under a dedicated no-role runtime identity; public health, metadata, prediction, CORS, rollout, and 60-request load evidence pass; and the Vercel frontend reports `Model ready` against the live API at [terraclass-api-280836764570.asia-south1.run.app](https://terraclass-api-280836764570.asia-south1.run.app).
+- **Next production handoff:** measure a client request after a real scale-to-zero interval, add alerting and service-level objectives, and design drift/feedback telemetry without overstating the five-class dataset scope.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -58,8 +59,10 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/api_load_test_2026-07-16.json` records the real-model HTTP benchmark at concurrency 1, 2, and 4.
 - `reports/model_release_verification_2026-07-16.json` records the fresh unauthenticated download verification for the public model release.
 - `reports/container_release_verification_2026-07-16.json` records public OCI pull, digest, platform-image, SBOM, and provenance evidence.
-- `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and remaining deployment boundary.
-- `docs/PRODUCTION_INFERENCE.md` documents the 16 July container, model-release, CI, and load-test evidence.
+- `reports/cloud_run_load_test_2026-07-16.json` records the zero-failure production HTTP benchmark at concurrency 1, 2, and 4.
+- `reports/cloud_run_deployment_verification_2026-07-16.json` binds the Cloud Run revision, resolved image, resources, probes, prediction, CORS, load report, and Vercel deployment.
+- `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and integrated deployment.
+- `docs/PRODUCTION_INFERENCE.md` documents the 16 July container, model-release, Cloud Run, Vercel, CI, and load-test evidence.
 
 ## Local setup
 
@@ -141,9 +144,9 @@ npm ci
 npm run dev
 ```
 
-The interface uses `http://localhost:8000` by default. The public Vercel frontend deliberately
-shows the model as offline until a hosted build sets `NEXT_PUBLIC_TERRACLASS_API_URL` to the
-deployed API origin; see `docs/API_AND_WEB_APP.md`.
+The interface uses `http://localhost:8000` by default. The production Vercel build sets
+`NEXT_PUBLIC_TERRACLASS_API_URL` to the Cloud Run origin and reports `Model ready`; see
+`docs/API_AND_WEB_APP.md`.
 
 Create and verify the leakage-controlled manifest:
 

@@ -25,6 +25,8 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Real-model HTTP concurrency testing across 60 measured requests with unique request tracing and zero failures
 - Separate Python, web, container-contract, image-provenance, and SBOM workflow definitions
 - Public Linux/AMD64 OCI image with semantic/source tags, immutable digest verification, SPDX SBOM, and SLSA v1 provenance
+- Immutable-digest Cloud Run deployment with a dedicated no-role runtime identity, bounded CPU/memory/concurrency, scale-to-zero, startup/liveness probes, restricted Vercel CORS, and production request evidence
+- Integrated Vercel-to-Cloud Run deployment verified through browser readiness, a correct production prediction, and a zero-failure 60-request production load probe
 
 ## Supported numerical claim
 
@@ -40,7 +42,7 @@ Optional serving bullet:
 
 Optional application bullet:
 
-> Engineered a versioned FastAPI inference service around a PyTorch ResNet18 model and deployed its responsive Tailwind CSS/Next.js frontend to Vercel, with bounded uploads, structured errors, health probes, request tracing, ranked probabilities, and automated API/render tests.
+> Engineered and deployed an end-to-end ResNet18 inference application using FastAPI on Google Cloud Run and a responsive Tailwind CSS/Next.js frontend on Vercel, with bounded uploads, structured errors, health probes, request tracing, ranked probabilities, and automated API/render tests.
 
 Optional production-readiness bullet:
 
@@ -54,6 +56,10 @@ Optional container-release bullet:
 
 > Published a public Linux/AMD64 ML inference container to GHCR, pinned semantic and source-commit tags to one immutable OCI digest, and verified attached SPDX SBOM and SLSA v1 provenance attestations.
 
+Optional production-deployment bullet:
+
+> Deployed the immutable ResNet18 container to Cloud Run under a dedicated least-privilege runtime identity, with scale-to-zero, bounded concurrency, health probes, and origin-restricted CORS; connected the Vercel UI and completed a 60-request production load probe with zero failures and 365.2 ms p95 latency at concurrency four.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -62,5 +68,6 @@ The model/version contract, input validation, restricted artifact loading, local
 concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
 workflow definitions, health probes, and public Vercel frontend are complete. GitHub CI has built the
 artifact-free runtime container and passed the Python and web gates. The public, checksum-verified
-model release and model-bearing production image are complete. Cloud Run API deployment, production
-SLOs, and drift-ready telemetry remain future deliverables and must not yet be claimed.
+model release, model-bearing production image, Cloud Run API, production load probe, and integrated
+Vercel deployment are complete. A scale-to-zero client-request measurement, production SLOs,
+alerting, and drift-ready telemetry remain future deliverables and must not yet be claimed.

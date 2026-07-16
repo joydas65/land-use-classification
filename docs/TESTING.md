@@ -54,8 +54,9 @@ critical advisory. The complete tree currently reports one low and five moderate
 findings. The production tree reports two moderate findings inherited from Next.js's embedded
 PostCSS version; npm offered only a breaking downgrade, so they are documented rather than hidden
 or force-fixed.
-TerraClass does not accept user-authored CSS, but the advisory must be reviewed again before the
-integrated model API is deployed.
+TerraClass does not accept user-authored CSS. The findings were reviewed for the integrated
+deployment and remain accepted moderate transitive risk; they must be rechecked on dependency
+updates.
 
 The 16 July local Python audit initially identified pip 25.1.1 as vulnerable. After upgrading to
 pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities; the local
@@ -119,3 +120,25 @@ PYTHONPATH=src python scripts/load_test_api.py \
 The committed 16 July report contains 60 measured requests, zero failures, 52.9 requests/second
 peak throughput, and 84.1 ms p95 latency at concurrency 4. It is local Apple Silicon steady-state
 evidence and must not be described as a Cloud Run benchmark or production SLO.
+
+The same protocol was run against the public Cloud Run service:
+
+```bash
+PYTHONPATH=src python scripts/load_test_api.py \
+  --base-url https://terraclass-api-280836764570.asia-south1.run.app \
+  --image data/raw/UCMerced_LandUse/Images/agricultural/agricultural06.tif \
+  --content-type image/tiff \
+  --concurrency 1 2 4 \
+  --warmup-requests 5 \
+  --requests-per-level 20 \
+  --timeout-seconds 30 \
+  --output reports/cloud_run_load_test_2026-07-16.json
+```
+
+The production report contains 60 measured requests and zero failures. Peak throughput was 13.3
+requests/second; concurrency-4 p95 total latency was 365.2 ms. The deployment audit additionally
+checks the exact OCI/platform digests, Cloud Run revision/resources/probes, HTTP 200 health and model
+metadata, a dedicated runtime identity with no project roles, correct 99.30%-confidence production
+prediction, origin-specific CORS, ready Vercel deployment, `Model ready` browser status, and zero
+browser console warnings/errors. These are
+point-in-time deployment measurements, not availability guarantees or a production SLO.

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "measured_at": "2026-07-16T14:35:26.226834+00:00",
+  "target": "https://terraclass-api-280836764570.asia-south1.run.app",
+  "model": {
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "serving_artifact_sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523"
+  },
+  "environment": {
+    "python": "3.13.5",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "processor": "arm"
+  },
+  "protocol": {
+    "image_name": "agricultural06.tif",
+    "image_sha256": "a9eac59d5d176cdd2099c2486c0938c5f12d6b507274f0ee90c1f212967a99f2",
+    "image_bytes": 211424,
+    "content_type": "image/tiff",
+    "concurrency_levels": [
+      1,
+      2,
+      4
+    ],
+    "warmup_requests": 5,
+    "requests_per_level": 20,
+    "timeout_seconds": 30.0
+  },
+  "levels": [
+    {
+      "concurrency": 1,
+      "requests": 20,
+      "failures": 0,
+      "elapsed_seconds": 3.9068294998724014,
+      "throughput_requests_per_second": 5.11924055059306,
+      "total_latency_ms": {
+        "mean": 195.09733950253576,
+        "p50": 190.82285393960774,
+        "p95": 227.847053820733,
+        "minimum": 169.29833311587572,
+        "maximum": 260.0277499295771
+      },
+      "model_pipeline_latency_ms": {
+        "mean": 27.204924100004746,
+        "p50": 26.229348000015307,
+        "p95": 32.802856300016,
+        "minimum": 23.908046000002514,
+        "maximum": 32.91249200000834
+      }
+    },
+    {
+      "concurrency": 2,
+      "requests": 20,
+      "failures": 0,
+      "elapsed_seconds": 2.257875540992245,
+      "throughput_requests_per_second": 8.85788416451458,
+      "total_latency_ms": {
+        "mean": 215.54582914104685,
+        "p50": 211.4396665710956,
+        "p95": 252.99557704711333,
+        "minimum": 165.7922500744462,
+        "maximum": 268.4820417780429
+      },
+      "model_pipeline_latency_ms": {
+        "mean": 31.745300799998688,
+        "p50": 30.19484150000551,
+        "p95": 44.777632750007974,
+        "minimum": 24.7549369999831,
+        "maximum": 52.50211599999943
+      }
+    },
+    {
+      "concurrency": 4,
+      "requests": 20,
+      "failures": 0,
+      "elapsed_seconds": 1.4995747080538422,
+      "throughput_requests_per_second": 13.337114778333472,
+      "total_latency_ms": {
+        "mean": 280.0342353992164,
+        "p50": 291.2037289934233,
+        "p95": 365.17565560061485,
+        "minimum": 187.06137500703335,
+        "maximum": 383.3940830081701
+      },
+      "model_pipeline_latency_ms": {
+        "mean": 62.87623734999812,
+        "p50": 75.72541700000102,
+        "p95": 90.26426684998796,
+        "minimum": 23.315709000002016,
+        "maximum": 91.60131299998397
+      }
+    }
+  ]
+}

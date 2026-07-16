@@ -11,6 +11,7 @@ spec:
         run.googleapis.com/cpu-throttling: "true"
         run.googleapis.com/startup-cpu-boost: "true"
     spec:
+      serviceAccountName: terraclass-runtime@PROJECT_ID.iam.gserviceaccount.com
       containerConcurrency: 4
       timeoutSeconds: 30
       containers:

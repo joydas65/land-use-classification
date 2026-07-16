@@ -33,7 +33,29 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["production_readiness"]["local_http_concurrency_levels"] == [1, 2, 4]
     assert report.observed["production_readiness"]["local_http_peak_throughput_rps"] > 0
     assert report.observed["production_readiness"]["local_http_concurrency_4_p95_ms"] > 0
-    assert report.observed["production_readiness"]["production_api_deployed"] is False
+    assert report.observed["production_readiness"]["production_api_deployed"] is True
+    assert (
+        report.observed["production_readiness"]["cloud_run_service_url"]
+        == "https://terraclass-api-280836764570.asia-south1.run.app"
+    )
+    assert report.observed["production_readiness"]["cloud_run_revision"] == (
+        "terraclass-api-v1-0-1"
+    )
+    assert report.observed["production_readiness"]["cloud_run_region"] == "asia-south1"
+    assert (
+        report.observed["production_readiness"]["cloud_run_rollout_container_healthy_seconds"]
+        == 18.02
+    )
+    assert (
+        report.observed["production_readiness"]["cloud_run_scale_to_zero_cold_request_measured"]
+        is False
+    )
+    assert report.observed["production_readiness"]["cloud_run_http_warmup_requests"] == 5
+    assert report.observed["production_readiness"]["cloud_run_http_measured_requests"] == 60
+    assert report.observed["production_readiness"]["cloud_run_http_failures"] == 0
+    assert report.observed["production_readiness"]["cloud_run_http_peak_throughput_rps"] > 0
+    assert report.observed["production_readiness"]["cloud_run_http_concurrency_4_p95_ms"] > 0
+    assert report.observed["production_readiness"]["production_slo_established"] is False
     assert "29457675941" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
     )
@@ -53,6 +75,7 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         "tailwind_css": True,
         "private_frontend_preview": True,
         "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
-        "production_api_deployed": False,
-        "integrated_deployment_claimed": False,
+        "production_api_url": "https://terraclass-api-280836764570.asia-south1.run.app",
+        "production_api_deployed": True,
+        "integrated_deployment_claimed": True,
     }

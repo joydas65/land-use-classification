@@ -88,6 +88,6 @@ PYTHONPATH=src python scripts/benchmark_inference.py \
 The 15 July application phase added a typed HTTP API, responsive browser interface, request IDs,
 structured logs, and health/readiness probes. The 16 July phase added the non-root container
 contract, bounded inference queue, published model release, CI definitions, Cloud Run template, and
-real HTTP concurrency benchmark; see `docs/PRODUCTION_INFERENCE.md`. Publishing the production
-image, deploying the API, collecting Cloud Run evidence, and connecting Vercel remain the next
-handoff.
+real HTTP concurrency benchmark. Later on 16 July, the production image was published, its exact
+digest was deployed to Cloud Run, production evidence was collected, and Vercel was connected; see
+`docs/PRODUCTION_INFERENCE.md` for the completed deployment and remaining claim boundary.

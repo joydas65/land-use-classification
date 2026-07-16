@@ -1,4 +1,4 @@
-# API and Browser Application — 15 July 2026
+# API and Browser Application — 15–16 July 2026
 
 ## Outcome
 
@@ -58,7 +58,7 @@ defaults to `http://localhost:8000`.
 - ESLint, the production vinext build, and the native Next.js build used by Vercel pass.
 - A real-artifact smoke test loaded the hash-pinned ResNet18 and classified `beach00.tif` as beach
   with 99.68% confidence. The cold request took 2,194.6 ms and the immediate warm request took
-  10.6 ms, so cold-start behavior remains an explicit deployment test requirement.
+  10.6 ms in the local process.
 - The complete dependency audit has no high or critical advisory. It reports one low and five
   moderate transitive findings. The production-only tree has two moderate findings in the
   Next.js-embedded PostCSS version; npm offers no non-breaking resolution. The findings are recorded
@@ -66,21 +66,27 @@ defaults to `http://localhost:8000`.
 - The 16 July real-model HTTP probe completed 60 measured requests with zero failures. Peak local
   throughput was 52.9 requests/second at concurrency 2; concurrency-4 p95 end-to-end latency was
   84.1 ms. This is local steady-state evidence, not a production SLO.
+- The production Cloud Run probe completed another 60 measured requests with zero failures. From
+  the test client in India, peak throughput was 13.3 requests/second and concurrency-4 p95 total
+  latency was 365.2 ms. The hardened rollout made the container healthy in 18.02 seconds with a
+  cached image. These are deployment measurements, not an established service-level objective or a
+  client-request measurement after scale-to-zero.
 
 ## Deployment boundary
 
 The Tailwind CSS/Next.js frontend is publicly deployed on Vercel at
 `https://terraclass-land-use-classification.vercel.app`. An owner-private Sites preview is also
-retained at `https://terraclass-joydas65.joydas-0111.chatgpt.site`. Both builds are useful for
-reviewing the responsive interface, but classification remains unavailable because the production
-model API does not exist yet. The project is therefore not yet claimed as a deployed integrated
-system.
+retained at `https://terraclass-joydas65.joydas-0111.chatgpt.site`. The production
+`NEXT_PUBLIC_TERRACLASS_API_URL` points to
+`https://terraclass-api-280836764570.asia-south1.run.app`, where Cloud Run serves the exact public
+OCI digest recorded in the release evidence. CORS accepts only the stable Vercel origin. A browser
+verification returned `Model ready` with no console warnings or errors, while a direct production
+request correctly classified `agricultural06.tif` with 99.30% confidence. The project can therefore
+be described as a deployed integrated system within its stated five-class scope.
 
-The serving artifact remains intentionally outside Git. Integrated deployment requires a container
-image for the API, a hash-verified artifact distribution path, an HTTPS API origin, and
-environment-specific concurrency, memory, latency, and cold-start evidence. The repository now has
-the container, release, CI, capacity, and Cloud Run configuration contracts. Its model release is
-publicly downloadable and checksum-verified, and the production image is publicly pullable from
-GHCR by immutable OCI digest with an SPDX SBOM and SLSA provenance. The API is not yet deployed. The
-public frontend may be presented as a deployed UI, but it must not be presented as a working
-end-to-end classifier until that work passes.
+The serving artifact remains intentionally outside Git and is fetched only through its
+byte-count/SHA-256 contract while building the production image. The public model release,
+Linux/AMD64 container, SPDX SBOM, SLSA provenance, Cloud Run revision, production load report, and
+Vercel deployment are now cross-referenced by versioned evidence. A true client request after the
+service has scaled to zero and longer-term service-level objectives remain future measurements; the
+current results must not be promoted into an availability or cold-start guarantee.

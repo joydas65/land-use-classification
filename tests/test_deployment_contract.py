@@ -27,6 +27,7 @@ def test_cloud_run_template_matches_api_capacity_and_frontend_origin(project_roo
     template = (project_root / "deploy/cloud-run-service.template.yaml").read_text(encoding="utf-8")
     assert "containerConcurrency: 4" in template
     assert "memory: 2Gi" in template
+    assert "serviceAccountName: terraclass-runtime@PROJECT_ID.iam.gserviceaccount.com" in template
     assert "TERRACLASS_MAX_CONCURRENT_INFERENCES" in template
     assert "https://terraclass-land-use-classification.vercel.app" in template
     assert "/api/v1/health/ready" in template
@@ -79,6 +80,52 @@ def test_public_container_release_has_digest_sbom_and_provenance(project_root: P
     assert {layer["predicate_type"] for layer in evidence["attestation_manifest"]["layers"]} == {
         "https://spdx.dev/Document",
         "https://slsa.dev/provenance/v1",
+    }
+
+
+def test_cloud_run_and_vercel_evidence_bind_the_released_image(project_root: Path) -> None:
+    release = json.loads(
+        (project_root / "reports/container_release_verification_2026-07-16.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    deployment = json.loads(
+        (project_root / "reports/cloud_run_deployment_verification_2026-07-16.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    load_report = json.loads(
+        (project_root / "reports/cloud_run_load_test_2026-07-16.json").read_text(encoding="utf-8")
+    )
+    cloud_run = deployment["cloud_run"]
+    assert cloud_run["ready"] is True
+    assert cloud_run["public_access"] is True
+    assert cloud_run["traffic_percent"] == 100
+    assert cloud_run["revision"] == "terraclass-api-v1-0-1"
+    assert cloud_run["deployed_oci_index_digest"] == release["oci_index"]["digest"]
+    assert cloud_run["resolved_linux_amd64_digest"] == release["image"]["digest"]
+    assert cloud_run["runtime_identity"] == {
+        "service_account": (
+            "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com"
+        ),
+        "project_roles": [],
+        "replaced_default_identity_role": "roles/editor",
+    }
+    assert cloud_run["resources"]["min_instances"] == 0
+    assert cloud_run["resources"]["max_instances"] == 3
+    assert deployment["api_verification"]["prediction"]["predicted_class"] == "agricultural"
+    assert (
+        deployment["api_verification"]["cors_preflight"]["allowed_origin"]
+        == (deployment["vercel"]["production_alias"])
+    )
+    assert sum(level["requests"] for level in load_report["levels"]) == 60
+    assert sum(level["failures"] for level in load_report["levels"]) == 0
+    assert deployment["claim_boundary"] == {
+        "cloud_run_api_deployed": True,
+        "integrated_public_classifier_deployed": True,
+        "production_load_probe_completed": True,
+        "production_slo_established": False,
+        "scale_to_zero_cold_request_measured": False,
     }
 
 

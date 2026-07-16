@@ -4,9 +4,9 @@
 
 The verified ResNet18 inference service now has a portable production contract and a public
 Linux/AMD64 image: a non-root CPU container, checksum-pinned model distribution, bounded request
-capacity, automated CI, an SPDX SBOM, SLSA v1 provenance, and a repeatable HTTP load test. The API is
-**not yet deployed** and the public Vercel interface continues to show the model as offline. This
-keeps the portfolio claim aligned with what a visitor can actually use.
+capacity, automated CI, an SPDX SBOM, SLSA v1 provenance, and repeatable local and production HTTP
+load tests. The exact released image is deployed to Cloud Run, and the public Vercel interface is
+connected to it and reports `Model ready`.
 
 ## Why the API is separate from Vercel
 
@@ -87,16 +87,53 @@ manifest `sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47
 and an attestation manifest with two in-toto layers: an SPDX document and SLSA provenance v1. The
 complete registry evidence is versioned in `reports/container_release_verification_2026-07-16.json`.
 
-Cloud Run deployment was not attempted from the locally configured Google Cloud context because it
-contains only a corporate account and project. A personal Google Cloud project with billing enabled
-must be selected before creating any service or IAM binding.
+## Cloud Run deployment
 
-## Remaining production handoff
+The personal Google Cloud project `land-use-classification-502614` has billing enabled and is kept
+in a separate local gcloud configuration to prevent cross-project changes. Cloud Run service
+`terraclass-api` is deployed in Mumbai (`asia-south1`) at:
 
-1. Configure a personal Google Cloud project and deploy the verified OCI digest to Cloud Run.
-2. Run the same load probe against the HTTPS Cloud Run URL and record cold-start behavior.
-3. Set `NEXT_PUBLIC_TERRACLASS_API_URL`, redeploy Vercel, verify CORS and predictions, and only then
-   change the project status to a deployed end-to-end classifier.
+`https://terraclass-api-280836764570.asia-south1.run.app`
 
-The repository does not claim production API deployment, production SLOs, or an integrated public
-classifier before all three steps pass.
+Revision `terraclass-api-v1-0-1` serves 100% of traffic and resolves the released OCI index to the
+verified Linux/AMD64 image digest
+`sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e`.
+The revision uses 2 vCPU, 2 GiB memory, concurrency 4, one protected model-execution slot,
+scale-to-zero, a maximum of three instances, CPU startup boost, and the versioned readiness and
+liveness probes. It runs as the dedicated
+`terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com` identity, which has no
+project IAM roles. This replaces the default compute identity after the audit found it held
+`roles/editor`. Public invocation is limited to the service-level `roles/run.invoker` binding for
+`allUsers`. Public readiness and model-metadata requests returned HTTP 200.
+
+The final hardened revision reused the imported image, became ready in 21.3 seconds, and made the
+container healthy in 18.02 seconds. This describes deployment initialization, not the latency of a
+client request after the service has remained idle long enough to scale to zero.
+
+A production prediction for `agricultural06.tif` returned `agricultural` with 99.30% confidence,
+matching the expected class and the pinned model identity. The controlled production load probe then
+completed five warm-up requests and 60 measured requests without failure:
+
+| Concurrency | Requests | Throughput | p50 total latency | p95 total latency |
+|---:|---:|---:|---:|---:|
+| 1 | 20 | 5.1 requests/second | 190.8 ms | 227.8 ms |
+| 2 | 20 | 8.9 requests/second | 211.4 ms | 253.0 ms |
+| 4 | 20 | **13.3 requests/second** | 291.2 ms | **365.2 ms** |
+
+These measurements include the public network path from the test client in India and are not a
+service-level objective. Exact results are stored in
+`reports/cloud_run_load_test_2026-07-16.json`.
+
+## Vercel integration and claim boundary
+
+Vercel production deployment `dpl_A7JEXaCo8BeHK5v7drCUFMeekWop` is ready and aliased to
+`https://terraclass-land-use-classification.vercel.app`. Its
+`NEXT_PUBLIC_TERRACLASS_API_URL` targets the Cloud Run service. The API's preflight response allows
+the exact Vercel origin and the required GET, POST, and OPTIONS methods. A deployed-browser check
+showed `Model ready` with no console warnings or errors.
+
+The project can now be presented as a deployed end-to-end five-class classifier. It must not be
+presented as a universal satellite classifier or as having a production availability/latency SLO.
+A true scale-to-zero cold-request measurement, alerting, and drift/feedback telemetry are the next
+production-hardening tasks. The cross-service evidence and explicit claim boundary are versioned in
+`reports/cloud_run_deployment_verification_2026-07-16.json`.

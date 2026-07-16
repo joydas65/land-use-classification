@@ -106,6 +106,10 @@ def audit_project(project_root: str | Path) -> AuditReport:
     )
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
     api_load_report_path = root / "reports/api_load_test_2026-07-16.json"
+    cloud_run_load_report_path = root / "reports/cloud_run_load_test_2026-07-16.json"
+    cloud_run_deployment_verification_path = (
+        root / "reports/cloud_run_deployment_verification_2026-07-16.json"
+    )
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
     api_document_path = root / "docs/API_AND_WEB_APP.md"
     production_document_path = root / "docs/PRODUCTION_INFERENCE.md"
@@ -622,6 +626,215 @@ def audit_project(project_root: str | Path) -> AuditReport:
             if level.get("throughput_requests_per_second", 0) <= 0:
                 report.errors.append("HTTP load level throughput must be positive")
 
+    cloud_load_levels: list[dict[str, Any]] = []
+    if not cloud_run_load_report_path.is_file():
+        report.errors.append("Versioned Cloud Run load report is missing")
+        cloud_run_load_report: dict[str, Any] = {}
+    else:
+        cloud_run_load_report = json.loads(cloud_run_load_report_path.read_text(encoding="utf-8"))
+        if cloud_run_load_report.get("schema_version") != 1:
+            report.errors.append("Cloud Run load report schema version differs from 1")
+        if (
+            cloud_run_load_report.get("target")
+            != "https://terraclass-api-280836764570.asia-south1.run.app"
+        ):
+            report.errors.append("Cloud Run load report target differs from production")
+        cloud_load_model = cloud_run_load_report.get("model", {})
+        if serving_config is not None and cloud_load_model != {
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+        }:
+            report.errors.append("Cloud Run load model identity differs from serving config")
+        cloud_load_protocol = cloud_run_load_report.get("protocol", {})
+        if cloud_load_protocol.get("concurrency_levels") != [1, 2, 4]:
+            report.errors.append("Cloud Run load report must cover concurrency 1, 2, and 4")
+        if cloud_load_protocol.get("warmup_requests") != 5:
+            report.errors.append("Cloud Run load report must contain five warm-up requests")
+        if cloud_load_protocol.get("requests_per_level") != 20:
+            report.errors.append("Cloud Run load report must contain 20 requests per level")
+        cloud_load_levels = cloud_run_load_report.get("levels", [])
+        if len(cloud_load_levels) != 3:
+            report.errors.append("Cloud Run load report must contain three concurrency levels")
+        elif any(level.get("failures") != 0 for level in cloud_load_levels):
+            report.errors.append("Cloud Run load report contains a failed request")
+        for level in cloud_load_levels:
+            latency = level.get("total_latency_ms", {})
+            if level.get("requests") != 20:
+                report.errors.append("Cloud Run load level does not contain 20 measured requests")
+            if not 0 < latency.get("p50", 0) <= latency.get("p95", 0):
+                report.errors.append("Cloud Run load level p50/p95 latency is inconsistent")
+            if level.get("throughput_requests_per_second", 0) <= 0:
+                report.errors.append("Cloud Run load level throughput must be positive")
+
+    if not cloud_run_deployment_verification_path.is_file():
+        report.errors.append("Cloud Run deployment verification report is missing")
+        cloud_run_deployment: dict[str, Any] = {}
+    else:
+        cloud_run_deployment = json.loads(
+            cloud_run_deployment_verification_path.read_text(encoding="utf-8")
+        )
+        if cloud_run_deployment.get("schema_version") != 1:
+            report.errors.append("Cloud Run deployment schema version differs from 1")
+        if cloud_run_deployment.get("verified_on") != "2026-07-16":
+            report.errors.append("Cloud Run deployment date differs from 16 July 2026")
+        cloud_run = cloud_run_deployment.get("cloud_run", {})
+        if {
+            "project_id": cloud_run.get("project_id"),
+            "project_number": cloud_run.get("project_number"),
+            "region": cloud_run.get("region"),
+            "service": cloud_run.get("service"),
+            "revision": cloud_run.get("revision"),
+            "service_url": cloud_run.get("service_url"),
+            "ready": cloud_run.get("ready"),
+            "public_access": cloud_run.get("public_access"),
+            "traffic_percent": cloud_run.get("traffic_percent"),
+        } != {
+            "project_id": "land-use-classification-502614",
+            "project_number": "280836764570",
+            "region": "asia-south1",
+            "service": "terraclass-api",
+            "revision": "terraclass-api-v1-0-1",
+            "service_url": "https://terraclass-api-280836764570.asia-south1.run.app",
+            "ready": True,
+            "public_access": True,
+            "traffic_percent": 100,
+        }:
+            report.errors.append("Cloud Run service identity/readiness evidence is inconsistent")
+        if cloud_run.get("deployed_oci_index_digest") != container_release_verification.get(
+            "oci_index", {}
+        ).get("digest") or cloud_run.get(
+            "resolved_linux_amd64_digest"
+        ) != container_release_verification.get("image", {}).get("digest"):
+            report.errors.append("Cloud Run deployment does not bind the released container")
+        if cloud_run.get("runtime_identity") != {
+            "service_account": (
+                "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com"
+            ),
+            "project_roles": [],
+            "replaced_default_identity_role": "roles/editor",
+        }:
+            report.errors.append("Cloud Run runtime identity is not least-privilege evidence")
+        if (
+            cloud_run.get("public_invoker_role") != "roles/run.invoker"
+            or cloud_run.get("public_invoker_member") != "allUsers"
+        ):
+            report.errors.append("Cloud Run public invoker evidence is inconsistent")
+        if cloud_run.get("resources") != {
+            "cpu": "2",
+            "memory": "2Gi",
+            "container_concurrency": 4,
+            "min_instances": 0,
+            "max_instances": 3,
+            "timeout_seconds": 30,
+            "cpu_throttling": True,
+            "startup_cpu_boost": True,
+        }:
+            report.errors.append("Cloud Run resources differ from the production contract")
+        if cloud_run.get("capacity") != {
+            "max_concurrent_inferences": 1,
+            "queue_timeout_seconds": 5,
+        }:
+            report.errors.append("Cloud Run inference capacity differs from the API contract")
+        if (
+            cloud_run.get("cors_allowed_origin")
+            != "https://terraclass-land-use-classification.vercel.app"
+        ):
+            report.errors.append("Cloud Run CORS origin differs from the production frontend")
+        initial_rollout = cloud_run.get("initial_rollout", {})
+        for duration_name in (
+            "revision_ready_seconds",
+            "container_healthy_seconds",
+        ):
+            if initial_rollout.get(duration_name, 0) <= 0:
+                report.errors.append(f"Cloud Run rollout duration is invalid: {duration_name}")
+        if initial_rollout.get("image_import_cached") is not True:
+            report.errors.append("Hardened Cloud Run revision did not record cached image import")
+        if initial_rollout.get("scale_to_zero_cold_request_measured") is not False:
+            report.errors.append("Cloud Run cold-request claim boundary is inconsistent")
+        cloud_api = cloud_run_deployment.get("api_verification", {})
+        if serving_config is not None and {
+            "readiness_status_code": cloud_api.get("readiness_status_code"),
+            "model_metadata_status_code": cloud_api.get("model_metadata_status_code"),
+            "model_id": cloud_api.get("model_id"),
+            "model_version": cloud_api.get("model_version"),
+            "serving_artifact_sha256": cloud_api.get("serving_artifact_sha256"),
+        } != {
+            "readiness_status_code": 200,
+            "model_metadata_status_code": 200,
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+        }:
+            report.errors.append("Cloud Run API identity/health evidence is inconsistent")
+        prediction = cloud_api.get("prediction", {})
+        if (
+            prediction.get("status_code") != 200
+            or prediction.get("expected_class") != "agricultural"
+            or prediction.get("predicted_class") != "agricultural"
+            or not 0 < prediction.get("confidence", 0) <= 1
+        ):
+            report.errors.append("Cloud Run production prediction evidence is invalid")
+        cors = cloud_api.get("cors_preflight", {})
+        if (
+            cors.get("status_code") != 200
+            or cors.get("allowed_origin") != "https://terraclass-land-use-classification.vercel.app"
+            or set(cors.get("allowed_methods", [])) != {"GET", "POST", "OPTIONS"}
+        ):
+            report.errors.append("Cloud Run production CORS evidence is invalid")
+        cloud_measured_requests = sum(int(level.get("requests", 0)) for level in cloud_load_levels)
+        cloud_failures = sum(int(level.get("failures", 0)) for level in cloud_load_levels)
+        cloud_peak_throughput = max(
+            (level.get("throughput_requests_per_second", 0) for level in cloud_load_levels),
+            default=0,
+        )
+        cloud_concurrency_4_p95 = next(
+            (
+                level.get("total_latency_ms", {}).get("p95")
+                for level in cloud_load_levels
+                if level.get("concurrency") == 4
+            ),
+            None,
+        )
+        if (
+            cloud_api.get("load_report") != "reports/cloud_run_load_test_2026-07-16.json"
+            or cloud_api.get("warmup_requests") != 5
+            or cloud_api.get("measured_requests") != cloud_measured_requests
+            or cloud_api.get("failures") != cloud_failures
+            or cloud_api.get("peak_throughput_requests_per_second") != cloud_peak_throughput
+            or cloud_api.get("concurrency_4_p95_total_latency_ms") != cloud_concurrency_4_p95
+        ):
+            report.errors.append("Cloud Run load summary differs from the versioned load report")
+        vercel = cloud_run_deployment.get("vercel", {})
+        if {
+            "project": vercel.get("project"),
+            "production_alias": vercel.get("production_alias"),
+            "target": vercel.get("target"),
+            "status": vercel.get("status"),
+            "api_environment_variable": vercel.get("api_environment_variable"),
+            "browser_model_status": vercel.get("browser_model_status"),
+            "browser_console_errors": vercel.get("browser_console_errors"),
+            "browser_console_warnings": vercel.get("browser_console_warnings"),
+        } != {
+            "project": "terraclass-land-use-classification",
+            "production_alias": "https://terraclass-land-use-classification.vercel.app",
+            "target": "production",
+            "status": "ready",
+            "api_environment_variable": "NEXT_PUBLIC_TERRACLASS_API_URL",
+            "browser_model_status": "Model ready",
+            "browser_console_errors": 0,
+            "browser_console_warnings": 0,
+        }:
+            report.errors.append("Vercel integration evidence is inconsistent")
+        if cloud_run_deployment.get("claim_boundary") != {
+            "cloud_run_api_deployed": True,
+            "integrated_public_classifier_deployed": True,
+            "production_load_probe_completed": True,
+            "production_slo_established": False,
+            "scale_to_zero_cold_request_measured": False,
+        }:
+            report.errors.append("Integrated deployment claim boundary is inconsistent")
+
     if not api_source_path.is_file():
         report.errors.append("Typed inference API source is missing")
         api_source = ""
@@ -684,6 +897,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             (
                 "containerConcurrency: 4",
                 "memory: 2Gi",
+                "serviceAccountName: terraclass-runtime@PROJECT_ID.iam.gserviceaccount.com",
                 "TERRACLASS_MAX_CONCURRENT_INFERENCES",
                 "/api/v1/health/ready",
             ),
@@ -935,7 +1149,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "NEXT_PUBLIC_TERRACLASS_API_URL",
         "https://terraclass-land-use-classification.vercel.app",
         "Tailwind CSS",
-        "not yet claimed as a deployed integrated system",
+        "deployed integrated system",
+        "https://terraclass-api-280836764570.asia-south1.run.app",
+        "Model ready",
     ):
         if token not in api_document_normalized:
             report.errors.append(f"Application documentation token is missing: {token}")
@@ -945,7 +1161,6 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "60 measured requests",
         "52.9 requests/second",
         "84.1 ms",
-        "not yet deployed",
         "model-v1.0.0",
         "44,795,275 bytes",
         "fresh unauthenticated HTTPS download",
@@ -954,7 +1169,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73",
         "SPDX",
         "SLSA provenance v1",
-        "personal Google Cloud project",
+        "land-use-classification-502614",
+        "terraclass-api-v1-0-1",
+        "https://terraclass-api-280836764570.asia-south1.run.app",
+        "13.3 requests/second",
+        "365.2 ms",
+        "scale-to-zero",
+        "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com",
+        "dpl_A7JEXaCo8BeHK5v7drCUFMeekWop",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")
@@ -1108,7 +1330,42 @@ def audit_project(project_root: str | Path) -> AuditReport:
                 ),
                 None,
             ),
-            "production_api_deployed": False,
+            "production_api_deployed": cloud_run_deployment.get("claim_boundary", {}).get(
+                "cloud_run_api_deployed"
+            ),
+            "cloud_run_service_url": cloud_run_deployment.get("cloud_run", {}).get("service_url"),
+            "cloud_run_revision": cloud_run_deployment.get("cloud_run", {}).get("revision"),
+            "cloud_run_region": cloud_run_deployment.get("cloud_run", {}).get("region"),
+            "cloud_run_rollout_container_healthy_seconds": cloud_run_deployment.get("cloud_run", {})
+            .get("initial_rollout", {})
+            .get("container_healthy_seconds"),
+            "cloud_run_scale_to_zero_cold_request_measured": cloud_run_deployment.get(
+                "claim_boundary", {}
+            ).get("scale_to_zero_cold_request_measured"),
+            "cloud_run_http_warmup_requests": cloud_run_load_report.get("protocol", {}).get(
+                "warmup_requests"
+            ),
+            "cloud_run_http_measured_requests": sum(
+                int(level.get("requests", 0)) for level in cloud_load_levels
+            ),
+            "cloud_run_http_failures": sum(
+                int(level.get("failures", 0)) for level in cloud_load_levels
+            ),
+            "cloud_run_http_peak_throughput_rps": max(
+                (level.get("throughput_requests_per_second", 0) for level in cloud_load_levels),
+                default=0,
+            ),
+            "cloud_run_http_concurrency_4_p95_ms": next(
+                (
+                    level.get("total_latency_ms", {}).get("p95")
+                    for level in cloud_load_levels
+                    if level.get("concurrency") == 4
+                ),
+                None,
+            ),
+            "production_slo_established": cloud_run_deployment.get("claim_boundary", {}).get(
+                "production_slo_established"
+            ),
         },
         "application_layer": {
             "api_routes": list(expected_api_routes),
@@ -1118,8 +1375,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "tailwind_css": True,
             "private_frontend_preview": True,
             "public_frontend_url": "https://terraclass-land-use-classification.vercel.app",
-            "production_api_deployed": False,
-            "integrated_deployment_claimed": False,
+            "production_api_url": cloud_run_deployment.get("cloud_run", {}).get("service_url"),
+            "production_api_deployed": cloud_run_deployment.get("claim_boundary", {}).get(
+                "cloud_run_api_deployed"
+            ),
+            "integrated_deployment_claimed": cloud_run_deployment.get("claim_boundary", {}).get(
+                "integrated_public_classifier_deployed"
+            ),
         },
     }
     return report
