@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "service": {
+    "project_id": "land-use-classification-502614",
+    "region": "asia-south1",
+    "service_name": "terraclass-api",
+    "service_version": "1.1.0",
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0"
+  },
+  "telemetry": {
+    "event": "prediction_observation",
+    "allowlisted_fields": [
+      "event",
+      "schema_version",
+      "request_id",
+      "model_id",
+      "model_version",
+      "predicted_class",
+      "confidence",
+      "confidence_bucket",
+      "inference_latency_ms",
+      "image_width",
+      "image_height",
+      "payload_bytes",
+      "content_type"
+    ],
+    "prohibited_fields": [
+      "filename",
+      "image_bytes",
+      "image_sha256",
+      "remote_ip",
+      "user_agent"
+    ],
+    "image_content_retained": false
+  },
+  "candidate_objectives": {
+    "status": "defined_not_yet_established",
+    "availability": {
+      "target_ratio": 0.99,
+      "rolling_window_days": 30,
+      "good_event": "container request completes without a 5xx response",
+      "excludes": "client-caused 4xx responses"
+    },
+    "steady_state_request_latency": {
+      "metric": "run.googleapis.com/request_latencies",
+      "percentile": 95,
+      "threshold_ms": 1000,
+      "evaluation_window_seconds": 300,
+      "includes_container_startup": false
+    },
+    "cold_request_latency": {
+      "measurement": "client-observed total request time after verified scale from zero",
+      "threshold_ms": 30000,
+      "evidence_report": "reports/cloud_run_scale_to_zero_2026-07-17.json"
+    }
+  },
+  "alert_policy_templates": [
+    "deploy/monitoring/cloud-run-5xx-ratio.json",
+    "deploy/monitoring/cloud-run-p95-latency.json"
+  ],
+  "drift_readiness": {
+    "status": "telemetry_ready_not_drift_validated",
+    "review_floor_predictions": 100,
+    "observable_signals": [
+      "predicted_class_distribution",
+      "confidence_bucket_distribution",
+      "inference_latency_ms"
+    ],
+    "required_before_drift_claim": [
+      "representative production reference window",
+      "ground-truth labels or a documented human-review sample",
+      "versioned thresholds validated against expected variation"
+    ],
+    "does_not_establish": [
+      "semantic data drift",
+      "real-world model accuracy",
+      "fairness",
+      "label quality"
+    ]
+  }
+}

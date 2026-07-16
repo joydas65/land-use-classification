@@ -134,6 +134,27 @@ showed `Model ready` with no console warnings or errors.
 
 The project can now be presented as a deployed end-to-end five-class classifier. It must not be
 presented as a universal satellite classifier or as having a production availability/latency SLO.
-A true scale-to-zero cold-request measurement, alerting, and drift/feedback telemetry are the next
-production-hardening tasks. The cross-service evidence and explicit claim boundary are versioned in
+The 16 July cross-service evidence and explicit claim boundary are versioned in
 `reports/cloud_run_deployment_verification_2026-07-16.json`.
+
+## 17 July scale-to-zero and monitoring extension
+
+Cloud Monitoring's instance-count metric first confirmed `active=0` and `idle=0`. After a
+1,119.990-second gap from the prior request, one client prediction caused Cloud Run to log a new
+traffic-triggered `AUTOSCALING` instance. The correct `agricultural` response completed in
+**11,013.115 ms** client-observed time, including DNS, TLS, pending startup, inference, and response
+transfer. The container's model inference portion was 321.804 ms. This single cold request is stored
+in `reports/cloud_run_scale_to_zero_2026-07-17.json`; it is not a p95 or uptime guarantee.
+
+Two enabled Cloud Monitoring policies now target the production service: a five-minute 5xx ratio
+above 5%, and warm-container p95 latency above 1,000 ms for five minutes. API readback verified both
+resource IDs. No notification channel is attached, so incidents are recorded but not emailed. The
+deployment evidence is in `reports/cloud_monitoring_deployment_2026-07-17.json`.
+
+Service source version `1.1.0` adds privacy-allowlisted structured prediction observations and
+disables duplicate Uvicorn access logs. It records model identity, prediction/confidence bucket,
+inference latency, dimensions, payload size, media type, and a random request ID; it does not copy
+the uploaded filename, image bytes/hash, IP address, or user agent into application prediction
+telemetry. Model version remains `1.0.0`. See `docs/OBSERVABILITY_AND_DRIFT.md` for the candidate
+99%/30-day and p95 objectives and the reasons these are not yet established SLOs or a validated drift
+detector.

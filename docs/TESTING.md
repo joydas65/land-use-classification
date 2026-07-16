@@ -1,15 +1,22 @@
 # Testing and Audit Guide
 
-The quality gate contains five layers:
+The quality gate contains six layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
-2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification, group isolation, manifest provenance, transforms, custom and transfer architectures, freezing policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion, artifact distribution, benchmark statistics, bounded API capacity, deployment contracts, and the versioned FastAPI contract.
+2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification,
+   group isolation, manifest provenance, transforms, custom and transfer architectures, freezing
+   policy, metrics, a gradient-update smoke test, deterministic notebook generation, security and
+   IIT evidence, serving configuration, input limits, ranked predictions, checkpoint promotion,
+   artifact distribution, benchmark statistics, bounded API capacity, deployment contracts, and the
+   versioned FastAPI contract.
 3. The web gate runs ESLint, a production vinext build, server-rendered HTML/contract tests, and the
    native Next.js build used by Vercel. Its browser contract includes decoding TIFF selections to a
    temporary PNG preview while retaining the original TIFF bytes for model inference.
 4. `python -m compileall src scripts tests` catches syntax/import compilation failures.
 5. GitHub CI builds the artifact-free container target; the production workflow separately fetches
    the checksum-pinned model and publishes an image with provenance and an SBOM.
+6. The observability contract cross-checks the application telemetry allowlist, prohibited privacy
+   fields, candidate service objectives, Cloud Monitoring policy metrics, and drift claim boundary.
 
 The complete local gate is:
 
@@ -22,6 +29,7 @@ ruff check .
 ruff format --check .
 python -m compileall -q src scripts tests
 cd web
+# Use the Node.js 24 major pinned in package.json.
 npm ci
 npm run lint
 npm test
@@ -49,18 +57,19 @@ inspection also verified the Linux/AMD64 image manifest and its two in-toto atte
 SPDX SBOM and SLSA provenance v1. The exact descriptors are committed in
 `reports/container_release_verification_2026-07-16.json`.
 
-The dependency review was rerun on 16 July with `npm audit --audit-level=high` for the complete tree
-and `npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or
-critical advisory. The complete tree currently reports one low and five moderate transitive
-findings. The production tree reports two moderate findings inherited from Next.js's embedded
-PostCSS version; npm offered only a breaking downgrade, so they are documented rather than hidden
-or force-fixed.
+The dependency review was rerun on 16 and 17 July with `npm audit --audit-level=high` for the
+complete tree and `npm audit --omit=dev --audit-level=high` for production dependencies. Neither
+tree has a high or critical advisory. The complete tree currently reports one low and five moderate
+transitive findings. The production tree reports two moderate findings inherited from Next.js's
+embedded PostCSS version; npm offered only a breaking downgrade, so they are documented rather than
+hidden or force-fixed.
 TerraClass does not accept user-authored CSS. The findings were reviewed for the integrated
 deployment and remain accepted moderate transitive risk; they must be rechecked on dependency
 updates.
 
 The 16 July local Python audit initially identified pip 25.1.1 as vulnerable. After upgrading to
-pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities; the local
+pip 26.1.2, `python -m pip_audit` reported no known third-party vulnerabilities on both 16 and 17
+July; the local
 `terraclass` package was skipped because it is not published on PyPI and is instead covered by the
 repository's source, contract, and integration tests. The first GitHub run additionally exposed
 runner-resolved Pillow 12.2.0 and setuptools 78.1.0 advisories. The project now requires Pillow
@@ -143,3 +152,10 @@ metadata, a dedicated runtime identity with no project roles, correct 99.30%-con
 prediction, origin-specific CORS, ready Vercel deployment, `Model ready` browser status, and zero
 browser console warnings/errors. These are
 point-in-time deployment measurements, not availability guarantees or a production SLO.
+
+The 17 July telemetry tests additionally parse emitted JSON, check every confidence-bucket boundary,
+reject invalid probabilities, and prove that an upload filename, image content/hash, IP address, and
+user agent are absent from the prediction event. Deployment-contract tests parse both Cloud
+Monitoring policy templates and require their metrics and service target to match
+`configs/monitoring/observability_v1.json`. See `docs/OBSERVABILITY_AND_DRIFT.md` for the operational
+claim boundary.

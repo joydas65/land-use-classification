@@ -1,0 +1,49 @@
+{
+  "displayName": "TerraClass Cloud Run 5xx ratio",
+  "combiner": "OR",
+  "enabled": true,
+  "userLabels": {
+    "application": "terraclass",
+    "environment": "production",
+    "objective": "availability"
+  },
+  "documentation": {
+    "content": "Investigate unhandled API errors, model readiness, capacity, and revision health. The ratio excludes client-caused 4xx responses and is intentionally sensitive at the current low traffic volume.",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "displayName": "Cloud Run 5xx responses exceed 5 percent in 5 minutes",
+      "conditionThreshold": {
+        "filter": "metric.type=\"run.googleapis.com/request_count\" AND resource.type=\"cloud_run_revision\" AND resource.label.service_name=\"terraclass-api\" AND metric.label.response_code_class=\"5xx\"",
+        "denominatorFilter": "metric.type=\"run.googleapis.com/request_count\" AND resource.type=\"cloud_run_revision\" AND resource.label.service_name=\"terraclass-api\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0.05,
+        "duration": "0s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_DELTA",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "groupByFields": [
+              "resource.label.service_name"
+            ]
+          }
+        ],
+        "denominatorAggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_DELTA",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "groupByFields": [
+              "resource.label.service_name"
+            ]
+          }
+        ],
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ]
+}

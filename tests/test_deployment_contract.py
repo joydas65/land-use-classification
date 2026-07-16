@@ -34,6 +34,102 @@ def test_cloud_run_template_matches_api_capacity_and_frontend_origin(project_roo
     assert "/api/v1/health/live" in template
 
 
+def test_observability_contract_is_private_and_matches_alert_policies(project_root: Path) -> None:
+    config = json.loads(
+        (project_root / "configs/monitoring/observability_v1.json").read_text(encoding="utf-8")
+    )
+    telemetry = config["telemetry"]
+    objectives = config["candidate_objectives"]
+    assert config["service"] == {
+        "project_id": "land-use-classification-502614",
+        "region": "asia-south1",
+        "service_name": "terraclass-api",
+        "service_version": "1.1.0",
+        "model_id": "terraclass-resnet18-group-aware",
+        "model_version": "1.0.0",
+    }
+    assert telemetry["image_content_retained"] is False
+    assert set(telemetry["prohibited_fields"]) == {
+        "filename",
+        "image_bytes",
+        "image_sha256",
+        "remote_ip",
+        "user_agent",
+    }
+    assert not set(telemetry["prohibited_fields"]).intersection(telemetry["allowlisted_fields"])
+    assert objectives["status"] == "defined_not_yet_established"
+    assert objectives["availability"]["target_ratio"] == 0.99
+    assert objectives["steady_state_request_latency"]["threshold_ms"] == 1000
+    assert config["drift_readiness"]["status"] == "telemetry_ready_not_drift_validated"
+
+    policy_paths = config["alert_policy_templates"]
+    policies = [
+        json.loads((project_root / path).read_text(encoding="utf-8")) for path in policy_paths
+    ]
+    assert len(policies) == 2
+    assert all(policy["enabled"] is True for policy in policies)
+    assert {policy["userLabels"]["objective"] for policy in policies} == {
+        "availability",
+        "steady-state-latency",
+    }
+    serialized = json.dumps(policies)
+    assert "run.googleapis.com/request_count" in serialized
+    assert "run.googleapis.com/request_latencies" in serialized
+    assert "terraclass-api" in serialized
+
+
+def test_scale_to_zero_report_proves_zero_instances_and_a_new_autoscaled_instance(
+    project_root: Path,
+) -> None:
+    evidence = json.loads(
+        (project_root / "reports/cloud_run_scale_to_zero_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    precondition = evidence["scale_to_zero_precondition"]
+    probe = evidence["client_probe"]
+    corroboration = evidence["cloud_run_corroboration"]
+
+    assert evidence["measured_on"] == "2026-07-17"
+    assert evidence["service"]["minimum_instances"] == 0
+    assert precondition["active_instances"] == 0
+    assert precondition["idle_instances"] == 0
+    assert (
+        precondition["request_gap_seconds"]
+        > precondition["documented_possible_idle_retention_seconds"]
+    )
+    assert probe["http_status"] == 200
+    assert probe["response"]["predicted_class"] == "agricultural"
+    assert probe["curl_timings_ms"]["total"] == 11013.115
+    assert "AUTOSCALING" in corroboration["instance_start_log"]["reason"]
+    assert corroboration["instance_start_log"]["matches_request_instance"] is True
+    assert evidence["claim_boundary"]["scale_from_zero_client_request_measured"] is True
+    assert evidence["claim_boundary"]["availability_slo_established"] is False
+
+
+def test_cloud_monitoring_deployment_matches_templates_without_notification_routing(
+    project_root: Path,
+) -> None:
+    evidence = json.loads(
+        (project_root / "reports/cloud_monitoring_deployment_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    policies = evidence["policies"]
+
+    assert evidence["project_id"] == "land-use-classification-502614"
+    assert evidence["readback_verified"] is True
+    assert {policy["template"] for policy in policies} == {
+        "deploy/monitoring/cloud-run-5xx-ratio.json",
+        "deploy/monitoring/cloud-run-p95-latency.json",
+    }
+    assert all(policy["enabled"] is True for policy in policies)
+    assert all(policy["notification_channels"] == [] for policy in policies)
+    assert evidence["claim_boundary"]["alert_policies_deployed"] is True
+    assert evidence["claim_boundary"]["notifications_routed"] is False
+    assert evidence["claim_boundary"]["candidate_objectives_established_as_slo"] is False
+
+
 def test_public_model_release_evidence_matches_distribution_contract(project_root: Path) -> None:
     release = json.loads(
         (project_root / "configs/serving/model_release_v1.json").read_text(encoding="utf-8")

@@ -17,6 +17,7 @@ from terraclass.artifact_distribution import ModelRelease, load_model_release
 from terraclass.colab_results import BundleValidationError, audit_versioned_evidence
 from terraclass.config import load_config
 from terraclass.inference import ServingConfig, load_serving_config
+from terraclass.telemetry import PREDICTION_OBSERVATION_FIELDS, PROHIBITED_PREDICTION_FIELDS
 from terraclass.transfer_config import load_transfer_config
 
 KNOWN_ISSUE_IDS = (
@@ -110,11 +111,19 @@ def audit_project(project_root: str | Path) -> AuditReport:
     cloud_run_deployment_verification_path = (
         root / "reports/cloud_run_deployment_verification_2026-07-16.json"
     )
+    cloud_run_scale_to_zero_path = root / "reports/cloud_run_scale_to_zero_2026-07-17.json"
+    cloud_monitoring_deployment_path = root / "reports/cloud_monitoring_deployment_2026-07-17.json"
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
     api_document_path = root / "docs/API_AND_WEB_APP.md"
     production_document_path = root / "docs/PRODUCTION_INFERENCE.md"
+    observability_document_path = root / "docs/OBSERVABILITY_AND_DRIFT.md"
     api_source_path = root / "src/terraclass/api.py"
     api_test_path = root / "tests/test_api.py"
+    telemetry_source_path = root / "src/terraclass/telemetry.py"
+    telemetry_test_path = root / "tests/test_telemetry.py"
+    monitoring_config_path = root / "configs/monitoring/observability_v1.json"
+    monitoring_5xx_policy_path = root / "deploy/monitoring/cloud-run-5xx-ratio.json"
+    monitoring_latency_policy_path = root / "deploy/monitoring/cloud-run-p95-latency.json"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
     web_css_path = root / "web/app/globals.css"
@@ -837,6 +846,73 @@ def audit_project(project_root: str | Path) -> AuditReport:
         }:
             report.errors.append("Integrated deployment claim boundary is inconsistent")
 
+    if not cloud_run_scale_to_zero_path.is_file():
+        report.errors.append("Cloud Run scale-to-zero evidence is missing")
+        cloud_run_scale_to_zero: dict[str, Any] = {}
+    else:
+        cloud_run_scale_to_zero = json.loads(
+            cloud_run_scale_to_zero_path.read_text(encoding="utf-8")
+        )
+        cold_service = cloud_run_scale_to_zero.get("service", {})
+        cold_precondition = cloud_run_scale_to_zero.get("scale_to_zero_precondition", {})
+        cold_probe = cloud_run_scale_to_zero.get("client_probe", {})
+        cold_response = cold_probe.get("response", {})
+        cold_corroboration = cloud_run_scale_to_zero.get("cloud_run_corroboration", {})
+        cold_claim = cloud_run_scale_to_zero.get("claim_boundary", {})
+        if cloud_run_scale_to_zero.get("schema_version") != 1:
+            report.errors.append("Cloud Run scale-to-zero schema version differs from 1")
+        if cloud_run_scale_to_zero.get("measured_on") != "2026-07-17":
+            report.errors.append("Cloud Run scale-to-zero date differs from 17 July 2026")
+        if {
+            "project_id": cold_service.get("project_id"),
+            "region": cold_service.get("region"),
+            "service_name": cold_service.get("service_name"),
+            "revision": cold_service.get("revision"),
+            "minimum_instances": cold_service.get("minimum_instances"),
+        } != {
+            "project_id": "land-use-classification-502614",
+            "region": "asia-south1",
+            "service_name": "terraclass-api",
+            "revision": "terraclass-api-v1-0-1",
+            "minimum_instances": 0,
+        }:
+            report.errors.append("Cloud Run scale-to-zero service identity is inconsistent")
+        if (
+            cold_precondition.get("request_gap_seconds", 0)
+            <= cold_precondition.get("documented_possible_idle_retention_seconds", 900)
+            or cold_precondition.get("active_instances") != 0
+            or cold_precondition.get("idle_instances") != 0
+        ):
+            report.errors.append("Cloud Run scale-to-zero precondition is not proven")
+        if (
+            cold_probe.get("http_status") != 200
+            or cold_response.get("expected_class") != "agricultural"
+            or cold_response.get("predicted_class") != "agricultural"
+            or cold_response.get("inference_latency_ms", 0) <= 0
+            or cold_probe.get("curl_timings_ms", {}).get("total", 0) <= 0
+        ):
+            report.errors.append("Cloud Run cold client prediction evidence is invalid")
+        if (
+            cold_corroboration.get("request_log", {}).get("http_status") != 200
+            or cold_corroboration.get("instance_start_log", {}).get("matches_request_instance")
+            is not True
+            or "AUTOSCALING"
+            not in cold_corroboration.get("instance_start_log", {}).get("reason", "")
+        ):
+            report.errors.append("Cloud Run cold autoscaling corroboration is invalid")
+        if cold_claim != {
+            "scale_from_zero_client_request_measured": True,
+            "correct_prediction_observed": True,
+            "availability_slo_established": False,
+            "latency_slo_established": False,
+            "semantic_drift_evaluated": False,
+            "note": (
+                "This is one point-in-time cold request, not a percentile, uptime guarantee, "
+                "or drift result."
+            ),
+        }:
+            report.errors.append("Cloud Run cold-request claim boundary is inconsistent")
+
     if not api_source_path.is_file():
         report.errors.append("Typed inference API source is missing")
         api_source = ""
@@ -860,6 +936,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "InferenceCapacityError",
         "asyncio.Semaphore",
         "TERRACLASS_MAX_CONCURRENT_INFERENCES",
+        "prediction_observation",
+        "emit_structured_event",
+        "access_log=False",
     ):
         if token not in api_source:
             report.errors.append(f"API safety/operability token is missing: {token}")
@@ -870,8 +949,121 @@ def audit_project(project_root: str | Path) -> AuditReport:
     else:
         api_test_source = api_test_path.read_text(encoding="utf-8")
         api_test_count = len(re.findall(r"^def test_", api_test_source, re.MULTILINE))
-        if api_test_count != 6:
-            report.errors.append("API contract suite must contain six focused tests")
+        if api_test_count != 7:
+            report.errors.append("API contract suite must contain seven focused tests")
+
+    telemetry_test_count = 0
+    if not telemetry_source_path.is_file():
+        report.errors.append("Prediction telemetry source is missing")
+    if not telemetry_test_path.is_file():
+        report.errors.append("Prediction telemetry tests are missing")
+    else:
+        telemetry_test_source = telemetry_test_path.read_text(encoding="utf-8")
+        telemetry_test_count = len(re.findall(r"^def test_", telemetry_test_source, re.MULTILINE))
+        if telemetry_test_count != 4:
+            report.errors.append("Prediction telemetry suite must contain four focused tests")
+
+    if not monitoring_config_path.is_file():
+        report.errors.append("Machine-readable observability contract is missing")
+        monitoring_config: dict[str, Any] = {}
+    else:
+        monitoring_config = json.loads(monitoring_config_path.read_text(encoding="utf-8"))
+        monitoring_service = monitoring_config.get("service", {})
+        telemetry_contract = monitoring_config.get("telemetry", {})
+        candidate_objectives = monitoring_config.get("candidate_objectives", {})
+        drift_readiness = monitoring_config.get("drift_readiness", {})
+        if monitoring_config.get("schema_version") != 1:
+            report.errors.append("Observability schema version differs from 1")
+        if monitoring_service != {
+            "project_id": "land-use-classification-502614",
+            "region": "asia-south1",
+            "service_name": "terraclass-api",
+            "service_version": "1.1.0",
+            "model_id": "terraclass-resnet18-group-aware",
+            "model_version": "1.0.0",
+        }:
+            report.errors.append("Observability service/model identity is inconsistent")
+        if telemetry_contract.get("allowlisted_fields") != list(PREDICTION_OBSERVATION_FIELDS):
+            report.errors.append("Prediction telemetry allowlist differs from code")
+        if set(telemetry_contract.get("prohibited_fields", [])) != set(
+            PROHIBITED_PREDICTION_FIELDS
+        ):
+            report.errors.append("Prediction telemetry prohibited fields differ from code")
+        if telemetry_contract.get("image_content_retained") is not False:
+            report.errors.append("Prediction telemetry must not retain image content")
+        if candidate_objectives.get("status") != "defined_not_yet_established":
+            report.errors.append("Candidate objectives are incorrectly marked as established")
+        if drift_readiness.get("status") != "telemetry_ready_not_drift_validated":
+            report.errors.append("Drift readiness claim boundary is inconsistent")
+
+    expected_monitoring_policies = {
+        "deploy/monitoring/cloud-run-5xx-ratio.json": (
+            monitoring_5xx_policy_path,
+            "run.googleapis.com/request_count",
+            "availability",
+        ),
+        "deploy/monitoring/cloud-run-p95-latency.json": (
+            monitoring_latency_policy_path,
+            "run.googleapis.com/request_latencies",
+            "steady-state-latency",
+        ),
+    }
+    if set(monitoring_config.get("alert_policy_templates", [])) != set(
+        expected_monitoring_policies
+    ):
+        report.errors.append("Observability alert policy list is inconsistent")
+    for relative_path, (policy_path, metric, objective) in expected_monitoring_policies.items():
+        if not policy_path.is_file():
+            report.errors.append(f"Monitoring policy is missing: {relative_path}")
+            continue
+        policy = json.loads(policy_path.read_text(encoding="utf-8"))
+        if policy.get("enabled") is not True:
+            report.errors.append(f"Monitoring policy is disabled: {relative_path}")
+        if policy.get("userLabels", {}).get("objective") != objective:
+            report.errors.append(f"Monitoring policy objective differs: {relative_path}")
+        if metric not in json.dumps(policy) or "terraclass-api" not in json.dumps(policy):
+            report.errors.append(f"Monitoring policy target differs: {relative_path}")
+
+    if not cloud_monitoring_deployment_path.is_file():
+        report.errors.append("Cloud Monitoring deployment evidence is missing")
+        cloud_monitoring_deployment: dict[str, Any] = {}
+    else:
+        cloud_monitoring_deployment = json.loads(
+            cloud_monitoring_deployment_path.read_text(encoding="utf-8")
+        )
+        deployed_policies = cloud_monitoring_deployment.get("policies", [])
+        monitoring_claim = cloud_monitoring_deployment.get("claim_boundary", {})
+        if (
+            cloud_monitoring_deployment.get("schema_version") != 1
+            or cloud_monitoring_deployment.get("verified_on") != "2026-07-17"
+            or cloud_monitoring_deployment.get("project_id") != "land-use-classification-502614"
+            or cloud_monitoring_deployment.get("readback_verified") is not True
+        ):
+            report.errors.append("Cloud Monitoring deployment identity is inconsistent")
+        if len(deployed_policies) != 2 or {
+            policy.get("template") for policy in deployed_policies
+        } != set(expected_monitoring_policies):
+            report.errors.append("Cloud Monitoring deployed policy set is inconsistent")
+        for deployed_policy in deployed_policies:
+            if (
+                deployed_policy.get("enabled") is not True
+                or not str(deployed_policy.get("name", "")).startswith(
+                    "projects/land-use-classification-502614/alertPolicies/"
+                )
+                or deployed_policy.get("notification_channels") != []
+            ):
+                report.errors.append("Cloud Monitoring policy readback is inconsistent")
+        if monitoring_claim != {
+            "alert_policies_deployed": True,
+            "incident_creation_enabled": True,
+            "notifications_routed": False,
+            "candidate_objectives_established_as_slo": False,
+            "note": (
+                "A notification channel must be chosen and verified separately; deployed policies "
+                "do not create 30-day historical evidence."
+            ),
+        }:
+            report.errors.append("Cloud Monitoring deployment claim boundary is inconsistent")
 
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
@@ -1115,6 +1307,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         production_document = ""
     else:
         production_document = production_document_path.read_text(encoding="utf-8")
+    if not observability_document_path.is_file():
+        report.errors.append("docs/OBSERVABILITY_AND_DRIFT.md is missing")
+        observability_document = ""
+    else:
+        observability_document = observability_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -1140,6 +1337,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             inference_document,
             api_document,
             production_document,
+            observability_document,
         )
     )
     for token in required_documentation_tokens:
@@ -1198,9 +1396,32 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "scale-to-zero",
         "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com",
         "dpl_A7JEXaCo8BeHK5v7drCUFMeekWop",
+        "17 July scale-to-zero and monitoring extension",
+        "1,119.990-second",
+        "11,013.115 ms",
+        "321.804 ms",
+        "cloud_run_scale_to_zero_2026-07-17.json",
+        "cloud_monitoring_deployment_2026-07-17.json",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")
+    observability_document_normalized = " ".join(observability_document.split())
+    for token in (
+        "prediction_observation",
+        "does **not** log the uploaded filename",
+        "99% over a rolling 30-day window",
+        "p95 at or below 1,000 ms",
+        "defined_not_yet_established",
+        "365.2 ms",
+        "11,013.115 ms",
+        "5310080937064810576",
+        "5310080937064809962",
+        "drift-*ready*, not a validated drift detector",
+    ):
+        if token not in "\n".join(
+            (observability_document_normalized, json.dumps(monitoring_config))
+        ):
+            report.errors.append(f"Observability documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -1360,9 +1581,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "cloud_run_rollout_container_healthy_seconds": cloud_run_deployment.get("cloud_run", {})
             .get("initial_rollout", {})
             .get("container_healthy_seconds"),
-            "cloud_run_scale_to_zero_cold_request_measured": cloud_run_deployment.get(
+            "cloud_run_scale_to_zero_cold_request_measured": cloud_run_scale_to_zero.get(
                 "claim_boundary", {}
-            ).get("scale_to_zero_cold_request_measured"),
+            ).get("scale_from_zero_client_request_measured"),
+            "cloud_run_scale_to_zero_client_total_ms": cloud_run_scale_to_zero.get(
+                "client_probe", {}
+            )
+            .get("curl_timings_ms", {})
+            .get("total"),
             "cloud_run_http_warmup_requests": cloud_run_load_report.get("protocol", {}).get(
                 "warmup_requests"
             ),
@@ -1387,10 +1613,27 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "production_slo_established": cloud_run_deployment.get("claim_boundary", {}).get(
                 "production_slo_established"
             ),
+            "prediction_telemetry_fields": monitoring_config.get("telemetry", {}).get(
+                "allowlisted_fields"
+            ),
+            "candidate_availability_target": monitoring_config.get("candidate_objectives", {})
+            .get("availability", {})
+            .get("target_ratio"),
+            "candidate_p95_latency_ms": monitoring_config.get("candidate_objectives", {})
+            .get("steady_state_request_latency", {})
+            .get("threshold_ms"),
+            "drift_readiness_status": monitoring_config.get("drift_readiness", {}).get("status"),
+            "cloud_monitoring_policies_deployed": cloud_monitoring_deployment.get(
+                "claim_boundary", {}
+            ).get("alert_policies_deployed"),
+            "cloud_monitoring_notifications_routed": cloud_monitoring_deployment.get(
+                "claim_boundary", {}
+            ).get("notifications_routed"),
         },
         "application_layer": {
             "api_routes": list(expected_api_routes),
             "api_contract_tests": api_test_count,
+            "telemetry_contract_tests": telemetry_test_count,
             "web_render_tests": web_test_count,
             "web_tiff_preview_tests": web_preview_test_count,
             "tiff_preview_decoder": "tiff@7.1.3",

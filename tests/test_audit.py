@@ -48,7 +48,11 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     )
     assert (
         report.observed["production_readiness"]["cloud_run_scale_to_zero_cold_request_measured"]
-        is False
+        is True
+    )
+    assert (
+        report.observed["production_readiness"]["cloud_run_scale_to_zero_client_total_ms"]
+        == 11013.115
     )
     assert report.observed["production_readiness"]["cloud_run_http_warmup_requests"] == 5
     assert report.observed["production_readiness"]["cloud_run_http_measured_requests"] == 60
@@ -56,6 +60,14 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["production_readiness"]["cloud_run_http_peak_throughput_rps"] > 0
     assert report.observed["production_readiness"]["cloud_run_http_concurrency_4_p95_ms"] > 0
     assert report.observed["production_readiness"]["production_slo_established"] is False
+    assert report.observed["production_readiness"]["candidate_availability_target"] == 0.99
+    assert report.observed["production_readiness"]["candidate_p95_latency_ms"] == 1000
+    assert report.observed["production_readiness"]["drift_readiness_status"] == (
+        "telemetry_ready_not_drift_validated"
+    )
+    assert report.observed["production_readiness"]["cloud_monitoring_policies_deployed"] is True
+    assert report.observed["production_readiness"]["cloud_monitoring_notifications_routed"] is False
+    assert "filename" not in report.observed["production_readiness"]["prediction_telemetry_fields"]
     assert "29457675941" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
     )
@@ -69,7 +81,8 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
             "/api/v1/model",
             "/api/v1/predictions",
         ],
-        "api_contract_tests": 6,
+        "api_contract_tests": 7,
+        "telemetry_contract_tests": 4,
         "web_render_tests": 2,
         "web_tiff_preview_tests": 3,
         "tiff_preview_decoder": "tiff@7.1.3",

@@ -29,10 +29,11 @@ from terraclass.inference import (
     TerraClassPredictor,
     load_serving_config,
 )
+from terraclass.telemetry import emit_structured_event, prediction_observation
 
 LOGGER = logging.getLogger("terraclass.api")
 SERVICE_NAME = "terraclass-inference-api"
-SERVICE_VERSION = "1.0.0"
+SERVICE_VERSION = "1.1.0"
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg",
     "image/png",
@@ -232,17 +233,16 @@ def create_app(
         response = await call_next(request)
         duration_ms = (time.perf_counter() - started) * 1000
         response.headers["X-Request-ID"] = request.state.request_id
-        LOGGER.info(
-            json.dumps(
-                {
-                    "event": "http_request",
-                    "request_id": request.state.request_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                    "duration_ms": round(duration_ms, 3),
-                }
-            )
+        emit_structured_event(
+            {
+                "event": "http_request",
+                "schema_version": 1,
+                "request_id": request.state.request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round(duration_ms, 3),
+            }
         )
         return response
 
@@ -394,6 +394,20 @@ def create_app(
             )
         finally:
             request.app.state.inference_slots.release()
+        emit_structured_event(
+            prediction_observation(
+                request_id=_request_id(request),
+                model_id=prediction.model_id,
+                model_version=prediction.model_version,
+                predicted_class=prediction.predicted_class,
+                confidence=prediction.confidence,
+                inference_latency_ms=prediction.latency_ms,
+                image_width=prediction.image_width,
+                image_height=prediction.image_height,
+                payload_bytes=len(payload),
+                content_type=file.content_type,
+            )
+        )
         return PredictionResponse(
             request_id=_request_id(request),
             **prediction.to_dict(),
@@ -413,6 +427,7 @@ def main() -> None:
         host=os.getenv("TERRACLASS_HOST", "127.0.0.1"),
         port=int(os.getenv("TERRACLASS_PORT", os.getenv("PORT", "8000"))),
         reload=False,
+        access_log=False,
     )
 
 

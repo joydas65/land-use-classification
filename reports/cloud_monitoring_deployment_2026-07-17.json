@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-07-17",
+  "project_id": "land-use-classification-502614",
+  "deployed_by": "joydas.0111@gmail.com",
+  "readback_verified": true,
+  "policies": [
+    {
+      "template": "deploy/monitoring/cloud-run-5xx-ratio.json",
+      "name": "projects/land-use-classification-502614/alertPolicies/5310080937064810576",
+      "condition_name": "projects/land-use-classification-502614/alertPolicies/5310080937064810576/conditions/5310080937064809799",
+      "display_name": "TerraClass Cloud Run 5xx ratio",
+      "created_at_utc": "2026-07-16T19:29:21.797954712Z",
+      "enabled": true,
+      "metric": "run.googleapis.com/request_count",
+      "threshold_ratio": 0.05,
+      "alignment_period_seconds": 300,
+      "notification_channels": []
+    },
+    {
+      "template": "deploy/monitoring/cloud-run-p95-latency.json",
+      "name": "projects/land-use-classification-502614/alertPolicies/5310080937064809962",
+      "condition_name": "projects/land-use-classification-502614/alertPolicies/5310080937064809962/conditions/5310080937064809185",
+      "display_name": "TerraClass Cloud Run p95 container latency",
+      "created_at_utc": "2026-07-16T19:29:30.021956216Z",
+      "enabled": true,
+      "metric": "run.googleapis.com/request_latencies",
+      "threshold_ms": 1000,
+      "alignment_period_seconds": 300,
+      "retest_window_seconds": 300,
+      "notification_channels": []
+    }
+  ],
+  "claim_boundary": {
+    "alert_policies_deployed": true,
+    "incident_creation_enabled": true,
+    "notifications_routed": false,
+    "candidate_objectives_established_as_slo": false,
+    "note": "A notification channel must be chosen and verified separately; deployed policies do not create 30-day historical evidence."
+  }
+}

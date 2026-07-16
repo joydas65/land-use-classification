@@ -1,4 +1,5 @@
 import io
+import json
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -136,7 +137,7 @@ def test_openapi_exposes_versioned_contract(project_root: Path) -> None:
     config = load_serving_config(project_root / "configs/serving/resnet18_group_aware_v1.json")
     with _client(project_root) as client:
         schema = client.get("/openapi.json").json()
-    assert schema["info"]["version"] == "1.0.0"
+    assert schema["info"]["version"] == "1.1.0"
     assert "/api/v1/predictions" in schema["paths"]
     assert config.model_version == "1.0.0"
 
@@ -173,3 +174,34 @@ def test_inference_capacity_is_bounded_and_returns_retry_contract(project_root: 
     assert busy.status_code == 429
     assert busy.json()["error"]["code"] == "inference_capacity_exceeded"
     assert busy.headers["Retry-After"] == "1"
+
+
+def test_prediction_emits_privacy_preserving_structured_telemetry(
+    project_root: Path, capsys
+) -> None:
+    with _client(project_root) as client:
+        response = client.post(
+            "/api/v1/predictions?top_k=2",
+            files={"file": ("private-scene-name.png", _png_bytes(), "image/png")},
+        )
+    events = [
+        json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith("{")
+    ]
+    observation = next(event for event in events if event["event"] == "prediction_observation")
+
+    assert response.status_code == 200
+    assert observation["request_id"] == response.json()["request_id"]
+    assert observation["predicted_class"] == "beach"
+    assert observation["confidence_bucket"] == "0_85_to_0_95"
+    assert observation["payload_bytes"] == len(_png_bytes())
+    assert observation["content_type"] == "image/png"
+    serialized = json.dumps(observation)
+    for prohibited in (
+        "private-scene-name.png",
+        "filename",
+        "image_bytes",
+        "image_sha256",
+        "remote_ip",
+        "user_agent",
+    ):
+        assert prohibited not in serialized

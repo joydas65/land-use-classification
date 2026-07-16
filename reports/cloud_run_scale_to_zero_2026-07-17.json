@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "measured_on": "2026-07-17",
+  "service": {
+    "project_id": "land-use-classification-502614",
+    "region": "asia-south1",
+    "service_name": "terraclass-api",
+    "revision": "terraclass-api-v1-0-1",
+    "service_url": "https://terraclass-api-280836764570.asia-south1.run.app",
+    "minimum_instances": 0,
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0"
+  },
+  "scale_to_zero_precondition": {
+    "last_request_before_probe_timestamp_utc": "2026-07-16T19:07:27.333327Z",
+    "probe_request_timestamp_utc": "2026-07-16T19:26:07.322928Z",
+    "request_gap_seconds": 1119.989601,
+    "documented_possible_idle_retention_seconds": 900,
+    "instance_count_metric": "run.googleapis.com/container/instance_count",
+    "instance_count_point_timestamp_utc": "2026-07-16T19:24:00Z",
+    "active_instances": 0,
+    "idle_instances": 0,
+    "metric_sampling_note": "Cloud Monitoring samples this metric every 60 seconds and can delay visibility by up to 120 seconds."
+  },
+  "client_probe": {
+    "started_at_utc": "2026-07-16T19:26:07Z",
+    "method": "POST",
+    "path": "/api/v1/predictions?top_k=3",
+    "input": {
+      "dataset": "UC Merced Land Use",
+      "relative_path": "agricultural/agricultural06.tif",
+      "content_type": "image/tiff",
+      "uploaded_bytes": 211632
+    },
+    "http_status": 200,
+    "curl_timings_ms": {
+      "dns": 38.659,
+      "tcp_connect": 50.264,
+      "tls_connect": 88.855,
+      "time_to_first_byte": 11013.067,
+      "total": 11013.115
+    },
+    "response": {
+      "request_id": "b7f61b6f-7916-4a6f-92af-7a27ffa8ba8a",
+      "expected_class": "agricultural",
+      "predicted_class": "agricultural",
+      "confidence": 0.993049144744873,
+      "inference_latency_ms": 321.80364599999933,
+      "image_width": 256,
+      "image_height": 256
+    }
+  },
+  "cloud_run_corroboration": {
+    "request_log": {
+      "timestamp_utc": "2026-07-16T19:26:07.322928Z",
+      "latency_ms": 10702.859677,
+      "http_status": 200,
+      "request_size_bytes": 212085,
+      "response_size_bytes": 638
+    },
+    "instance_start_log": {
+      "timestamp_utc": "2026-07-16T19:26:07.333506Z",
+      "reason": "AUTOSCALING - Instance started due to configured scaling factors or no existing capacity for current traffic.",
+      "instance_id": "001548f72906d28147e4fc0b7a1e262ff27c2c7ee8ee33d4467ffd5148d607ec9cdc85c0a98151afaa24a58d211008e5812e8aec29cb05ffd31cd1166b933c630ee3b6a0e8ebdc260706a6e6a497",
+      "matches_request_instance": true
+    }
+  },
+  "candidate_objective_evaluation": {
+    "cold_request_threshold_ms": 30000,
+    "observed_client_total_ms": 11013.115,
+    "within_candidate_threshold": true
+  },
+  "claim_boundary": {
+    "scale_from_zero_client_request_measured": true,
+    "correct_prediction_observed": true,
+    "availability_slo_established": false,
+    "latency_slo_established": false,
+    "semantic_drift_evaluated": false,
+    "note": "This is one point-in-time cold request, not a percentile, uptime guarantee, or drift result."
+  },
+  "source_basis": [
+    "https://docs.cloud.google.com/run/docs/about-instance-autoscaling",
+    "https://docs.cloud.google.com/monitoring/api/metrics_gcp_p_z"
+  ]
+}
