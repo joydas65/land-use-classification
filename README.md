@@ -13,7 +13,8 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **16 July 2026 production-readiness and model-distribution milestone — complete:** non-root CPU container contract, checksum-pinned model distribution, bounded inference queue, Python/web/container CI, Cloud Run template, a zero-failure 60-request HTTP load benchmark, and a publicly downloadable ResNet18 release verified by byte count and SHA-256.
 - **16 July 2026 production-container milestone — complete:** public Linux/AMD64 GHCR image, semantic and source-commit tags pinned to one immutable OCI digest, successful public-pull verification, an SPDX SBOM, and SLSA v1 provenance.
 - **16 July 2026 integrated-production milestone — complete:** the exact released digest is deployed to Google Cloud Run in Mumbai as revision `terraclass-api-v1-0-1` under a dedicated no-role runtime identity; public health, metadata, prediction, CORS, rollout, and 60-request load evidence pass; and the Vercel frontend reports `Model ready` against the live API at [terraclass-api-280836764570.asia-south1.run.app](https://terraclass-api-280836764570.asia-south1.run.app).
-- **Next production handoff:** measure a client request after a real scale-to-zero interval, add alerting and service-level objectives, and design drift/feedback telemetry without overstating the five-class dataset scope.
+- **17 July 2026 observability milestone — complete:** Cloud Monitoring verified zero active and idle instances before an 11.013-second scale-from-zero prediction; service `1.1.0` adds privacy-allowlisted structured prediction telemetry; the signed `api-v1.1.0` image is deployed as revision `terraclass-api-v1-1-0`; and enabled 5xx-ratio and warm-container p95-latency policies were created and read back.
+- **Next production handoff:** attach and verify an owner-approved notification channel, gather enough traffic for the candidate 30-day objective, and add labeled or human-reviewed production feedback before claiming a validated drift detector.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -51,9 +52,12 @@ These are observed values from the original notebook, not newly reproduced resul
 - `configs/serving/model_release_v1.json` is the HTTPS release URL, byte-count, and SHA-256 distribution contract.
 - `src/terraclass/inference.py` is the reusable image-validation and prediction boundary for the web application.
 - `src/terraclass/api.py` exposes the model through a typed, versioned FastAPI contract.
+- `src/terraclass/telemetry.py` emits the privacy-allowlisted production prediction event.
 - `Dockerfile` defines artifact-free CI and checksum-fetched production container targets.
 - `.github/workflows/` defines Python, web, container-contract, provenance, and SBOM automation.
 - `deploy/cloud-run-service.template.yaml` records the initial Cloud Run resources, capacity, CORS, and probe policy.
+- `configs/monitoring/observability_v1.json` separates candidate objectives from established claims and defines the telemetry/privacy contract.
+- `deploy/monitoring/` contains the deployed Cloud Monitoring alert-policy templates.
 - `web/` contains the responsive Tailwind CSS/Next.js TerraClass interface, Vercel configuration, and production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
 - `reports/api_load_test_2026-07-16.json` records the real-model HTTP benchmark at concurrency 1, 2, and 4.
@@ -61,8 +65,13 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/container_release_verification_2026-07-16.json` records public OCI pull, digest, platform-image, SBOM, and provenance evidence.
 - `reports/cloud_run_load_test_2026-07-16.json` records the zero-failure production HTTP benchmark at concurrency 1, 2, and 4.
 - `reports/cloud_run_deployment_verification_2026-07-16.json` binds the Cloud Run revision, resolved image, resources, probes, prediction, CORS, load report, and Vercel deployment.
+- `reports/cloud_run_scale_to_zero_2026-07-17.json` records the metric-confirmed zero-instance precondition and one client-observed cold request.
+- `reports/container_release_verification_2026-07-17.json` binds service source `1.1.0` to its public OCI digests, SPDX SBOM, and SLSA provenance.
+- `reports/cloud_monitoring_deployment_2026-07-17.json` records the two enabled policy IDs and the intentionally empty notification routing.
+- `reports/cloud_run_observability_deployment_2026-07-17.json` binds the current release, Cloud Run revision, API response, structured log, and Vercel browser acceptance evidence.
 - `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and integrated deployment.
-- `docs/PRODUCTION_INFERENCE.md` documents the 16 July container, model-release, Cloud Run, Vercel, CI, and load-test evidence.
+- `docs/PRODUCTION_INFERENCE.md` documents the 16–17 July container, Cloud Run, Vercel, load, scale-to-zero, and observability evidence.
+- `docs/OBSERVABILITY_AND_DRIFT.md` defines the monitoring boundaries and explains what remains before a drift or SLO claim is credible.
 
 ## Local setup
 

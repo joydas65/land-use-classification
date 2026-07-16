@@ -57,6 +57,13 @@ inspection also verified the Linux/AMD64 image manifest and its two in-toto atte
 SPDX SBOM and SLSA provenance v1. The exact descriptors are committed in
 `reports/container_release_verification_2026-07-16.json`.
 
+For the observability release, GitHub CI run `29528731780` passed the Python, web, and
+container-contract jobs. Tag `api-v1.1.0` triggered container-release run `29528840225`; anonymous
+inspection verified both release tags against OCI index
+`sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41`, the resolved Linux/AMD64
+manifest, and its SPDX/SLSA attestation layers. The current release evidence is committed in
+`reports/container_release_verification_2026-07-17.json`.
+
 The dependency review was rerun on 16 and 17 July with `npm audit --audit-level=high` for the
 complete tree and `npm audit --omit=dev --audit-level=high` for production dependencies. Neither
 tree has a high or critical advisory. The complete tree currently reports one low and five moderate
@@ -158,4 +165,6 @@ reject invalid probabilities, and prove that an upload filename, image content/h
 user agent are absent from the prediction event. Deployment-contract tests parse both Cloud
 Monitoring policy templates and require their metrics and service target to match
 `configs/monitoring/observability_v1.json`. See `docs/OBSERVABILITY_AND_DRIFT.md` for the operational
-claim boundary.
+claim boundary. Deployment tests also bind the `api-v1.1.0` release to Cloud Run revision
+`terraclass-api-v1-1-0`, verify the exact structured log allowlist, and preserve the distinction
+between deployed incident policies and unconfigured notification routing.

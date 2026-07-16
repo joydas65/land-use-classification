@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-07-17",
+  "cloud_run": {
+    "project_id": "land-use-classification-502614",
+    "project_number": "280836764570",
+    "region": "asia-south1",
+    "service": "terraclass-api",
+    "revision": "terraclass-api-v1-1-0",
+    "service_url": "https://terraclass-api-280836764570.asia-south1.run.app",
+    "ready": true,
+    "traffic_percent": 100,
+    "deployed_oci_index_digest": "sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41",
+    "resolved_linux_amd64_digest": "sha256:eeb2e416780bbad8b86fad302916857c388a6375c5b86486244e8dad7e6e6f75",
+    "runtime_identity": {
+      "service_account": "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com",
+      "project_roles": []
+    },
+    "public_invoker": {
+      "role": "roles/run.invoker",
+      "member": "allUsers"
+    },
+    "resources": {
+      "cpu": "2",
+      "memory": "2Gi",
+      "container_concurrency": 4,
+      "min_instances": 0,
+      "max_instances": 3,
+      "timeout_seconds": 30,
+      "cpu_throttling": true,
+      "startup_cpu_boost": true
+    },
+    "capacity": {
+      "max_concurrent_inferences": 1,
+      "queue_timeout_seconds": 5
+    },
+    "probes": {
+      "startup_path": "/api/v1/health/ready",
+      "startup_failure_threshold": 30,
+      "liveness_path": "/api/v1/health/live",
+      "liveness_failure_threshold": 3
+    },
+    "rollout": {
+      "revision_created_at_utc": "2026-07-16T19:41:28.403550Z",
+      "revision_ready_seconds": 35.63,
+      "container_healthy_seconds": 18.03,
+      "container_image_import_seconds": 8.69
+    }
+  },
+  "api_verification": {
+    "live_status_code": 200,
+    "ready_status_code": 200,
+    "service_name": "terraclass-inference-api",
+    "service_version": "1.1.0",
+    "model_metadata_status_code": 200,
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "serving_artifact_sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523",
+    "prediction": {
+      "status_code": 200,
+      "request_id": "0c6a4d97-48da-4af5-8cc7-2cccb270ec4a",
+      "expected_class": "agricultural",
+      "predicted_class": "agricultural",
+      "confidence": 0.993049144744873,
+      "inference_latency_ms": 425.61761999999703,
+      "image_width": 256,
+      "image_height": 256
+    },
+    "cors_preflight": {
+      "status_code": 200,
+      "allowed_origin": "https://terraclass-land-use-classification.vercel.app",
+      "allowed_methods": [
+        "GET",
+        "POST",
+        "OPTIONS"
+      ]
+    }
+  },
+  "structured_telemetry_verification": {
+    "log_name": "run.googleapis.com/stdout",
+    "payload_type": "jsonPayload",
+    "event": {
+      "event": "prediction_observation",
+      "schema_version": 1,
+      "request_id": "0c6a4d97-48da-4af5-8cc7-2cccb270ec4a",
+      "model_id": "terraclass-resnet18-group-aware",
+      "model_version": "1.0.0",
+      "predicted_class": "agricultural",
+      "confidence": 0.993049,
+      "confidence_bucket": "0_95_to_1_00",
+      "inference_latency_ms": 425.618,
+      "image_width": 256,
+      "image_height": 256,
+      "payload_bytes": 211424,
+      "content_type": "image/tiff"
+    },
+    "http_event": {
+      "event": "http_request",
+      "schema_version": 1,
+      "request_id": "0c6a4d97-48da-4af5-8cc7-2cccb270ec4a",
+      "method": "POST",
+      "path": "/api/v1/predictions",
+      "status_code": 200,
+      "duration_ms": 821.52
+    },
+    "prohibited_fields_absent": [
+      "filename",
+      "image_bytes",
+      "image_sha256",
+      "remote_ip",
+      "user_agent"
+    ]
+  },
+  "monitoring": {
+    "deployment_report": "reports/cloud_monitoring_deployment_2026-07-17.json",
+    "alert_policy_count": 2,
+    "notifications_routed": false
+  },
+  "vercel_browser": {
+    "production_alias": "https://terraclass-land-use-classification.vercel.app",
+    "page_title": "TerraClass | Satellite Land-Use Classification",
+    "browser_model_status": "Model ready",
+    "alert_text": "",
+    "console_errors": 0,
+    "console_warnings": 0
+  },
+  "claim_boundary": {
+    "service_v1_1_0_deployed": true,
+    "privacy_allowlisted_prediction_telemetry_observed": true,
+    "alert_policies_deployed": true,
+    "notifications_routed": false,
+    "candidate_objectives_established_as_slo": false,
+    "drift_detector_validated": false
+  }
+}

@@ -10,7 +10,9 @@ affect billing.
 - project: `land-use-classification-502614`
 - region: `asia-south1`
 - service: `terraclass-api`
-- released image: `ghcr.io/joydas65/terraclass-api:api-v1.0.0`
+- current released image: `ghcr.io/joydas65/terraclass-api:api-v1.1.0`
+- current OCI index: `sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41`
+- current revision: `terraclass-api-v1-1-0`
 - runtime identity: `terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com`
 
 ## Build and deploy
@@ -40,12 +42,13 @@ contracts unchanged unless a new reviewed requirement justifies the change.
 
 ## Acceptance gate
 
-1. `/api/v1/health/live`, `/api/v1/health/ready`, and `/api/v1/model` return their versioned shapes.
+1. `/api/v1/health/live`, `/api/v1/health/ready`, and `/api/v1/model` return their versioned shapes; service version is `1.1.0` and model version remains `1.0.0`.
 2. The artifact SHA-256 equals
    `b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523`.
 3. The production load probe has zero failures at concurrency 1, 2, and 4.
 4. Scale-from-zero client time, steady-state p50/p95, revision, region, and image digests are recorded.
 5. Browser preflight and prediction requests succeed only from the Vercel production origin.
+6. A successful prediction emits one allowlisted `prediction_observation` JSON event without filename, image content/hash, IP address, or user-agent fields.
 
 Only after this gate passes should `NEXT_PUBLIC_TERRACLASS_API_URL` be added to Vercel and the
 frontend redeployed. Do not store Google credentials, access tokens, or service-account keys in this

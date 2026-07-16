@@ -67,11 +67,31 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     )
     assert report.observed["production_readiness"]["cloud_monitoring_policies_deployed"] is True
     assert report.observed["production_readiness"]["cloud_monitoring_notifications_routed"] is False
+    assert (
+        report.observed["production_readiness"]["current_container_release_workflow_run"]
+        == 29528840225
+    )
+    assert report.observed["production_readiness"]["current_container_index_digest"] == (
+        "sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41"
+    )
+    assert report.observed["production_readiness"]["current_container_platform_digest"] == (
+        "sha256:eeb2e416780bbad8b86fad302916857c388a6375c5b86486244e8dad7e6e6f75"
+    )
+    assert report.observed["production_readiness"]["current_cloud_run_revision"] == (
+        "terraclass-api-v1-1-0"
+    )
+    assert report.observed["production_readiness"]["current_service_version"] == "1.1.0"
+    assert (
+        report.observed["production_readiness"]["production_prediction_telemetry_observed"] is True
+    )
     assert "filename" not in report.observed["production_readiness"]["prediction_telemetry_fields"]
     assert "29457675941" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
     )
     assert "29503393345" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
+        encoding="utf-8"
+    )
+    assert "29528840225" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
     )
     assert report.observed["application_layer"] == {

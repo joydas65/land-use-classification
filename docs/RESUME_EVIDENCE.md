@@ -27,6 +27,9 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Public Linux/AMD64 OCI image with semantic/source tags, immutable digest verification, SPDX SBOM, and SLSA v1 provenance
 - Immutable-digest Cloud Run deployment with a dedicated no-role runtime identity, bounded CPU/memory/concurrency, scale-to-zero, startup/liveness probes, restricted Vercel CORS, and production request evidence
 - Integrated Vercel-to-Cloud Run deployment verified through browser readiness, a correct production prediction, and a zero-failure 60-request production load probe
+- Metric-confirmed scale-to-zero verification correlated across client timing, Cloud Run request logs, and an autoscaling instance-start event
+- Privacy-allowlisted JSON prediction telemetry with independent service/model versioning and tests that exclude filenames, image content/hashes, network identity, and user agents
+- Deployed Cloud Monitoring 5xx-ratio and warm-container p95 policies, with candidate objectives kept separate from achieved SLO and drift claims
 
 ## Supported numerical claim
 
@@ -60,6 +63,10 @@ Optional production-deployment bullet:
 
 > Deployed the immutable ResNet18 container to Cloud Run under a dedicated least-privilege runtime identity, with scale-to-zero, bounded concurrency, health probes, and origin-restricted CORS; connected the Vercel UI and completed a 60-request production load probe with zero failures and 365.2 ms p95 latency at concurrency four.
 
+Optional production-observability bullet:
+
+> Added privacy-allowlisted structured prediction telemetry and Cloud Monitoring 5xx/p95 alert policies to a versioned ML API; verified one scale-from-zero request at 11.013 seconds by correlating a zero-instance metric, client timing, and the Cloud Run autoscaling log.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -68,6 +75,9 @@ The model/version contract, input validation, restricted artifact loading, local
 concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
 workflow definitions, health probes, and public Vercel frontend are complete. GitHub CI has built the
 artifact-free runtime container and passed the Python and web gates. The public, checksum-verified
-model release, model-bearing production image, Cloud Run API, production load probe, and integrated
-Vercel deployment are complete. A scale-to-zero client-request measurement, production SLOs,
-alerting, and drift-ready telemetry remain future deliverables and must not yet be claimed.
+model release, model-bearing production image, Cloud Run API, production load probe, integrated
+Vercel deployment, scale-from-zero measurement, structured prediction telemetry, and incident
+policies are complete. Notification routing still needs an owner-approved destination. The candidate
+objectives need sufficient historical traffic before they can be described as achieved SLOs, and
+credible drift validation still requires a representative reference window plus labeled or
+human-reviewed production examples.

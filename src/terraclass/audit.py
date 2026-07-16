@@ -105,6 +105,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
     container_release_verification_path = (
         root / "reports/container_release_verification_2026-07-16.json"
     )
+    current_container_release_path = root / "reports/container_release_verification_2026-07-17.json"
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
     api_load_report_path = root / "reports/api_load_test_2026-07-16.json"
     cloud_run_load_report_path = root / "reports/cloud_run_load_test_2026-07-16.json"
@@ -113,6 +114,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
     )
     cloud_run_scale_to_zero_path = root / "reports/cloud_run_scale_to_zero_2026-07-17.json"
     cloud_monitoring_deployment_path = root / "reports/cloud_monitoring_deployment_2026-07-17.json"
+    observability_deployment_path = (
+        root / "reports/cloud_run_observability_deployment_2026-07-17.json"
+    )
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
     api_document_path = root / "docs/API_AND_WEB_APP.md"
     production_document_path = root / "docs/PRODUCTION_INFERENCE.md"
@@ -567,6 +571,64 @@ def audit_project(project_root: str | Path) -> AuditReport:
                 or layer.get("size_bytes", 0) <= 0
             ):
                 report.errors.append("Container attestation layer evidence is invalid")
+
+    if not current_container_release_path.is_file():
+        report.errors.append("Current container-release verification report is missing")
+        current_container_release: dict[str, Any] = {}
+    else:
+        current_container_release = json.loads(
+            current_container_release_path.read_text(encoding="utf-8")
+        )
+        current_source = current_container_release.get("source", {})
+        current_workflow = current_container_release.get("workflow", {})
+        current_registry = current_container_release.get("registry", {})
+        current_index = current_container_release.get("oci_index", {})
+        current_image = current_container_release.get("image", {})
+        current_attestation = current_container_release.get("attestation_manifest", {})
+        if (
+            current_container_release.get("schema_version") != 1
+            or current_container_release.get("verified_on") != "2026-07-17"
+            or current_source
+            != {
+                "repository": "https://github.com/joydas65/land-use-classification",
+                "commit": "e8a11cf4ba71db65d96479dd35cd7064072dedd4",
+                "tag": "api-v1.1.0",
+            }
+            or current_workflow.get("run_id") != 29528840225
+            or current_workflow.get("conclusion") != "success"
+        ):
+            report.errors.append("Current container source/workflow evidence is inconsistent")
+        current_index_digest = current_index.get("digest")
+        current_image_digest = current_image.get("digest")
+        if (
+            current_registry.get("visibility") != "public"
+            or current_registry.get("anonymous_oci_pull_verified") is not True
+            or current_registry.get("tags")
+            != {
+                "api-v1.1.0": current_index_digest,
+                "sha-e8a11cf": current_index_digest,
+            }
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", str(current_index_digest)) is None
+            or current_image.get("platform") != {"architecture": "amd64", "os": "linux"}
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", str(current_image_digest)) is None
+        ):
+            report.errors.append("Current public OCI image evidence is inconsistent")
+        current_layers = current_attestation.get("layers", [])
+        if (
+            re.fullmatch(r"sha256:[0-9a-f]{64}", str(current_attestation.get("digest"))) is None
+            or current_attestation.get("subject_digest") != current_image_digest
+            or {layer.get("predicate_type") for layer in current_layers}
+            != {"https://spdx.dev/Document", "https://slsa.dev/provenance/v1"}
+        ):
+            report.errors.append("Current container attestations do not bind the platform image")
+        for layer in current_layers:
+            if (
+                not isinstance(layer, dict)
+                or re.fullmatch(r"sha256:[0-9a-f]{64}", str(layer.get("digest"))) is None
+                or not isinstance(layer.get("size_bytes"), int)
+                or layer.get("size_bytes", 0) <= 0
+            ):
+                report.errors.append("Current container attestation layer evidence is invalid")
 
     if not inference_benchmark_path.is_file():
         report.errors.append("Versioned inference benchmark is missing")
@@ -1065,6 +1127,128 @@ def audit_project(project_root: str | Path) -> AuditReport:
         }:
             report.errors.append("Cloud Monitoring deployment claim boundary is inconsistent")
 
+    if not observability_deployment_path.is_file():
+        report.errors.append("Cloud Run observability deployment evidence is missing")
+        observability_deployment: dict[str, Any] = {}
+    else:
+        observability_deployment = json.loads(
+            observability_deployment_path.read_text(encoding="utf-8")
+        )
+        current_cloud_run = observability_deployment.get("cloud_run", {})
+        current_api = observability_deployment.get("api_verification", {})
+        current_telemetry = observability_deployment.get("structured_telemetry_verification", {})
+        current_browser = observability_deployment.get("vercel_browser", {})
+        current_claim = observability_deployment.get("claim_boundary", {})
+        if (
+            observability_deployment.get("schema_version") != 1
+            or observability_deployment.get("verified_on") != "2026-07-17"
+            or current_cloud_run.get("project_id") != "land-use-classification-502614"
+            or current_cloud_run.get("region") != "asia-south1"
+            or current_cloud_run.get("service") != "terraclass-api"
+            or current_cloud_run.get("revision") != "terraclass-api-v1-1-0"
+            or current_cloud_run.get("service_url")
+            != "https://terraclass-api-280836764570.asia-south1.run.app"
+            or current_cloud_run.get("ready") is not True
+            or current_cloud_run.get("traffic_percent") != 100
+            or current_cloud_run.get("deployed_oci_index_digest")
+            != current_container_release.get("oci_index", {}).get("digest")
+            or current_cloud_run.get("resolved_linux_amd64_digest")
+            != current_container_release.get("image", {}).get("digest")
+        ):
+            report.errors.append("Current Cloud Run release binding is inconsistent")
+        if current_cloud_run.get("runtime_identity") != {
+            "service_account": (
+                "terraclass-runtime@land-use-classification-502614.iam.gserviceaccount.com"
+            ),
+            "project_roles": [],
+        } or current_cloud_run.get("public_invoker") != {
+            "role": "roles/run.invoker",
+            "member": "allUsers",
+        }:
+            report.errors.append("Current Cloud Run IAM evidence is inconsistent")
+        if current_cloud_run.get("resources") != {
+            "cpu": "2",
+            "memory": "2Gi",
+            "container_concurrency": 4,
+            "min_instances": 0,
+            "max_instances": 3,
+            "timeout_seconds": 30,
+            "cpu_throttling": True,
+            "startup_cpu_boost": True,
+        } or current_cloud_run.get("capacity") != {
+            "max_concurrent_inferences": 1,
+            "queue_timeout_seconds": 5,
+        }:
+            report.errors.append("Current Cloud Run resource/capacity contract is inconsistent")
+        if current_cloud_run.get("probes") != {
+            "startup_path": "/api/v1/health/ready",
+            "startup_failure_threshold": 30,
+            "liveness_path": "/api/v1/health/live",
+            "liveness_failure_threshold": 3,
+        } or any(
+            current_cloud_run.get("rollout", {}).get(field, 0) <= 0
+            for field in (
+                "revision_ready_seconds",
+                "container_healthy_seconds",
+                "container_image_import_seconds",
+            )
+        ):
+            report.errors.append("Current Cloud Run probe/rollout evidence is inconsistent")
+        if serving_config is not None and (
+            current_api.get("live_status_code") != 200
+            or current_api.get("ready_status_code") != 200
+            or current_api.get("service_version") != "1.1.0"
+            or current_api.get("model_id") != serving_config.model_id
+            or current_api.get("model_version") != serving_config.model_version
+            or current_api.get("serving_artifact_sha256") != serving_config.serving_artifact.sha256
+            or current_api.get("prediction", {}).get("predicted_class") != "agricultural"
+            or current_api.get("cors_preflight", {}).get("allowed_origin")
+            != "https://terraclass-land-use-classification.vercel.app"
+        ):
+            report.errors.append("Current Cloud Run API/CORS evidence is inconsistent")
+        telemetry_event = current_telemetry.get("event", {})
+        if (
+            set(telemetry_event) != set(PREDICTION_OBSERVATION_FIELDS)
+            or current_telemetry.get("payload_type") != "jsonPayload"
+            or current_telemetry.get("prohibited_fields_absent")
+            != monitoring_config.get("telemetry", {}).get("prohibited_fields")
+            or telemetry_event.get("request_id")
+            != current_api.get("prediction", {}).get("request_id")
+            or telemetry_event.get("event") != "prediction_observation"
+            or telemetry_event.get("schema_version") != 1
+            or telemetry_event.get("model_id") != current_api.get("model_id")
+            or telemetry_event.get("model_version") != current_api.get("model_version")
+            or telemetry_event.get("predicted_class")
+            != current_api.get("prediction", {}).get("predicted_class")
+            or not 0 <= telemetry_event.get("confidence", -1) <= 1
+            or telemetry_event.get("inference_latency_ms", 0) <= 0
+        ):
+            report.errors.append("Production structured telemetry evidence is inconsistent")
+        if observability_deployment.get("monitoring") != {
+            "deployment_report": "reports/cloud_monitoring_deployment_2026-07-17.json",
+            "alert_policy_count": len(cloud_monitoring_deployment.get("policies", [])),
+            "notifications_routed": False,
+        }:
+            report.errors.append("Current deployment does not bind the monitoring evidence")
+        if current_browser != {
+            "production_alias": "https://terraclass-land-use-classification.vercel.app",
+            "page_title": "TerraClass | Satellite Land-Use Classification",
+            "browser_model_status": "Model ready",
+            "alert_text": "",
+            "console_errors": 0,
+            "console_warnings": 0,
+        }:
+            report.errors.append("Current Vercel browser evidence is inconsistent")
+        if current_claim != {
+            "service_v1_1_0_deployed": True,
+            "privacy_allowlisted_prediction_telemetry_observed": True,
+            "alert_policies_deployed": True,
+            "notifications_routed": False,
+            "candidate_objectives_established_as_slo": False,
+            "drift_detector_validated": False,
+        }:
+            report.errors.append("Current observability deployment claim boundary is inconsistent")
+
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
     if not any(str(dependency).startswith("fastapi") for dependency in web_dependencies):
@@ -1402,6 +1586,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "321.804 ms",
         "cloud_run_scale_to_zero_2026-07-17.json",
         "cloud_monitoring_deployment_2026-07-17.json",
+        "29528731780",
+        "29528840225",
+        "api-v1.1.0",
+        "sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41",
+        "sha256:eeb2e416780bbad8b86fad302916857c388a6375c5b86486244e8dad7e6e6f75",
+        "terraclass-api-v1-1-0",
+        "cloud_run_observability_deployment_2026-07-17.json",
+        "candidate engineering objectives",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")
@@ -1629,6 +1821,24 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "cloud_monitoring_notifications_routed": cloud_monitoring_deployment.get(
                 "claim_boundary", {}
             ).get("notifications_routed"),
+            "current_container_release_workflow_run": current_container_release.get(
+                "workflow", {}
+            ).get("run_id"),
+            "current_container_index_digest": current_container_release.get("oci_index", {}).get(
+                "digest"
+            ),
+            "current_container_platform_digest": current_container_release.get("image", {}).get(
+                "digest"
+            ),
+            "current_cloud_run_revision": observability_deployment.get("cloud_run", {}).get(
+                "revision"
+            ),
+            "current_service_version": observability_deployment.get("api_verification", {}).get(
+                "service_version"
+            ),
+            "production_prediction_telemetry_observed": observability_deployment.get(
+                "claim_boundary", {}
+            ).get("privacy_allowlisted_prediction_telemetry_observed"),
         },
         "application_layer": {
             "api_routes": list(expected_api_routes),

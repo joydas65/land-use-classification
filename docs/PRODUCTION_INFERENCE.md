@@ -1,4 +1,4 @@
-# Production Inference Phase — 16 July 2026
+# Production Inference and Observability — 16 July 2026 through 17 July 2026
 
 ## Outcome
 
@@ -6,7 +6,8 @@ The verified ResNet18 inference service now has a portable production contract a
 Linux/AMD64 image: a non-root CPU container, checksum-pinned model distribution, bounded request
 capacity, automated CI, an SPDX SBOM, SLSA v1 provenance, and repeatable local and production HTTP
 load tests. The exact released image is deployed to Cloud Run, and the public Vercel interface is
-connected to it and reports `Model ready`.
+connected to it and reports `Model ready`. The 17 July release adds privacy-allowlisted structured
+telemetry, a verified scale-from-zero request, and two deployed Cloud Monitoring alert policies.
 
 ## Why the API is separate from Vercel
 
@@ -95,7 +96,7 @@ in a separate local gcloud configuration to prevent cross-project changes. Cloud
 
 `https://terraclass-api-280836764570.asia-south1.run.app`
 
-Revision `terraclass-api-v1-0-1` serves 100% of traffic and resolves the released OCI index to the
+The initial hardened revision `terraclass-api-v1-0-1` served 100% of traffic and resolved the released OCI index to the
 verified Linux/AMD64 image digest
 `sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e`.
 The revision uses 2 vCPU, 2 GiB memory, concurrency 4, one protected model-execution slot,
@@ -158,3 +159,25 @@ the uploaded filename, image bytes/hash, IP address, or user agent into applicat
 telemetry. Model version remains `1.0.0`. See `docs/OBSERVABILITY_AND_DRIFT.md` for the candidate
 99%/30-day and p95 objectives and the reasons these are not yet established SLOs or a validated drift
 detector.
+
+GitHub CI run
+[`29528731780`](https://github.com/joydas65/land-use-classification/actions/runs/29528731780)
+passed the Python, web, and container-contract jobs for source commit
+`e8a11cf4ba71db65d96479dd35cd7064072dedd4`. Tag `api-v1.1.0` then triggered successful
+[container-release run `29528840225`](https://github.com/joydas65/land-use-classification/actions/runs/29528840225).
+Anonymous OCI inspection verified that `api-v1.1.0` and `sha-e8a11cf` resolve to immutable index
+`sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41`. Its Linux/AMD64 image is
+`sha256:eeb2e416780bbad8b86fad302916857c388a6375c5b86486244e8dad7e6e6f75`, with attached SPDX and
+SLSA provenance v1 evidence recorded in `reports/container_release_verification_2026-07-17.json`.
+
+Cloud Run revision `terraclass-api-v1-1-0` now serves 100% of traffic using those exact digests. It
+became ready in 35.63 seconds, retained the reviewed identity, resource, capacity, probe, and CORS
+contracts, and returned HTTP 200 for live, ready, model, preflight, and prediction checks. The
+production prediction produced a matching `jsonPayload` observation containing exactly the telemetry
+allowlist and none of the prohibited application fields. A fresh browser check of the Vercel alias
+again showed `Model ready` with zero console warnings or errors. The complete binding is in
+`reports/cloud_run_observability_deployment_2026-07-17.json`.
+
+The two policies can create incidents, but no notification destination is attached. The 99%/30-day
+availability and 1,000 ms warm p95 values remain candidate engineering objectives; this point-in-time
+evidence does not establish an achieved SLO or a validated drift detector.

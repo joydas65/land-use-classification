@@ -179,6 +179,89 @@ def test_public_container_release_has_digest_sbom_and_provenance(project_root: P
     }
 
 
+def test_observability_container_release_binds_source_tags_and_attestations(
+    project_root: Path,
+) -> None:
+    evidence = json.loads(
+        (project_root / "reports/container_release_verification_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    index_digest = "sha256:aee708b1d979a331f8f4f71ad9988ab01e6b04bc1cf2fc4420ad535328a06e41"
+    image_digest = "sha256:eeb2e416780bbad8b86fad302916857c388a6375c5b86486244e8dad7e6e6f75"
+
+    assert evidence["source"] == {
+        "repository": "https://github.com/joydas65/land-use-classification",
+        "commit": "e8a11cf4ba71db65d96479dd35cd7064072dedd4",
+        "tag": "api-v1.1.0",
+    }
+    assert evidence["workflow"]["run_id"] == 29_528_840_225
+    assert evidence["workflow"]["conclusion"] == "success"
+    assert evidence["registry"]["anonymous_oci_pull_verified"] is True
+    assert evidence["registry"]["tags"] == {
+        "api-v1.1.0": index_digest,
+        "sha-e8a11cf": index_digest,
+    }
+    assert evidence["oci_index"]["digest"] == index_digest
+    assert evidence["image"] == {
+        "digest": image_digest,
+        "media_type": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {"architecture": "amd64", "os": "linux"},
+    }
+    assert evidence["attestation_manifest"]["subject_digest"] == image_digest
+    assert {layer["predicate_type"] for layer in evidence["attestation_manifest"]["layers"]} == {
+        "https://spdx.dev/Document",
+        "https://slsa.dev/provenance/v1",
+    }
+
+
+def test_observability_deployment_binds_release_telemetry_and_browser(
+    project_root: Path,
+) -> None:
+    release = json.loads(
+        (project_root / "reports/container_release_verification_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    deployment = json.loads(
+        (project_root / "reports/cloud_run_observability_deployment_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    config = json.loads(
+        (project_root / "configs/monitoring/observability_v1.json").read_text(encoding="utf-8")
+    )
+    cloud_run = deployment["cloud_run"]
+    api = deployment["api_verification"]
+    telemetry = deployment["structured_telemetry_verification"]
+
+    assert cloud_run["revision"] == "terraclass-api-v1-1-0"
+    assert cloud_run["ready"] is True
+    assert cloud_run["traffic_percent"] == 100
+    assert cloud_run["deployed_oci_index_digest"] == release["oci_index"]["digest"]
+    assert cloud_run["resolved_linux_amd64_digest"] == release["image"]["digest"]
+    assert cloud_run["runtime_identity"]["project_roles"] == []
+    assert cloud_run["resources"]["min_instances"] == 0
+    assert api["service_version"] == "1.1.0"
+    assert api["model_version"] == "1.0.0"
+    assert api["prediction"]["predicted_class"] == "agricultural"
+    assert telemetry["payload_type"] == "jsonPayload"
+    assert set(telemetry["event"]) == set(config["telemetry"]["allowlisted_fields"])
+    assert telemetry["prohibited_fields_absent"] == config["telemetry"]["prohibited_fields"]
+    assert telemetry["event"]["request_id"] == api["prediction"]["request_id"]
+    assert deployment["vercel_browser"]["browser_model_status"] == "Model ready"
+    assert deployment["vercel_browser"]["console_errors"] == 0
+    assert deployment["vercel_browser"]["console_warnings"] == 0
+    assert deployment["claim_boundary"] == {
+        "service_v1_1_0_deployed": True,
+        "privacy_allowlisted_prediction_telemetry_observed": True,
+        "alert_policies_deployed": True,
+        "notifications_routed": False,
+        "candidate_objectives_established_as_slo": False,
+        "drift_detector_validated": False,
+    }
+
+
 def test_cloud_run_and_vercel_evidence_bind_the_released_image(project_root: Path) -> None:
     release = json.loads(
         (project_root / "reports/container_release_verification_2026-07-16.json").read_text(
