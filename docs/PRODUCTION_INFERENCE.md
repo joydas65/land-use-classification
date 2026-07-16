@@ -2,11 +2,11 @@
 
 ## Outcome
 
-The verified ResNet18 inference service now has a portable production contract: a non-root CPU
-container, checksum-pinned model distribution, bounded request capacity, automated CI definitions,
-and a repeatable HTTP load test. The API is **not yet deployed** and the public Vercel interface
-continues to show the model as offline. This keeps the portfolio claim aligned with what a visitor
-can actually use.
+The verified ResNet18 inference service now has a portable production contract and a public
+Linux/AMD64 image: a non-root CPU container, checksum-pinned model distribution, bounded request
+capacity, automated CI, an SPDX SBOM, SLSA v1 provenance, and a repeatable HTTP load test. The API is
+**not yet deployed** and the public Vercel interface continues to show the model as offline. This
+keeps the portfolio claim aligned with what a visitor can actually use.
 
 ## Why the API is separate from Vercel
 
@@ -70,12 +70,30 @@ Python job also checks dependency consistency and known vulnerabilities before t
 available, publishes to GHCR, and requests provenance and an SBOM. GitHub CI run
 [`29457675941`](https://github.com/joydas65/land-use-classification/actions/runs/29457675941)
 completed successfully on 16 July: the Python, web, and artifact-free `runtime-base` container jobs
-all passed. The model-bearing production image has not yet been published; its workflow can now
-consume the verified public release asset.
+all passed. The signed release described below then built the model-bearing target and published it
+with provenance and an SBOM.
+
+## Published production image
+
+Tagging source commit `3b5b07471246227b48cfdae909a7a81637e714b8` as `api-v1.0.0` triggered
+[container-release run `29503393345`](https://github.com/joydas65/land-use-classification/actions/runs/29503393345),
+which completed successfully. A standards-based anonymous OCI pull then verified the public package
+`ghcr.io/joydas65/terraclass-api` and its immutable index digest:
+
+`sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73`
+
+Both `api-v1.0.0` and `sha-3b5b074` resolve to that digest. The index contains the Linux/AMD64 image
+manifest `sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e`
+and an attestation manifest with two in-toto layers: an SPDX document and SLSA provenance v1. The
+complete registry evidence is versioned in `reports/container_release_verification_2026-07-16.json`.
+
+Cloud Run deployment was not attempted from the locally configured Google Cloud context because it
+contains only a corporate account and project. A personal Google Cloud project with billing enabled
+must be selected before creating any service or IAM binding.
 
 ## Remaining production handoff
 
-1. Build and publish the production image, then deploy its exact digest to Cloud Run.
+1. Configure a personal Google Cloud project and deploy the verified OCI digest to Cloud Run.
 2. Run the same load probe against the HTTPS Cloud Run URL and record cold-start behavior.
 3. Set `NEXT_PUBLIC_TERRACLASS_API_URL`, redeploy Vercel, verify CORS and predictions, and only then
    change the project status to a deployed end-to-end classifier.

@@ -101,6 +101,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
     serving_config_path = root / "configs/serving/resnet18_group_aware_v1.json"
     model_release_path = root / "configs/serving/model_release_v1.json"
     model_release_verification_path = root / "reports/model_release_verification_2026-07-16.json"
+    container_release_verification_path = (
+        root / "reports/container_release_verification_2026-07-16.json"
+    )
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
     api_load_report_path = root / "reports/api_load_test_2026-07-16.json"
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
@@ -479,6 +482,76 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "sha256_matches_contract": True,
         }:
             report.errors.append("Public model-download verification is incomplete")
+
+    if not container_release_verification_path.is_file():
+        report.errors.append("Public container-release verification report is missing")
+        container_release_verification: dict[str, Any] = {}
+    else:
+        try:
+            container_release_verification = json.loads(
+                container_release_verification_path.read_text(encoding="utf-8")
+            )
+        except json.JSONDecodeError as error:
+            report.errors.append(f"Container-release verification report is invalid: {error}")
+            container_release_verification = {}
+        if container_release_verification.get("schema_version") != 1:
+            report.errors.append("Container-release verification schema version differs from 1")
+        if container_release_verification.get("verified_on") != "2026-07-16":
+            report.errors.append("Container-release verification date differs from 16 July 2026")
+        source_evidence = container_release_verification.get("source", {})
+        if (
+            source_evidence.get("repository")
+            != ("https://github.com/joydas65/land-use-classification")
+            or source_evidence.get("tag") != "api-v1.0.0"
+        ):
+            report.errors.append("Container source evidence differs from the release tag")
+        if re.fullmatch(r"[0-9a-f]{40}", str(source_evidence.get("commit"))) is None:
+            report.errors.append("Container source commit is not a full Git SHA")
+        workflow_evidence = container_release_verification.get("workflow", {})
+        if workflow_evidence.get("run_id") != 29503393345 or (
+            workflow_evidence.get("conclusion") != "success"
+        ):
+            report.errors.append("Container-release workflow evidence is not successful")
+        registry_evidence = container_release_verification.get("registry", {})
+        if (
+            registry_evidence.get("repository") != "ghcr.io/joydas65/terraclass-api"
+            or registry_evidence.get("visibility") != "public"
+            or registry_evidence.get("public_pull_verified") is not True
+        ):
+            report.errors.append("Public GHCR pull evidence is incomplete")
+        tag_digests = registry_evidence.get("tags", {})
+        index_evidence = container_release_verification.get("oci_index", {})
+        index_digest = index_evidence.get("digest")
+        if (
+            re.fullmatch(r"sha256:[0-9a-f]{64}", str(index_digest)) is None
+            or tag_digests.get("api-v1.0.0") != index_digest
+            or tag_digests.get("sha-3b5b074") != index_digest
+        ):
+            report.errors.append("Container tags do not share one immutable OCI digest")
+        image_evidence = container_release_verification.get("image", {})
+        image_digest = image_evidence.get("digest")
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", str(image_digest)) is None or image_evidence.get(
+            "platform"
+        ) != {"architecture": "amd64", "os": "linux"}:
+            report.errors.append("Container platform-image evidence is invalid")
+        attestation_evidence = container_release_verification.get("attestation_manifest", {})
+        if (
+            re.fullmatch(r"sha256:[0-9a-f]{64}", str(attestation_evidence.get("digest"))) is None
+            or attestation_evidence.get("subject_digest") != image_digest
+        ):
+            report.errors.append("Container attestation manifest does not bind the image")
+        attestation_layers = attestation_evidence.get("layers", [])
+        if {
+            layer.get("predicate_type") for layer in attestation_layers if isinstance(layer, dict)
+        } != {"https://spdx.dev/Document", "https://slsa.dev/provenance/v1"}:
+            report.errors.append("Container release must contain SPDX and SLSA attestations")
+        for layer in attestation_layers:
+            if not isinstance(layer, dict) or (
+                re.fullmatch(r"sha256:[0-9a-f]{64}", str(layer.get("digest"))) is None
+                or not isinstance(layer.get("size_bytes"), int)
+                or layer.get("size_bytes", 0) <= 0
+            ):
+                report.errors.append("Container attestation layer evidence is invalid")
 
     if not inference_benchmark_path.is_file():
         report.errors.append("Versioned inference benchmark is missing")
@@ -877,6 +950,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "44,795,275 bytes",
         "fresh unauthenticated HTTPS download",
         "29457675941",
+        "29503393345",
+        "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73",
+        "SPDX",
+        "SLSA provenance v1",
+        "personal Google Cloud project",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")
@@ -980,6 +1058,35 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "model_release_target_commit": model_release_verification.get("release", {}).get(
                 "target_commit"
             ),
+            "container_release_workflow_run": container_release_verification.get(
+                "workflow", {}
+            ).get("run_id"),
+            "container_image": container_release_verification.get("registry", {}).get("repository"),
+            "container_index_digest": container_release_verification.get("oci_index", {}).get(
+                "digest"
+            ),
+            "container_platform_digest": container_release_verification.get("image", {}).get(
+                "digest"
+            ),
+            "container_public_pull_verified": container_release_verification.get(
+                "registry", {}
+            ).get("public_pull_verified"),
+            "container_sbom_attested": "https://spdx.dev/Document"
+            in {
+                layer.get("predicate_type")
+                for layer in container_release_verification.get("attestation_manifest", {}).get(
+                    "layers", []
+                )
+                if isinstance(layer, dict)
+            },
+            "container_provenance_attested": "https://slsa.dev/provenance/v1"
+            in {
+                layer.get("predicate_type")
+                for layer in container_release_verification.get("attestation_manifest", {}).get(
+                    "layers", []
+                )
+                if isinstance(layer, dict)
+            },
             "container_contract": dockerfile_path.is_file(),
             "ci_workflows": ci_workflow_path.is_file() and container_workflow_path.is_file(),
             "local_http_warmup_requests": api_load_report.get("protocol", {}).get(

@@ -20,6 +20,14 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["production_readiness"]["ci_workflows"] is True
     assert report.observed["production_readiness"]["model_release_public_download_verified"] is True
     assert len(report.observed["production_readiness"]["model_release_target_commit"]) == 40
+    assert report.observed["production_readiness"]["container_release_workflow_run"] == 29503393345
+    assert report.observed["production_readiness"]["container_public_pull_verified"] is True
+    assert report.observed["production_readiness"]["container_sbom_attested"] is True
+    assert report.observed["production_readiness"]["container_provenance_attested"] is True
+    assert report.observed["production_readiness"]["container_index_digest"].startswith("sha256:")
+    assert report.observed["production_readiness"]["container_platform_digest"].startswith(
+        "sha256:"
+    )
     assert report.observed["production_readiness"]["local_http_warmup_requests"] == 5
     assert report.observed["production_readiness"]["local_http_measured_requests"] == 60
     assert report.observed["production_readiness"]["local_http_concurrency_levels"] == [1, 2, 4]
@@ -27,6 +35,9 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert report.observed["production_readiness"]["local_http_concurrency_4_p95_ms"] > 0
     assert report.observed["production_readiness"]["production_api_deployed"] is False
     assert "29457675941" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
+        encoding="utf-8"
+    )
+    assert "29503393345" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
     )
     assert report.observed["application_layer"] == {

@@ -79,7 +79,8 @@ system.
 The serving artifact remains intentionally outside Git. Integrated deployment requires a container
 image for the API, a hash-verified artifact distribution path, an HTTPS API origin, and
 environment-specific concurrency, memory, latency, and cold-start evidence. The repository now has
-the container, release, CI, capacity, and Cloud Run configuration contracts, and its model release
-is publicly downloadable and checksum-verified. The production image and API are not yet deployed.
-The public frontend may be presented as a deployed UI, but it must not be presented as a working
+the container, release, CI, capacity, and Cloud Run configuration contracts. Its model release is
+publicly downloadable and checksum-verified, and the production image is publicly pullable from
+GHCR by immutable OCI digest with an SPDX SBOM and SLSA provenance. The API is not yet deployed. The
+public frontend may be presented as a deployed UI, but it must not be presented as a working
 end-to-end classifier until that work passes.

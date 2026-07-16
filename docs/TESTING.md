@@ -39,8 +39,14 @@ machine-checked but is not recorded as locally executed. GitHub CI run
 successfully built the artifact-free `runtime-base` target alongside passing Python and web jobs.
 The public model release was then verified through a fresh unauthenticated HTTPS download. Its
 44,795,275-byte size and SHA-256 match the release and serving contracts; the result is committed in
-`reports/model_release_verification_2026-07-16.json`. The model-bearing production image has not yet
-been published.
+`reports/model_release_verification_2026-07-16.json`.
+
+The signed `api-v1.0.0` tag triggered public container-release run `29503393345`. The workflow
+published `ghcr.io/joydas65/terraclass-api` successfully. A separate anonymous OCI pull verified
+that the semantic tag and `sha-3b5b074` resolve to the same immutable index digest. Registry
+inspection also verified the Linux/AMD64 image manifest and its two in-toto attestation layers: an
+SPDX SBOM and SLSA provenance v1. The exact descriptors are committed in
+`reports/container_release_verification_2026-07-16.json`.
 
 The dependency review was rerun on 16 July with `npm audit --audit-level=high` for the complete tree
 and `npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or

@@ -58,6 +58,30 @@ def test_public_model_release_evidence_matches_distribution_contract(project_roo
     }
 
 
+def test_public_container_release_has_digest_sbom_and_provenance(project_root: Path) -> None:
+    evidence = json.loads(
+        (project_root / "reports/container_release_verification_2026-07-16.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    registry = evidence["registry"]
+    index_digest = evidence["oci_index"]["digest"]
+    assert evidence["workflow"]["conclusion"] == "success"
+    assert evidence["workflow"]["run_id"] == 29_503_393_345
+    assert registry["visibility"] == "public"
+    assert registry["public_pull_verified"] is True
+    assert registry["tags"] == {
+        "api-v1.0.0": index_digest,
+        "sha-3b5b074": index_digest,
+    }
+    assert evidence["image"]["platform"] == {"architecture": "amd64", "os": "linux"}
+    assert evidence["attestation_manifest"]["subject_digest"] == evidence["image"]["digest"]
+    assert {layer["predicate_type"] for layer in evidence["attestation_manifest"]["layers"]} == {
+        "https://spdx.dev/Document",
+        "https://slsa.dev/provenance/v1",
+    }
+
+
 def test_ci_covers_python_web_and_container_contracts(project_root: Path) -> None:
     ci = (project_root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     release = (project_root / ".github/workflows/container-release.yml").read_text(encoding="utf-8")

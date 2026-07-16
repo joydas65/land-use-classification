@@ -24,6 +24,7 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Non-root CPU container and Cloud Run resource/probe contracts with explicit CORS and bounded inference capacity
 - Real-model HTTP concurrency testing across 60 measured requests with unique request tracing and zero failures
 - Separate Python, web, container-contract, image-provenance, and SBOM workflow definitions
+- Public Linux/AMD64 OCI image with semantic/source tags, immutable digest verification, SPDX SBOM, and SLSA v1 provenance
 
 ## Supported numerical claim
 
@@ -49,6 +50,10 @@ Optional model-release bullet:
 
 > Published a versioned ResNet18 serving artifact through a public GitHub release and verified its 44,795,275-byte download against a pinned SHA-256 before allowing production-image assembly.
 
+Optional container-release bullet:
+
+> Published a public Linux/AMD64 ML inference container to GHCR, pinned semantic and source-commit tags to one immutable OCI digest, and verified attached SPDX SBOM and SLSA v1 provenance attestations.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -57,5 +62,5 @@ The model/version contract, input validation, restricted artifact loading, local
 concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
 workflow definitions, health probes, and public Vercel frontend are complete. GitHub CI has built the
 artifact-free runtime container and passed the Python and web gates. The public, checksum-verified
-model release is complete. The model-bearing production image, Cloud Run API, production SLOs, and
-drift-ready telemetry remain future deliverables and must not yet be claimed.
+model release and model-bearing production image are complete. Cloud Run API deployment, production
+SLOs, and drift-ready telemetry remain future deliverables and must not yet be claimed.

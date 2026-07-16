@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-07-16",
+  "source": {
+    "repository": "https://github.com/joydas65/land-use-classification",
+    "commit": "3b5b07471246227b48cfdae909a7a81637e714b8",
+    "tag": "api-v1.0.0"
+  },
+  "workflow": {
+    "run_id": 29503393345,
+    "job_id": 87637823499,
+    "url": "https://github.com/joydas65/land-use-classification/actions/runs/29503393345",
+    "conclusion": "success"
+  },
+  "registry": {
+    "repository": "ghcr.io/joydas65/terraclass-api",
+    "package_url": "https://github.com/users/joydas65/packages/container/package/terraclass-api",
+    "visibility": "public",
+    "public_pull_verified": true,
+    "tags": {
+      "api-v1.0.0": "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73",
+      "sha-3b5b074": "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73"
+    }
+  },
+  "oci_index": {
+    "digest": "sha256:484766fe9334a2807813edbdee0bfe637d71bac2af60c78a9642a807201ccd73",
+    "media_type": "application/vnd.oci.image.index.v1+json"
+  },
+  "image": {
+    "digest": "sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e",
+    "media_type": "application/vnd.oci.image.manifest.v1+json",
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "attestation_manifest": {
+    "digest": "sha256:8163b3fb9368f1b963d7169a5c7e8ab9c69e96bab3e8e1dd0d1c16b562ee5cda",
+    "subject_digest": "sha256:5b782de503d4b09823a31dec6aa9e527e7fce9e80f5eb4c4107459e636fbe47e",
+    "layers": [
+      {
+        "digest": "sha256:7dab661c394e32b3e5541c1d10ae08772227fe111d6aec5e5f645bc5dab19ba6",
+        "predicate_type": "https://spdx.dev/Document",
+        "size_bytes": 2756050
+      },
+      {
+        "digest": "sha256:168cf77d308d02aebcf05cb36f1e1d3fd332fc6d2423f77c6efb2faa36fe7055",
+        "predicate_type": "https://slsa.dev/provenance/v1",
+        "size_bytes": 26605
+      }
+    ]
+  }
+}
