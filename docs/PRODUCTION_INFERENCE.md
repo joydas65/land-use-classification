@@ -25,10 +25,13 @@ The configuration remains portable to another container service if the hosting c
 byte count, and SHA-256. `scripts/fetch_serving_artifact.py` streams into a temporary file, rejects
 wrong redirects, length, or content, and atomically replaces the destination only after verification.
 
-The reserved release is `model-v1.0.0` with asset `resnet18_group_aware_v1.pt`. Publication is
-pending explicit approval to upload the public 44.8 MB model asset. Until it exists, the production
-container target is intentionally not buildable; the artifact-free `runtime-base` target remains
-available for CI contract validation.
+The public release [`model-v1.0.0`](https://github.com/joydas65/land-use-classification/releases/tag/model-v1.0.0)
+now contains `resnet18_group_aware_v1.pt`. On 16 July, a fresh unauthenticated HTTPS download
+returned exactly **44,795,275 bytes** and SHA-256
+`b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523`, matching both serving
+contracts. The machine-readable result is retained in
+`reports/model_release_verification_2026-07-16.json`. The production container can therefore fetch
+the model without embedding the binary in Git.
 
 ## Container and capacity contract
 
@@ -65,19 +68,17 @@ production measurements must still test cold starts, memory, scaling, and networ
 Python job also checks dependency consistency and known vulnerabilities before tests.
 `.github/workflows/container-release.yml` builds the production image only after the model release is
 available, publishes to GHCR, and requests provenance and an SBOM. GitHub CI run
-[`29455400219`](https://github.com/joydas65/land-use-classification/actions/runs/29455400219)
+[`29457675941`](https://github.com/joydas65/land-use-classification/actions/runs/29457675941)
 completed successfully on 16 July: the Python, web, and artifact-free `runtime-base` container jobs
-all passed. The model-bearing production image remains deliberately unbuilt until the approved
-release asset exists.
+all passed. The model-bearing production image has not yet been published; its workflow can now
+consume the verified public release asset.
 
 ## Remaining production handoff
 
-1. Publish the checksum-pinned `model-v1.0.0` GitHub release asset.
-2. Download the published asset through the release contract and verify its byte count and SHA-256.
-3. Build and publish the production image, then deploy its exact digest to Cloud Run.
-4. Run the same load probe against the HTTPS Cloud Run URL and record cold-start behavior.
-5. Set `NEXT_PUBLIC_TERRACLASS_API_URL`, redeploy Vercel, verify CORS and predictions, and only then
+1. Build and publish the production image, then deploy its exact digest to Cloud Run.
+2. Run the same load probe against the HTTPS Cloud Run URL and record cold-start behavior.
+3. Set `NEXT_PUBLIC_TERRACLASS_API_URL`, redeploy Vercel, verify CORS and predictions, and only then
    change the project status to a deployed end-to-end classifier.
 
 The repository does not claim production API deployment, production SLOs, or an integrated public
-classifier before all five steps pass.
+classifier before all three steps pass.

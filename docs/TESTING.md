@@ -35,15 +35,19 @@ docker build --target runtime-base --tag terraclass-api:contract-test .
 
 Docker is not installed in the 16 July local environment, so that build is defined and
 machine-checked but is not recorded as locally executed. GitHub CI run
-[`29455400219`](https://github.com/joydas65/land-use-classification/actions/runs/29455400219)
+[`29457675941`](https://github.com/joydas65/land-use-classification/actions/runs/29457675941)
 successfully built the artifact-free `runtime-base` target alongside passing Python and web jobs.
-The model-bearing production target remains gated on the approved release asset.
+The public model release was then verified through a fresh unauthenticated HTTPS download. Its
+44,795,275-byte size and SHA-256 match the release and serving contracts; the result is committed in
+`reports/model_release_verification_2026-07-16.json`. The model-bearing production image has not yet
+been published.
 
-The 15 July dependency review ran `npm audit --audit-level=high` for the complete tree and
-`npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or
-critical advisory. The complete tree reports one low and three moderate transitive findings. The
-production tree reports two moderate findings inherited from Next.js's embedded PostCSS version;
-npm offered only a breaking downgrade, so they are documented rather than hidden or force-fixed.
+The dependency review was rerun on 16 July with `npm audit --audit-level=high` for the complete tree
+and `npm audit --omit=dev --audit-level=high` for production dependencies. Neither tree has a high or
+critical advisory. The complete tree currently reports one low and five moderate transitive
+findings. The production tree reports two moderate findings inherited from Next.js's embedded
+PostCSS version; npm offered only a breaking downgrade, so they are documented rather than hidden
+or force-fixed.
 TerraClass does not accept user-authored CSS, but the advisory must be reviewed again before the
 integrated model API is deployed.
 

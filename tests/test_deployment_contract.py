@@ -33,6 +33,31 @@ def test_cloud_run_template_matches_api_capacity_and_frontend_origin(project_roo
     assert "/api/v1/health/live" in template
 
 
+def test_public_model_release_evidence_matches_distribution_contract(project_root: Path) -> None:
+    release = json.loads(
+        (project_root / "configs/serving/model_release_v1.json").read_text(encoding="utf-8")
+    )
+    evidence = json.loads(
+        (project_root / "reports/model_release_verification_2026-07-16.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert evidence["repository"]["visibility"] == "public"
+    assert evidence["release"]["tag"] == "model-v1.0.0"
+    assert evidence["asset"] == {
+        "name": release["asset_name"],
+        "url": release["url"],
+        "size_bytes": release["size_bytes"],
+        "sha256": release["sha256"],
+    }
+    assert evidence["verification"] == {
+        "method": "fresh unauthenticated HTTPS download",
+        "public_access": True,
+        "size_matches_contract": True,
+        "sha256_matches_contract": True,
+    }
+
+
 def test_ci_covers_python_web_and_container_contracts(project_root: Path) -> None:
     ci = (project_root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
     release = (project_root / ".github/workflows/container-release.yml").read_text(encoding="utf-8")

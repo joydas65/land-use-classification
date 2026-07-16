@@ -100,6 +100,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
     colab_figure_path = root / "reports/figures/training_and_confusion_colab_l4.png"
     serving_config_path = root / "configs/serving/resnet18_group_aware_v1.json"
     model_release_path = root / "configs/serving/model_release_v1.json"
+    model_release_verification_path = root / "reports/model_release_verification_2026-07-16.json"
     inference_benchmark_path = root / "reports/inference_benchmark_2026-07-15.json"
     api_load_report_path = root / "reports/api_load_test_2026-07-16.json"
     inference_document_path = root / "docs/INFERENCE_FOUNDATION.md"
@@ -432,6 +433,52 @@ def audit_project(project_root: str | Path) -> AuditReport:
                     report.errors.append(
                         "Local serving artifact size differs from release contract"
                     )
+
+    if not model_release_verification_path.is_file():
+        report.errors.append("Public model-release verification report is missing")
+        model_release_verification: dict[str, Any] = {}
+    else:
+        try:
+            model_release_verification = json.loads(
+                model_release_verification_path.read_text(encoding="utf-8")
+            )
+        except json.JSONDecodeError as error:
+            report.errors.append(f"Model-release verification report is invalid: {error}")
+            model_release_verification = {}
+        if model_release_verification.get("schema_version") != 1:
+            report.errors.append("Model-release verification schema version differs from 1")
+        if model_release_verification.get("verified_on") != "2026-07-16":
+            report.errors.append("Model-release verification date differs from 16 July 2026")
+        repository_evidence = model_release_verification.get("repository", {})
+        if repository_evidence != {
+            "url": "https://github.com/joydas65/land-use-classification",
+            "visibility": "public",
+        }:
+            report.errors.append("Public repository evidence differs from the release target")
+        release_evidence = model_release_verification.get("release", {})
+        if (
+            release_evidence.get("url")
+            != ("https://github.com/joydas65/land-use-classification/releases/tag/model-v1.0.0")
+            or release_evidence.get("tag") != "model-v1.0.0"
+        ):
+            report.errors.append("Published release evidence differs from model-v1.0.0")
+        if re.fullmatch(r"[0-9a-f]{40}", str(release_evidence.get("target_commit"))) is None:
+            report.errors.append("Model-release target commit is not a full Git SHA")
+        asset_evidence = model_release_verification.get("asset", {})
+        if model_release is not None and asset_evidence != {
+            "name": model_release.asset_name,
+            "url": model_release.url,
+            "size_bytes": model_release.size_bytes,
+            "sha256": model_release.sha256,
+        }:
+            report.errors.append("Published model asset differs from the release contract")
+        if model_release_verification.get("verification") != {
+            "method": "fresh unauthenticated HTTPS download",
+            "public_access": True,
+            "size_matches_contract": True,
+            "sha256_matches_contract": True,
+        }:
+            report.errors.append("Public model-download verification is incomplete")
 
     if not inference_benchmark_path.is_file():
         report.errors.append("Versioned inference benchmark is missing")
@@ -827,7 +874,9 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "84.1 ms",
         "not yet deployed",
         "model-v1.0.0",
-        "29455400219",
+        "44,795,275 bytes",
+        "fresh unauthenticated HTTPS download",
+        "29457675941",
     ):
         if token not in production_document_normalized:
             report.errors.append(f"Production documentation token is missing: {token}")
@@ -925,6 +974,12 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "production_readiness": {
             "model_release_url": model_release.url if model_release else None,
             "model_release_size_bytes": model_release.size_bytes if model_release else None,
+            "model_release_public_download_verified": model_release_verification.get(
+                "verification", {}
+            ).get("public_access"),
+            "model_release_target_commit": model_release_verification.get("release", {}).get(
+                "target_commit"
+            ),
             "container_contract": dockerfile_path.is_file(),
             "ci_workflows": ci_workflow_path.is_file() and container_workflow_path.is_file(),
             "local_http_warmup_requests": api_load_report.get("protocol", {}).get(

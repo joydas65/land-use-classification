@@ -20,7 +20,7 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Typed, versioned FastAPI inference service with bounded multipart uploads, structured errors, CORS, request IDs, structured request logs, and liveness/readiness probes
 - Responsive Tailwind CSS/Next.js browser interface with client-side validation, model readiness, ranked confidence visualization, request provenance, and explicit model-scope communication
 - Public Vercel frontend deployment, native Next.js and worker builds, server-render contract tests, API integration tests, and dependency security review
-- Checksum-pinned HTTPS model distribution with bounded streaming, byte-count verification, atomic promotion, and a reserved versioned GitHub release
+- Published, versioned GitHub model release with checksum-pinned HTTPS distribution, bounded streaming, byte-count verification, and atomic promotion
 - Non-root CPU container and Cloud Run resource/probe contracts with explicit CORS and bounded inference capacity
 - Real-model HTTP concurrency testing across 60 measured requests with unique request tracing and zero failures
 - Separate Python, web, container-contract, image-provenance, and SBOM workflow definitions
@@ -45,6 +45,10 @@ Optional production-readiness bullet:
 
 > Hardened a PyTorch inference API with checksum-pinned model distribution, a non-root CPU container contract, bounded asynchronous capacity, and repeatable HTTP load testing; completed 60 steady-state requests without failures and measured 52.9 requests/second peak local throughput.
 
+Optional model-release bullet:
+
+> Published a versioned ResNet18 serving artifact through a public GitHub release and verified its 44,795,275-byte download against a pinned SHA-256 before allowing production-image assembly.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -52,6 +56,6 @@ Keep the dataset scope in the same bullet as the perfect score. Do not shorten t
 The model/version contract, input validation, restricted artifact loading, local sequential and HTTP
 concurrency benchmarks, typed service, bounded capacity, container configuration, release contract,
 workflow definitions, health probes, and public Vercel frontend are complete. GitHub CI has built the
-artifact-free runtime container and passed the Python and web gates. The release asset, model-bearing
-production image, Cloud Run API, production SLOs, and drift-ready telemetry remain future
-deliverables and must not yet be claimed.
+artifact-free runtime container and passed the Python and web gates. The public, checksum-verified
+model release is complete. The model-bearing production image, Cloud Run API, production SLOs, and
+drift-ready telemetry remain future deliverables and must not yet be claimed.

@@ -59,7 +59,7 @@ defaults to `http://localhost:8000`.
 - A real-artifact smoke test loaded the hash-pinned ResNet18 and classified `beach00.tif` as beach
   with 99.68% confidence. The cold request took 2,194.6 ms and the immediate warm request took
   10.6 ms, so cold-start behavior remains an explicit deployment test requirement.
-- The complete dependency audit has no high or critical advisory. It reports one low and three
+- The complete dependency audit has no high or critical advisory. It reports one low and five
   moderate transitive findings. The production-only tree has two moderate findings in the
   Next.js-embedded PostCSS version; npm offers no non-breaking resolution. The findings are recorded
   in `docs/TESTING.md` for integrated-deployment review.
@@ -79,6 +79,7 @@ system.
 The serving artifact remains intentionally outside Git. Integrated deployment requires a container
 image for the API, a hash-verified artifact distribution path, an HTTPS API origin, and
 environment-specific concurrency, memory, latency, and cold-start evidence. The repository now has
-the container, release, CI, capacity, and Cloud Run configuration contracts, but the release asset,
-image, and API are not yet deployed. The public frontend may be presented as a deployed UI, but it
-must not be presented as a working end-to-end classifier until that work passes.
+the container, release, CI, capacity, and Cloud Run configuration contracts, and its model release
+is publicly downloadable and checksum-verified. The production image and API are not yet deployed.
+The public frontend may be presented as a deployed UI, but it must not be presented as a working
+end-to-end classifier until that work passes.

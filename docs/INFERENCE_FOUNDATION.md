@@ -23,7 +23,8 @@ artifact atomically and proves that the result can be loaded with the default re
 
 The binary artifacts remain excluded from Git. The 16 July phase added a versioned GitHub release
 contract and an atomic downloader that verifies HTTPS, byte count, and the same SHA-256 before the
-model can enter a production image. Public release publication is still pending approval.
+model can enter a production image. The public `model-v1.0.0` release is now published, and a fresh
+unauthenticated download matched the 44,795,275-byte contract and expected SHA-256.
 
 Recreate the local serving artifact from the audited training checkpoint:
 
@@ -86,6 +87,7 @@ PYTHONPATH=src python scripts/benchmark_inference.py \
 
 The 15 July application phase added a typed HTTP API, responsive browser interface, request IDs,
 structured logs, and health/readiness probes. The 16 July phase added the non-root container
-contract, bounded inference queue, release manifest, CI definitions, Cloud Run template, and real
-HTTP concurrency benchmark; see `docs/PRODUCTION_INFERENCE.md`. Publishing the release and image,
-deploying the API, collecting Cloud Run evidence, and connecting Vercel remain the next handoff.
+contract, bounded inference queue, published model release, CI definitions, Cloud Run template, and
+real HTTP concurrency benchmark; see `docs/PRODUCTION_INFERENCE.md`. Publishing the production
+image, deploying the API, collecting Cloud Run evidence, and connecting Vercel remain the next
+handoff.
