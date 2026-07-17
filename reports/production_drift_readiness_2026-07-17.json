@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-07-17",
+  "project_id": "land-use-classification-502614",
+  "dashboard": {
+    "definition": "deploy/monitoring/terraclass-operations-dashboard.json",
+    "definition_sha256": "d7eef4d5a7a4330f9e0e4e9b5cfc4b0250a5afea0919709ded3f518053996af0",
+    "validation_method": "gcloud monitoring dashboards create --validate-only",
+    "validation_passed": true,
+    "name": "projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4",
+    "display_name": "TerraClass Production Operations",
+    "etag": "d3afe82a33a4d4de3a3a56f8ebeb9c18",
+    "readback_verified": true,
+    "widgets": [
+      "scope_and_claim_boundary",
+      "request_rate_by_response_class",
+      "warm_container_p95_latency",
+      "instance_count_by_state",
+      "privacy_allowlisted_prediction_logs"
+    ]
+  },
+  "production_prediction_inventory": {
+    "query_scope": {
+      "resource_type": "cloud_run_revision",
+      "service_name": "terraclass-api",
+      "event": "prediction_observation",
+      "limit": 1000,
+      "order": "ascending"
+    },
+    "raw_request_level_log_committed": false,
+    "profile": {
+      "schema_version": 1,
+      "model": {
+        "model_id": "terraclass-resnet18-group-aware",
+        "model_version": "1.0.0"
+      },
+      "window": {
+        "prediction_count": 1,
+        "minimum_required": 100,
+        "minimum_met": false,
+        "first_timestamp_utc": "2026-07-16T19:42:40.015100Z",
+        "last_timestamp_utc": "2026-07-16T19:42:40.015100Z"
+      },
+      "class_counts": {
+        "agricultural": 1,
+        "airplane": 0,
+        "baseballdiamond": 0,
+        "beach": 0,
+        "buildings": 0
+      },
+      "class_distribution": {
+        "agricultural": 1.0,
+        "airplane": 0.0,
+        "baseballdiamond": 0.0,
+        "beach": 0.0,
+        "buildings": 0.0
+      },
+      "confidence_bucket_counts": {
+        "below_0_50": 0,
+        "0_50_to_0_70": 0,
+        "0_70_to_0_85": 0,
+        "0_85_to_0_95": 0,
+        "0_95_to_1_00": 1
+      },
+      "confidence_bucket_distribution": {
+        "below_0_50": 0.0,
+        "0_50_to_0_70": 0.0,
+        "0_70_to_0_85": 0.0,
+        "0_85_to_0_95": 0.0,
+        "0_95_to_1_00": 1.0
+      },
+      "low_confidence_rate": 0.0,
+      "inference_latency_ms": {
+        "mean": 425.618,
+        "p50": 425.618,
+        "p95": 425.618,
+        "maximum": 425.618
+      },
+      "privacy": {
+        "request_ids_retained": false,
+        "request_level_events_retained": false,
+        "images_or_identifiers_retained": false
+      }
+    }
+  },
+  "analysis_implementation": {
+    "config": "configs/monitoring/drift_analysis_v1.json",
+    "module": "src/terraclass/drift.py",
+    "command": "terraclass-drift",
+    "prediction_event_validation": "strict_allowlist",
+    "distribution_comparison": "base-2 Jensen-Shannon divergence",
+    "human_review_metrics": [
+      "accuracy",
+      "macro_f1",
+      "per_class_f1"
+    ],
+    "candidate_signal_thresholds_validated": false
+  },
+  "human_review": {
+    "reviewed_predictions": 0,
+    "minimum_required": 100,
+    "minimum_met": false,
+    "reviewer_identity_collected": false,
+    "images_or_filenames_collected": false
+  },
+  "notification_routing": {
+    "configured": false,
+    "reason": "Owner has not yet approved a notification destination."
+  },
+  "claim_boundary": {
+    "aggregate_profile_created": true,
+    "drift_comparison_performed": false,
+    "drift_detector_validated": false,
+    "production_accuracy_established": false,
+    "candidate_objective_established_as_slo": false,
+    "note": "One prediction is inventory evidence only and is far below the 100-event comparison and review floors."
+  }
+}

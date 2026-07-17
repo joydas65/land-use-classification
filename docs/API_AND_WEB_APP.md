@@ -87,6 +87,7 @@ be described as a deployed integrated system within its stated five-class scope.
 The serving artifact remains intentionally outside Git and is fetched only through its
 byte-count/SHA-256 contract while building the production image. The public model release,
 Linux/AMD64 container, SPDX SBOM, SLSA provenance, Cloud Run revision, production load report, and
-Vercel deployment are now cross-referenced by versioned evidence. A true client request after the
-service has scaled to zero and longer-term service-level objectives remain future measurements; the
-current results must not be promoted into an availability or cold-start guarantee.
+Vercel deployment are now cross-referenced by versioned evidence. The later scale-to-zero extension
+recorded one metric-confirmed cold request at 11.013 seconds, but longer-term service-level evidence
+still requires representative traffic and time windows. A single cold request must not be promoted
+into an availability or cold-start guarantee.

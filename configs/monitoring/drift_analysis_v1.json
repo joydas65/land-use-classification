@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "service": {
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "class_names": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ]
+  },
+  "minimum_samples": {
+    "prediction_window": 100,
+    "human_review": 100
+  },
+  "candidate_signals": {
+    "status": "engineering_defaults_not_validated_thresholds",
+    "class_js_divergence": 0.1,
+    "confidence_js_divergence": 0.1,
+    "low_confidence_rate_increase": 0.1,
+    "latency_p95_ratio": 2.0
+  },
+  "prediction_input": {
+    "accepted_formats": [
+      "Cloud Logging JSON array with jsonPayload",
+      "newline-delimited prediction_observation JSON"
+    ],
+    "strict_allowlist_source": "src/terraclass/telemetry.py",
+    "request_level_data_persisted_by_analyzer": false
+  },
+  "human_review": {
+    "event": "prediction_review",
+    "allowlisted_fields": [
+      "event",
+      "schema_version",
+      "request_id",
+      "model_id",
+      "model_version",
+      "predicted_class",
+      "reviewed_class",
+      "review_source",
+      "reviewed_at_utc"
+    ],
+    "prohibited_fields": [
+      "filename",
+      "image_bytes",
+      "image_sha256",
+      "remote_ip",
+      "user_agent",
+      "reviewer_name",
+      "reviewer_email"
+    ],
+    "reviewer_identity_collected": false,
+    "image_content_retained": false
+  },
+  "claim_boundary": {
+    "drift_detector_validated": false,
+    "production_accuracy_established": false,
+    "candidate_signal_requires_human_review": true,
+    "review_metrics_apply_only_to_reviewed_sample": true
+  }
+}

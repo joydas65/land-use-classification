@@ -16,6 +16,12 @@ from typing import Any
 from terraclass.artifact_distribution import ModelRelease, load_model_release
 from terraclass.colab_results import BundleValidationError, audit_versioned_evidence
 from terraclass.config import load_config
+from terraclass.drift import (
+    CONFIDENCE_BUCKETS,
+    PROHIBITED_REVIEW_FIELDS,
+    REVIEW_RECORD_FIELDS,
+    load_drift_config,
+)
 from terraclass.inference import ServingConfig, load_serving_config
 from terraclass.telemetry import PREDICTION_OBSERVATION_FIELDS, PROHIBITED_PREDICTION_FIELDS
 from terraclass.transfer_config import load_transfer_config
@@ -121,13 +127,20 @@ def audit_project(project_root: str | Path) -> AuditReport:
     api_document_path = root / "docs/API_AND_WEB_APP.md"
     production_document_path = root / "docs/PRODUCTION_INFERENCE.md"
     observability_document_path = root / "docs/OBSERVABILITY_AND_DRIFT.md"
+    feedback_drift_document_path = root / "docs/PRODUCTION_FEEDBACK_AND_DRIFT.md"
     api_source_path = root / "src/terraclass/api.py"
     api_test_path = root / "tests/test_api.py"
     telemetry_source_path = root / "src/terraclass/telemetry.py"
     telemetry_test_path = root / "tests/test_telemetry.py"
     monitoring_config_path = root / "configs/monitoring/observability_v1.json"
+    drift_config_path = root / "configs/monitoring/drift_analysis_v1.json"
     monitoring_5xx_policy_path = root / "deploy/monitoring/cloud-run-5xx-ratio.json"
     monitoring_latency_policy_path = root / "deploy/monitoring/cloud-run-p95-latency.json"
+    monitoring_dashboard_path = root / "deploy/monitoring/terraclass-operations-dashboard.json"
+    drift_readiness_report_path = root / "reports/production_drift_readiness_2026-07-17.json"
+    drift_source_path = root / "src/terraclass/drift.py"
+    drift_script_path = root / "scripts/analyze_production_drift.py"
+    drift_test_path = root / "tests/test_drift.py"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
     web_css_path = root / "web/app/globals.css"
@@ -1058,6 +1071,192 @@ def audit_project(project_root: str | Path) -> AuditReport:
         if drift_readiness.get("status") != "telemetry_ready_not_drift_validated":
             report.errors.append("Drift readiness claim boundary is inconsistent")
 
+    drift_test_count = 0
+    if not drift_source_path.is_file():
+        report.errors.append("Production drift-analysis source is missing")
+    else:
+        drift_source = drift_source_path.read_text(encoding="utf-8")
+        for token in (
+            "jensen_shannon_divergence",
+            "profile_prediction_window",
+            "compare_prediction_windows",
+            "summarize_human_reviews",
+            "insufficient_data",
+        ):
+            if token not in drift_source:
+                report.errors.append(f"Production drift-analysis token is missing: {token}")
+    if not drift_script_path.is_file():
+        report.errors.append("Production drift-analysis script is missing")
+    elif "from terraclass.drift import main" not in drift_script_path.read_text(encoding="utf-8"):
+        report.errors.append(
+            "Production drift-analysis script does not use the packaged entry point"
+        )
+    if not drift_test_path.is_file():
+        report.errors.append("Production drift-analysis tests are missing")
+    else:
+        drift_test_source = drift_test_path.read_text(encoding="utf-8")
+        drift_test_count = len(re.findall(r"^def test_", drift_test_source, re.MULTILINE))
+        if drift_test_count != 7:
+            report.errors.append("Production drift-analysis suite must contain seven focused tests")
+
+    if not drift_config_path.is_file():
+        report.errors.append("Machine-readable drift-analysis contract is missing")
+        drift_config_raw: dict[str, Any] = {}
+        drift_analysis_config = None
+    else:
+        drift_config_raw = json.loads(drift_config_path.read_text(encoding="utf-8"))
+        try:
+            drift_analysis_config = load_drift_config(drift_config_path)
+        except (KeyError, TypeError, ValueError) as error:
+            report.errors.append(f"Drift-analysis configuration is invalid: {error}")
+            drift_analysis_config = None
+        drift_service = drift_config_raw.get("service", {})
+        drift_samples = drift_config_raw.get("minimum_samples", {})
+        drift_signals = drift_config_raw.get("candidate_signals", {})
+        drift_review = drift_config_raw.get("human_review", {})
+        drift_claim = drift_config_raw.get("claim_boundary", {})
+        expected_classes = list(serving_config.class_names) if serving_config is not None else []
+        if (
+            drift_config_raw.get("schema_version") != 1
+            or drift_service.get("model_id") != "terraclass-resnet18-group-aware"
+            or drift_service.get("model_version") != "1.0.0"
+            or drift_service.get("class_names") != expected_classes
+        ):
+            report.errors.append("Drift-analysis service/model contract is inconsistent")
+        if drift_samples != {"prediction_window": 100, "human_review": 100}:
+            report.errors.append("Drift-analysis sample floors are inconsistent")
+        if (
+            drift_signals.get("status") != "engineering_defaults_not_validated_thresholds"
+            or drift_signals.get("class_js_divergence") != 0.1
+            or drift_signals.get("confidence_js_divergence") != 0.1
+            or drift_signals.get("low_confidence_rate_increase") != 0.1
+            or drift_signals.get("latency_p95_ratio") != 2.0
+        ):
+            report.errors.append("Drift candidate-signal contract is inconsistent")
+        if (
+            drift_review.get("allowlisted_fields") != list(REVIEW_RECORD_FIELDS)
+            or set(drift_review.get("prohibited_fields", [])) != set(PROHIBITED_REVIEW_FIELDS)
+            or drift_review.get("reviewer_identity_collected") is not False
+            or drift_review.get("image_content_retained") is not False
+        ):
+            report.errors.append("Human-review privacy contract differs from code")
+        if drift_claim != {
+            "drift_detector_validated": False,
+            "production_accuracy_established": False,
+            "candidate_signal_requires_human_review": True,
+            "review_metrics_apply_only_to_reviewed_sample": True,
+        }:
+            report.errors.append("Drift-analysis claim boundary is inconsistent")
+        if drift_analysis_config is not None and (
+            drift_analysis_config.minimum_window_predictions != 100
+            or drift_analysis_config.minimum_reviewed_predictions != 100
+            or list(drift_analysis_config.class_names) != expected_classes
+        ):
+            report.errors.append("Loaded drift-analysis contract differs from its JSON evidence")
+
+    if not monitoring_dashboard_path.is_file():
+        report.errors.append("Cloud Monitoring operations dashboard definition is missing")
+        monitoring_dashboard: dict[str, Any] = {}
+    else:
+        monitoring_dashboard = json.loads(monitoring_dashboard_path.read_text(encoding="utf-8"))
+        dashboard_serialized = json.dumps(monitoring_dashboard)
+        dashboard_tiles = monitoring_dashboard.get("mosaicLayout", {}).get("tiles", [])
+        if (
+            monitoring_dashboard.get("displayName") != "TerraClass Production Operations"
+            or monitoring_dashboard.get("labels") != {"ml": "", "production": "", "terraclass": ""}
+            or len(dashboard_tiles) != 5
+        ):
+            report.errors.append("Cloud Monitoring dashboard identity/layout is inconsistent")
+        for token in (
+            "run.googleapis.com/request_count",
+            "run.googleapis.com/request_latencies",
+            "run.googleapis.com/container/instance_count",
+            "prediction_observation",
+            "does not establish production accuracy",
+        ):
+            if token not in dashboard_serialized:
+                report.errors.append(f"Cloud Monitoring dashboard token is missing: {token}")
+
+    if not drift_readiness_report_path.is_file():
+        report.errors.append("Production drift-readiness deployment evidence is missing")
+        drift_readiness_report: dict[str, Any] = {}
+    else:
+        drift_readiness_report = json.loads(drift_readiness_report_path.read_text(encoding="utf-8"))
+        deployed_dashboard = drift_readiness_report.get("dashboard", {})
+        inventory = drift_readiness_report.get("production_prediction_inventory", {})
+        inventory_profile = inventory.get("profile", {})
+        inventory_window = inventory_profile.get("window", {})
+        inventory_privacy = inventory_profile.get("privacy", {})
+        review_evidence = drift_readiness_report.get("human_review", {})
+        drift_deployment_claim = drift_readiness_report.get("claim_boundary", {})
+        if (
+            drift_readiness_report.get("schema_version") != 1
+            or drift_readiness_report.get("verified_on") != "2026-07-17"
+            or drift_readiness_report.get("project_id") != "land-use-classification-502614"
+        ):
+            report.errors.append("Production drift-readiness evidence identity is inconsistent")
+        if (
+            deployed_dashboard.get("definition")
+            != "deploy/monitoring/terraclass-operations-dashboard.json"
+            or not monitoring_dashboard_path.is_file()
+            or deployed_dashboard.get("definition_sha256") != _sha256(monitoring_dashboard_path)
+            or deployed_dashboard.get("validation_passed") is not True
+            or deployed_dashboard.get("name")
+            != "projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4"
+            or deployed_dashboard.get("etag") != "d3afe82a33a4d4de3a3a56f8ebeb9c18"
+            or deployed_dashboard.get("readback_verified") is not True
+            or len(deployed_dashboard.get("widgets", [])) != 5
+        ):
+            report.errors.append("Cloud Monitoring dashboard deployment evidence is inconsistent")
+        if (
+            inventory.get("raw_request_level_log_committed") is not False
+            or inventory_window
+            != {
+                "prediction_count": 1,
+                "minimum_required": 100,
+                "minimum_met": False,
+                "first_timestamp_utc": "2026-07-16T19:42:40.015100Z",
+                "last_timestamp_utc": "2026-07-16T19:42:40.015100Z",
+            }
+            or inventory_profile.get("model")
+            != {
+                "model_id": "terraclass-resnet18-group-aware",
+                "model_version": "1.0.0",
+            }
+            or inventory_profile.get("class_counts", {}).get("agricultural") != 1
+            or inventory_profile.get("confidence_bucket_counts", {}).get("0_95_to_1_00") != 1
+            or set(inventory_profile.get("confidence_bucket_counts", {})) != set(CONFIDENCE_BUCKETS)
+            or inventory_privacy
+            != {
+                "request_ids_retained": False,
+                "request_level_events_retained": False,
+                "images_or_identifiers_retained": False,
+            }
+        ):
+            report.errors.append("First production aggregate profile is inconsistent")
+        if review_evidence != {
+            "reviewed_predictions": 0,
+            "minimum_required": 100,
+            "minimum_met": False,
+            "reviewer_identity_collected": False,
+            "images_or_filenames_collected": False,
+        }:
+            report.errors.append("Production human-review evidence is inconsistent")
+        if drift_readiness_report.get("notification_routing", {}).get(
+            "configured"
+        ) is not False or drift_deployment_claim != {
+            "aggregate_profile_created": True,
+            "drift_comparison_performed": False,
+            "drift_detector_validated": False,
+            "production_accuracy_established": False,
+            "candidate_objective_established_as_slo": False,
+            "note": (
+                "One prediction is inventory evidence only and is far below the 100-event "
+                "comparison and review floors."
+            ),
+        }:
+            report.errors.append("Production drift-readiness claim boundary is inconsistent")
+
     expected_monitoring_policies = {
         "deploy/monitoring/cloud-run-5xx-ratio.json": (
             monitoring_5xx_policy_path,
@@ -1257,6 +1456,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         "terraclass.api:main"
     ):
         report.errors.append("terraclass-api command does not target terraclass.api:main")
+    if (
+        pyproject.get("project", {}).get("scripts", {}).get("terraclass-drift")
+        != "terraclass.drift:main"
+    ):
+        report.errors.append("terraclass-drift command does not target terraclass.drift:main")
 
     deployment_contracts = (
         (
@@ -1496,6 +1700,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         observability_document = ""
     else:
         observability_document = observability_document_path.read_text(encoding="utf-8")
+    if not feedback_drift_document_path.is_file():
+        report.errors.append("docs/PRODUCTION_FEEDBACK_AND_DRIFT.md is missing")
+        feedback_drift_document = ""
+    else:
+        feedback_drift_document = feedback_drift_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -1522,6 +1731,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             api_document,
             production_document,
             observability_document,
+            feedback_drift_document,
         )
     )
     for token in required_documentation_tokens:
@@ -1614,6 +1824,22 @@ def audit_project(project_root: str | Path) -> AuditReport:
             (observability_document_normalized, json.dumps(monitoring_config))
         ):
             report.errors.append(f"Observability documentation token is missing: {token}")
+    feedback_drift_document_normalized = " ".join(feedback_drift_document.split())
+    for token in (
+        "scheduled 18 July phase was implemented and verified early on 17 July 2026",
+        "base-2 Jensen–Shannon divergence",
+        "at least 100 events",
+        "accuracy, macro-F1",
+        "request IDs or request-level observations",
+        "production_drift_readiness_2026-07-17.json",
+        "projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4",
+        "does not prove production accuracy",
+        "explicitly confirms the destination",
+    ):
+        if token not in feedback_drift_document_normalized:
+            report.errors.append(
+                f"Production feedback/drift documentation token is missing: {token}"
+            )
 
     report.warnings.extend(
         [
@@ -1839,11 +2065,40 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "production_prediction_telemetry_observed": observability_deployment.get(
                 "claim_boundary", {}
             ).get("privacy_allowlisted_prediction_telemetry_observed"),
+            "operations_dashboard_deployed": drift_readiness_report.get("dashboard", {}).get(
+                "readback_verified"
+            ),
+            "operations_dashboard_name": drift_readiness_report.get("dashboard", {}).get("name"),
+            "production_prediction_inventory_count": drift_readiness_report.get(
+                "production_prediction_inventory", {}
+            )
+            .get("profile", {})
+            .get("window", {})
+            .get("prediction_count"),
+            "production_prediction_inventory_minimum_met": drift_readiness_report.get(
+                "production_prediction_inventory", {}
+            )
+            .get("profile", {})
+            .get("window", {})
+            .get("minimum_met"),
+            "production_human_review_count": drift_readiness_report.get("human_review", {}).get(
+                "reviewed_predictions"
+            ),
+            "production_drift_comparison_performed": drift_readiness_report.get(
+                "claim_boundary", {}
+            ).get("drift_comparison_performed"),
+            "production_drift_detector_validated": drift_readiness_report.get(
+                "claim_boundary", {}
+            ).get("drift_detector_validated"),
+            "production_accuracy_established": drift_readiness_report.get("claim_boundary", {}).get(
+                "production_accuracy_established"
+            ),
         },
         "application_layer": {
             "api_routes": list(expected_api_routes),
             "api_contract_tests": api_test_count,
             "telemetry_contract_tests": telemetry_test_count,
+            "drift_contract_tests": drift_test_count,
             "web_render_tests": web_test_count,
             "web_tiff_preview_tests": web_preview_test_count,
             "tiff_preview_decoder": "tiff@7.1.3",

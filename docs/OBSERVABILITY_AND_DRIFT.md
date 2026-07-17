@@ -96,6 +96,13 @@ or accuracy claims require a representative production reference window, ground-
 documented human-review sample, and versioned thresholds tested against expected variation. The
 telemetry alone does not establish semantic drift, real-world accuracy, fairness, or label quality.
 
+The scheduled 18 July implementation adds the strict offline analyzer described in
+`docs/PRODUCTION_FEEDBACK_AND_DRIFT.md`. It aggregates events without retaining request IDs, compares
+eligible windows with Jensen–Shannon divergence and latency/confidence signals, and calculates
+accuracy and macro-F1 for owner-reviewed samples. The first real inventory contained one event, so
+the 100-event floor prevented a comparison. This is implementation and refusal evidence, not drift
+or production-accuracy evidence.
+
 ## Source basis
 
 - [Cloud Run autoscaling](https://docs.cloud.google.com/run/docs/about-instance-autoscaling) defines

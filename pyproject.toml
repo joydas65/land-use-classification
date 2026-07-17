@@ -29,6 +29,7 @@ terraclass-baseline = "terraclass.training:main"
 terraclass-transfer = "terraclass.transfer_training:main"
 terraclass-audit = "terraclass.audit:main"
 terraclass-api = "terraclass.api:main"
+terraclass-drift = "terraclass.drift:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

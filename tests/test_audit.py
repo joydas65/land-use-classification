@@ -84,6 +84,19 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
     assert (
         report.observed["production_readiness"]["production_prediction_telemetry_observed"] is True
     )
+    assert report.observed["production_readiness"]["operations_dashboard_deployed"] is True
+    assert report.observed["production_readiness"]["operations_dashboard_name"] == (
+        "projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4"
+    )
+    assert report.observed["production_readiness"]["production_prediction_inventory_count"] == 1
+    assert (
+        report.observed["production_readiness"]["production_prediction_inventory_minimum_met"]
+        is False
+    )
+    assert report.observed["production_readiness"]["production_human_review_count"] == 0
+    assert report.observed["production_readiness"]["production_drift_comparison_performed"] is False
+    assert report.observed["production_readiness"]["production_drift_detector_validated"] is False
+    assert report.observed["production_readiness"]["production_accuracy_established"] is False
     assert "filename" not in report.observed["production_readiness"]["prediction_telemetry_fields"]
     assert "29457675941" in (project_root / "docs/PRODUCTION_INFERENCE.md").read_text(
         encoding="utf-8"
@@ -103,6 +116,7 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         ],
         "api_contract_tests": 7,
         "telemetry_contract_tests": 4,
+        "drift_contract_tests": 7,
         "web_render_tests": 2,
         "web_tiff_preview_tests": 3,
         "tiff_preview_decoder": "tiff@7.1.3",

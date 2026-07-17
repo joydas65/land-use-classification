@@ -30,6 +30,8 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Metric-confirmed scale-to-zero verification correlated across client timing, Cloud Run request logs, and an autoscaling instance-start event
 - Privacy-allowlisted JSON prediction telemetry with independent service/model versioning and tests that exclude filenames, image content/hashes, network identity, and user agents
 - Deployed Cloud Monitoring 5xx-ratio and warm-container p95 policies, with candidate objectives kept separate from achieved SLO and drift claims
+- Privacy-preserving production ML review pipeline with strict log/review schemas, aggregate class/confidence/latency profiles, Jensen–Shannon comparison, sample-size gates, and reviewed-sample accuracy/macro-F1
+- API-validated and deployed Cloud Monitoring dashboard for request rate, p95 latency, instance state, and allowlisted prediction logs
 
 ## Supported numerical claim
 
@@ -67,6 +69,10 @@ Optional production-observability bullet:
 
 > Added privacy-allowlisted structured prediction telemetry and Cloud Monitoring 5xx/p95 alert policies to a versioned ML API; verified one scale-from-zero request at 11.013 seconds by correlating a zero-instance metric, client timing, and the Cloud Run autoscaling log.
 
+Optional production-ML monitoring bullet:
+
+> Built a privacy-preserving production review pipeline that validates Cloud Logging and human-label records, aggregates class/confidence/latency profiles, compares eligible windows with Jensen–Shannon divergence, and calculates reviewed-sample accuracy and macro-F1 behind explicit 100-event evidence gates.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -77,7 +83,9 @@ workflow definitions, health probes, and public Vercel frontend are complete. Gi
 artifact-free runtime container and passed the Python and web gates. The public, checksum-verified
 model release, model-bearing production image, Cloud Run API, production load probe, integrated
 Vercel deployment, scale-from-zero measurement, structured prediction telemetry, and incident
-policies are complete. Notification routing still needs an owner-approved destination. The candidate
-objectives need sufficient historical traffic before they can be described as achieved SLOs, and
-credible drift validation still requires a representative reference window plus labeled or
-human-reviewed production examples.
+policies are complete. The production review analyzer and operations dashboard are also complete,
+including strict privacy schemas, sample-size refusal, Jensen–Shannon comparison, and reviewed-sample
+metrics. Notification routing still needs an owner-approved destination. The candidate objectives
+need sufficient historical traffic before they can be described as achieved SLOs, and credible drift
+validation still requires two representative windows plus at least 100 labeled or human-reviewed
+production examples.

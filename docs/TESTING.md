@@ -1,6 +1,6 @@
 # Testing and Audit Guide
 
-The quality gate contains six layers:
+The quality gate contains seven layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification,
@@ -17,6 +17,9 @@ The quality gate contains six layers:
    the checksum-pinned model and publishes an image with provenance and an SBOM.
 6. The observability contract cross-checks the application telemetry allowlist, prohibited privacy
    fields, candidate service objectives, Cloud Monitoring policy metrics, and drift claim boundary.
+7. The production-review gate validates strict prediction/review schemas, privacy exclusions,
+   aggregate profiles, Jensen–Shannon calculations, insufficient-sample refusal, reviewed-sample
+   accuracy/macro-F1, dashboard definition, and deployment readback evidence.
 
 The complete local gate is:
 
@@ -168,3 +171,11 @@ Monitoring policy templates and require their metrics and service target to matc
 claim boundary. Deployment tests also bind the `api-v1.1.0` release to Cloud Run revision
 `terraclass-api-v1-1-0`, verify the exact structured log allowlist, and preserve the distinction
 between deployed incident policies and unconfigured notification routing.
+
+The scheduled 18 July feedback/drift-readiness tests use synthetic records only to exercise numerical
+and privacy behavior. Production evidence remains separate: the first Cloud Logging inventory
+contained one allowlisted prediction, and the committed aggregate correctly reports
+`minimum_met=false` against the 100-event floor. The raw entry and request ID are not committed.
+Dashboard configuration was checked through `gcloud monitoring dashboards create --validate-only`
+before creation, then described by resource ID to verify the saved widgets and etag. See
+`reports/production_drift_readiness_2026-07-17.json`.

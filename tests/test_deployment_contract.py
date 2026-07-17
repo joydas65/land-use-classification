@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -128,6 +129,45 @@ def test_cloud_monitoring_deployment_matches_templates_without_notification_rout
     assert evidence["claim_boundary"]["alert_policies_deployed"] is True
     assert evidence["claim_boundary"]["notifications_routed"] is False
     assert evidence["claim_boundary"]["candidate_objectives_established_as_slo"] is False
+
+
+def test_operations_dashboard_and_first_drift_inventory_preserve_claim_boundaries(
+    project_root: Path,
+) -> None:
+    dashboard_path = project_root / "deploy/monitoring/terraclass-operations-dashboard.json"
+    dashboard = json.loads(dashboard_path.read_text(encoding="utf-8"))
+    evidence = json.loads(
+        (project_root / "reports/production_drift_readiness_2026-07-17.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    profile = evidence["production_prediction_inventory"]["profile"]
+    serialized_dashboard = json.dumps(dashboard)
+
+    assert dashboard["displayName"] == "TerraClass Production Operations"
+    assert len(dashboard["mosaicLayout"]["tiles"]) == 5
+    assert "run.googleapis.com/request_count" in serialized_dashboard
+    assert "run.googleapis.com/request_latencies" in serialized_dashboard
+    assert "run.googleapis.com/container/instance_count" in serialized_dashboard
+    assert "prediction_observation" in serialized_dashboard
+    assert (
+        evidence["dashboard"]["definition_sha256"]
+        == hashlib.sha256(dashboard_path.read_bytes()).hexdigest()
+    )
+    assert evidence["dashboard"]["name"] == (
+        "projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4"
+    )
+    assert evidence["dashboard"]["readback_verified"] is True
+    assert evidence["production_prediction_inventory"]["raw_request_level_log_committed"] is False
+    assert profile["window"]["prediction_count"] == 1
+    assert profile["window"]["minimum_required"] == 100
+    assert profile["window"]["minimum_met"] is False
+    assert profile["privacy"]["request_ids_retained"] is False
+    assert evidence["human_review"]["reviewed_predictions"] == 0
+    assert evidence["notification_routing"]["configured"] is False
+    assert evidence["claim_boundary"]["drift_comparison_performed"] is False
+    assert evidence["claim_boundary"]["drift_detector_validated"] is False
+    assert evidence["claim_boundary"]["production_accuracy_established"] is False
 
 
 def test_public_model_release_evidence_matches_distribution_contract(project_root: Path) -> None:

@@ -62,3 +62,11 @@ and warm-container p95 latency. Both were deployed and read back on 17 July 2026
 omit notification channels until the owner chooses and verifies a destination. See
 `reports/cloud_monitoring_deployment_2026-07-17.json` and `docs/OBSERVABILITY_AND_DRIFT.md` before
 creating or editing a policy.
+
+The operations dashboard is versioned at
+`deploy/monitoring/terraclass-operations-dashboard.json`. It passed the Cloud Monitoring
+`--validate-only` check before deployment and is read back as
+`projects/280836764570/dashboards/0c996266-70c0-4ad0-adc0-3e919225a4e4`. Do not create the file again
+in the same project; use `gcloud monitoring dashboards update` with that dashboard ID after a
+reviewed change. The dashboard is operational evidence only and does not establish model accuracy,
+semantic drift, or an achieved service-level objective.

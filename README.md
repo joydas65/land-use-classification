@@ -14,7 +14,8 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **16 July 2026 production-container milestone — complete:** public Linux/AMD64 GHCR image, semantic and source-commit tags pinned to one immutable OCI digest, successful public-pull verification, an SPDX SBOM, and SLSA v1 provenance.
 - **16 July 2026 integrated-production milestone — complete:** the exact released digest is deployed to Google Cloud Run in Mumbai as revision `terraclass-api-v1-0-1` under a dedicated no-role runtime identity; public health, metadata, prediction, CORS, rollout, and 60-request load evidence pass; and the Vercel frontend reports `Model ready` against the live API at [terraclass-api-280836764570.asia-south1.run.app](https://terraclass-api-280836764570.asia-south1.run.app).
 - **17 July 2026 observability milestone — complete:** Cloud Monitoring verified zero active and idle instances before an 11.013-second scale-from-zero prediction; service `1.1.0` adds privacy-allowlisted structured prediction telemetry; the signed `api-v1.1.0` image is deployed as revision `terraclass-api-v1-1-0`; and enabled 5xx-ratio and warm-container p95-latency policies were created and read back.
-- **Next production handoff:** attach and verify an owner-approved notification channel, gather enough traffic for the candidate 30-day objective, and add labeled or human-reviewed production feedback before claiming a validated drift detector.
+- **18 July 2026 scheduled feedback/drift-readiness milestone — completed early on 17 July:** strict offline log/review validation, aggregate class/confidence/latency profiles, Jensen–Shannon window comparison, reviewed-sample accuracy/macro-F1, explicit 100-event floors, and a deployed Cloud Monitoring operations dashboard. The first real inventory contains one event, so the tooling correctly makes no drift or production-accuracy claim.
+- **Next production handoff:** attach and verify an owner-approved notification channel, gather two representative 100-event windows, and collect at least 100 owner-reviewed labels before evaluating the candidate drift signals.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -53,10 +54,12 @@ These are observed values from the original notebook, not newly reproduced resul
 - `src/terraclass/inference.py` is the reusable image-validation and prediction boundary for the web application.
 - `src/terraclass/api.py` exposes the model through a typed, versioned FastAPI contract.
 - `src/terraclass/telemetry.py` emits the privacy-allowlisted production prediction event.
+- `src/terraclass/drift.py` validates exported logs/reviews and produces aggregate drift-readiness and reviewed-sample evidence.
 - `Dockerfile` defines artifact-free CI and checksum-fetched production container targets.
 - `.github/workflows/` defines Python, web, container-contract, provenance, and SBOM automation.
 - `deploy/cloud-run-service.template.yaml` records the initial Cloud Run resources, capacity, CORS, and probe policy.
 - `configs/monitoring/observability_v1.json` separates candidate objectives from established claims and defines the telemetry/privacy contract.
+- `configs/monitoring/drift_analysis_v1.json` defines sample floors, candidate signals, human-review privacy, and claim boundaries.
 - `deploy/monitoring/` contains the deployed Cloud Monitoring alert-policy templates.
 - `web/` contains the responsive Tailwind CSS/Next.js TerraClass interface, Vercel configuration, and production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
@@ -69,9 +72,11 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/container_release_verification_2026-07-17.json` binds service source `1.1.0` to its public OCI digests, SPDX SBOM, and SLSA provenance.
 - `reports/cloud_monitoring_deployment_2026-07-17.json` records the two enabled policy IDs and the intentionally empty notification routing.
 - `reports/cloud_run_observability_deployment_2026-07-17.json` binds the current release, Cloud Run revision, API response, structured log, and Vercel browser acceptance evidence.
+- `reports/production_drift_readiness_2026-07-17.json` records dashboard readback and the first privacy-safe aggregate production inventory.
 - `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and integrated deployment.
 - `docs/PRODUCTION_INFERENCE.md` documents the 16–17 July container, Cloud Run, Vercel, load, scale-to-zero, and observability evidence.
 - `docs/OBSERVABILITY_AND_DRIFT.md` defines the monitoring boundaries and explains what remains before a drift or SLO claim is credible.
+- `docs/PRODUCTION_FEEDBACK_AND_DRIFT.md` documents the offline review workflow, candidate comparisons, deployed dashboard, and sample-size refusal.
 
 ## Local setup
 
