@@ -46,6 +46,11 @@ The decision is to retain the original softmax. No calibrated artifact was promo
 Cloud Run model remains unchanged. This is an intentional methodological refusal, not an incomplete
 implementation.
 
+The 18 July follow-up in `docs/EXTERNAL_CALIBRATION_AND_OOD.md` resolves the small-sample
+identifiability problem with independent RESISC45 calibration and test roles. Its stable interior
+temperature improves external NLL, Brier score, and ECE, but materially worsens UC Merced NLL.
+It is therefore preserved as cross-domain evidence rather than promoted globally.
+
 ## Selective prediction
 
 The original softmax retained 60 of 75 test images at a confidence threshold of 0.99, giving 80%

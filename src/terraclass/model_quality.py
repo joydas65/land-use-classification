@@ -449,20 +449,22 @@ def render_reliability_figure(
     before: dict[str, Any],
     after: dict[str, Any],
     destination: Path,
+    *,
+    title: str = "ResNet18 group-aware test reliability (75 images)",
+    before_title: str = "Original softmax",
+    after_title: str = "Temperature-scaling sensitivity",
 ) -> None:
     canvas = Image.new("RGB", (860, 500), (248, 246, 240))
     draw = ImageDraw.Draw(canvas)
     font = ImageFont.load_default()
     draw.text(
         (45, 25),
-        "ResNet18 group-aware test reliability (75 images)",
+        title,
         fill=(25, 35, 43),
         font=font,
     )
-    _draw_reliability_panel(canvas, (45, 80), "Original softmax", before["reliability_bins"])
-    _draw_reliability_panel(
-        canvas, (455, 80), "Temperature-scaling sensitivity", after["reliability_bins"]
-    )
+    _draw_reliability_panel(canvas, (45, 80), before_title, before["reliability_bins"])
+    _draw_reliability_panel(canvas, (455, 80), after_title, after["reliability_bins"])
     destination.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(destination, format="PNG", optimize=True)
 

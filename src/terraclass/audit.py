@@ -22,6 +22,7 @@ from terraclass.drift import (
     REVIEW_RECORD_FIELDS,
     load_drift_config,
 )
+from terraclass.external_calibration import load_external_calibration_config
 from terraclass.inference import ServingConfig, load_serving_config
 from terraclass.model_quality import load_model_quality_config
 from terraclass.telemetry import PREDICTION_OBSERVATION_FIELDS, PROHIBITED_PREDICTION_FIELDS
@@ -152,6 +153,22 @@ def audit_project(project_root: str | Path) -> AuditReport:
         root / "reports/figures/reliability_resnet18_group_aware_2026-07-17.png"
     )
     gradcam_figure_path = root / "reports/figures/gradcam_resnet18_group_aware_2026-07-17.png"
+    external_calibration_config_path = root / "configs/evaluation/external_calibration_v1.json"
+    external_calibration_manifest_path = (
+        root / "data/manifests/resisc45_external_calibration_v1.csv"
+    )
+    external_calibration_report_path = (
+        root / "reports/external_calibration_evaluation_2026-07-18.json"
+    )
+    external_calibration_figure_path = (
+        root / "reports/figures/external_calibration_resisc45_2026-07-18.png"
+    )
+    external_calibration_document_path = root / "docs/EXTERNAL_CALIBRATION_AND_OOD.md"
+    external_calibration_source_path = root / "src/terraclass/external_calibration.py"
+    external_calibration_script_path = root / "scripts/evaluate_external_calibration.py"
+    external_download_script_path = root / "scripts/download_resisc45.py"
+    external_calibration_test_path = root / "tests/test_external_calibration.py"
+    external_download_test_path = root / "tests/test_download_resisc45.py"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
     web_css_path = root / "web/app/globals.css"
@@ -1639,6 +1656,323 @@ def audit_project(project_root: str | Path) -> AuditReport:
             }:
                 report.errors.append(f"Model-quality {key} figure hash is inconsistent")
 
+    external_calibration_test_count = 0
+    external_download_test_count = 0
+    if not external_calibration_source_path.is_file():
+        report.errors.append("External-calibration evaluation source is missing")
+    else:
+        external_source = external_calibration_source_path.read_text(encoding="utf-8")
+        for token in (
+            "def build_external_manifest(",
+            "def bootstrap_temperature_interval(",
+            "def cross_validated_temperature_stability(",
+            "def ood_detection_metrics(",
+            "def evaluate_promotion_gates(",
+        ):
+            if token not in external_source:
+                report.errors.append(
+                    f"External-calibration implementation token is missing: {token}"
+                )
+    for path, expected_import, description in (
+        (
+            external_calibration_script_path,
+            "from terraclass.external_calibration import main",
+            "External-calibration evaluation",
+        ),
+        (
+            external_download_script_path,
+            "def _download_verified(",
+            "External dataset download",
+        ),
+    ):
+        if not path.is_file():
+            report.errors.append(f"{description} script is missing")
+        elif expected_import not in path.read_text(encoding="utf-8"):
+            report.errors.append(f"{description} script contract is inconsistent")
+    for path, expected_count, description in (
+        (external_calibration_test_path, 7, "External-calibration"),
+        (external_download_test_path, 3, "External dataset download"),
+    ):
+        if not path.is_file():
+            report.errors.append(f"{description} focused tests are missing")
+            continue
+        count = len(re.findall(r"^def test_", path.read_text(encoding="utf-8"), re.MULTILINE))
+        if description == "External-calibration":
+            external_calibration_test_count = count
+        else:
+            external_download_test_count = count
+        if count != expected_count:
+            report.errors.append(f"{description} suite must contain {expected_count} focused tests")
+
+    external_config = None
+    if not external_calibration_config_path.is_file():
+        report.errors.append("External-calibration configuration is missing")
+    else:
+        try:
+            external_config = load_external_calibration_config(external_calibration_config_path)
+        except (KeyError, TypeError, ValueError) as error:
+            report.errors.append(f"External-calibration configuration is invalid: {error}")
+
+    external_manifest_rows: list[dict[str, str]] = []
+    if not external_calibration_manifest_path.is_file():
+        report.errors.append("External-calibration manifest is missing")
+    else:
+        with external_calibration_manifest_path.open(encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            external_manifest_rows = list(reader)
+        expected_columns = {
+            "role",
+            "source_split",
+            "relative_path",
+            "source_class",
+            "target_class",
+            "label",
+            "sha256",
+        }
+        external_role_counts = {
+            role: sum(row["role"] == role for row in external_manifest_rows)
+            for role in ("calibration", "external_test", "ood_test")
+        }
+        external_paths = [row["relative_path"] for row in external_manifest_rows]
+        balanced_counts = {
+            role: {
+                label: sum(
+                    row["role"] == role and row["label"] == str(label)
+                    for row in external_manifest_rows
+                )
+                for label in range(5)
+            }
+            for role in ("calibration", "external_test")
+        }
+        if (
+            set(external_manifest_rows[0] if external_manifest_rows else ()) != expected_columns
+            or external_role_counts != {"calibration": 500, "external_test": 500, "ood_test": 5457}
+            or any(
+                counts != {0: 100, 1: 100, 2: 100, 3: 100, 4: 100}
+                for counts in balanced_counts.values()
+            )
+            or len(external_paths) != len(set(external_paths))
+            or any(len(row["sha256"]) != 64 for row in external_manifest_rows)
+            or any(
+                row["source_split"] != "validation"
+                for row in external_manifest_rows
+                if row["role"] == "calibration"
+            )
+            or any(
+                row["source_split"] != "test"
+                for row in external_manifest_rows
+                if row["role"] != "calibration"
+            )
+        ):
+            report.errors.append("External-calibration manifest contract is inconsistent")
+
+    if not external_calibration_report_path.is_file():
+        report.errors.append("External-calibration evaluation report is missing")
+        external_calibration_report: dict[str, Any] = {}
+    else:
+        external_calibration_report = json.loads(
+            external_calibration_report_path.read_text(encoding="utf-8")
+        )
+    if external_config is not None:
+        external_model = external_calibration_report.get("model", {})
+        external_dataset = external_calibration_report.get("external_dataset", {})
+        external_provenance = external_calibration_report.get("provenance", {})
+        external_scaling = external_calibration_report.get("temperature_scaling", {})
+        external_fit = external_scaling.get("fit", {})
+        external_bootstrap = external_scaling.get("bootstrap", {}).get("temperature", {})
+        external_cv = external_scaling.get("cross_validation", {})
+        external_test_before = external_scaling.get("untouched_external_test", {}).get("before", {})
+        external_test_after = external_scaling.get("untouched_external_test", {}).get("after", {})
+        uc_sensitivity = external_scaling.get("uc_merced_group_aware_test_sensitivity", {})
+        external_promotion = external_calibration_report.get("promotion", {})
+        external_ood = external_calibration_report.get("ood_detection", {})
+        if (
+            external_calibration_report.get("schema_version") != 1
+            or external_calibration_report.get("evaluated_on") != "2026-07-18"
+            or external_calibration_report.get("evaluation_id") != external_config["evaluation_id"]
+        ):
+            report.errors.append("External-calibration report identity is inconsistent")
+        if serving_config is not None and external_model != {
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "architecture": serving_config.architecture,
+            "class_names": list(serving_config.class_names),
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+        }:
+            report.errors.append("External-calibration model identity is inconsistent")
+        expected_external_dataset = external_config["external_dataset"]
+        if (
+            external_dataset.get("name") != "NWPU-RESISC45"
+            or external_dataset.get("archive_sha256")
+            != expected_external_dataset["archive"]["sha256"]
+            or external_dataset.get("archive_size_bytes") != 427_389_445
+            or external_dataset.get("license") != "CC-BY-NC-4.0"
+            or external_dataset.get("commercial_use_permitted") is not False
+            or external_dataset.get("class_mapping") != external_config["class_mapping"]
+            or external_dataset.get("mapping_basis") != external_config["mapping_basis"]
+        ):
+            report.errors.append("External-calibration dataset evidence is inconsistent")
+        if (
+            external_provenance.get("config_path")
+            != "configs/evaluation/external_calibration_v1.json"
+            or external_provenance.get("config_sha256") != _sha256(external_calibration_config_path)
+            or external_provenance.get("manifest_path")
+            != "data/manifests/resisc45_external_calibration_v1.csv"
+            or external_provenance.get("manifest_sha256")
+            != _sha256(external_calibration_manifest_path)
+            or external_provenance.get("role_counts")
+            != {"calibration": 500, "external_test": 500, "ood_test": 5457}
+            or external_provenance.get("role_source_splits")
+            != {
+                "calibration": ["validation"],
+                "external_test": ["test"],
+                "ood_test": ["test"],
+            }
+            or external_provenance.get("roles_disjoint") is not True
+        ):
+            report.errors.append("External-calibration provenance is inconsistent")
+
+        exact_scalars = (
+            ("temperature", external_fit.get("temperature"), 2.697718011917623),
+            (
+                "bootstrap lower",
+                external_bootstrap.get("lower"),
+                2.4857829107685996,
+            ),
+            (
+                "bootstrap upper",
+                external_bootstrap.get("upper"),
+                2.908357790713815,
+            ),
+            (
+                "bootstrap relative width",
+                external_bootstrap.get("relative_interval_width"),
+                0.15691014009473317,
+            ),
+            (
+                "cross-validation coefficient of variation",
+                external_cv.get("temperature_coefficient_of_variation"),
+                0.014172107798009363,
+            ),
+            (
+                "external NLL before",
+                external_test_before.get("negative_log_likelihood"),
+                1.5983403032623402,
+            ),
+            (
+                "external NLL after",
+                external_test_after.get("negative_log_likelihood"),
+                1.0839213910083454,
+            ),
+            (
+                "external Brier before",
+                external_test_before.get("multiclass_brier_score"),
+                0.6132518170441752,
+            ),
+            (
+                "external Brier after",
+                external_test_after.get("multiclass_brier_score"),
+                0.540326481121465,
+            ),
+            (
+                "external ECE before",
+                external_test_before.get("expected_calibration_error"),
+                0.21998949330946,
+            ),
+            (
+                "external ECE after",
+                external_test_after.get("expected_calibration_error"),
+                0.06607848174526312,
+            ),
+            (
+                "UC Merced NLL before",
+                uc_sensitivity.get("before", {}).get("negative_log_likelihood"),
+                0.01974693908636797,
+            ),
+            (
+                "UC Merced NLL after",
+                uc_sensitivity.get("after", {}).get("negative_log_likelihood"),
+                0.2349079742224512,
+            ),
+        )
+        for name, actual, expected in exact_scalars:
+            if actual is None or abs(actual - expected) > 1e-12:
+                report.errors.append(
+                    f"External-calibration {name}={actual!r} differs from {expected!r}"
+                )
+        if (
+            external_fit.get("at_optimization_bound") is not False
+            or external_bootstrap.get("bound_hits") != 0
+            or external_cv.get("folds") != 5
+            or external_cv.get("all_fits_interior") is not True
+            or external_cv.get("all_holdout_nll_improved") is not True
+            or external_test_before.get("sample_count") != 500
+            or external_test_before.get("accuracy") != 0.624
+            or external_test_before.get("macro_f1") != 0.592231362174236
+            or external_test_after.get("accuracy") != external_test_before.get("accuracy")
+            or external_test_after.get("macro_f1") != external_test_before.get("macro_f1")
+        ):
+            report.errors.append("External-calibration statistical evidence is inconsistent")
+        expected_checks = {
+            "minimum_calibration_samples": True,
+            "minimum_calibration_errors": True,
+            "interior_temperature": True,
+            "bootstrap_interval_width": True,
+            "bootstrap_no_bound_hits": True,
+            "cross_validation_temperature_cv": True,
+            "cross_validation_all_fits_interior": True,
+            "cross_validation_all_holdout_nll_improved": True,
+            "external_test_nll_improved": True,
+            "external_test_brier_improved": True,
+            "external_test_ece_improved": True,
+            "external_test_classification_unchanged": True,
+            "in_domain_classification_unchanged": True,
+            "in_domain_nll_degradation_within_limit": False,
+        }
+        if (
+            external_promotion.get("calibration_errors") != 171
+            or external_promotion.get("checks") != expected_checks
+            or external_promotion.get("statistical_gates_passed") is not False
+            or external_promotion.get("production_promotion_approved") is not False
+            or not all(external_promotion.get("policy_blockers", {}).values())
+        ):
+            report.errors.append("External-calibration promotion refusal is inconsistent")
+        ood_after = external_ood.get("after_temperature", {})
+        if (
+            ood_after.get("aligned_samples") != 500
+            or ood_after.get("ood_samples") != 5457
+            or abs(
+                ood_after.get("maximum_softmax_probability", {}).get("auroc", 0)
+                - 0.6588733736485248
+            )
+            > 1e-12
+            or abs(
+                ood_after.get("negative_normalized_entropy", {}).get("auroc", 0)
+                - 0.6743745647791828
+            )
+            > 1e-12
+            or "not treated as an OOD detector" not in ood_after.get("claim_boundary", "")
+        ):
+            report.errors.append("External-calibration OOD evidence is inconsistent")
+        expected_claim_boundary = {
+            **external_config["claim_boundary"],
+            "production_model_changed": False,
+            "calibration_candidate_only": True,
+            "reason": (
+                "Statistical evidence is evaluated separately from production-domain, semantic "
+                "mapping, and license approval."
+            ),
+        }
+        if external_calibration_report.get("claim_boundary") != expected_claim_boundary:
+            report.errors.append("External-calibration claim boundary is inconsistent")
+        if not external_calibration_figure_path.is_file():
+            report.errors.append("External-calibration reliability figure is missing")
+        elif external_calibration_report.get("figure") != {
+            "path": "reports/figures/external_calibration_resisc45_2026-07-18.png",
+            "sha256": _sha256(external_calibration_figure_path),
+        }:
+            report.errors.append("External-calibration figure hash is inconsistent")
+
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
     if not any(str(dependency).startswith("fastapi") for dependency in web_dependencies):
@@ -1658,6 +1992,14 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         report.errors.append(
             "terraclass-model-quality command does not target terraclass.model_quality:main"
+        )
+    if (
+        pyproject.get("project", {}).get("scripts", {}).get("terraclass-external-calibration")
+        != "terraclass.external_calibration:main"
+    ):
+        report.errors.append(
+            "terraclass-external-calibration command does not target "
+            "terraclass.external_calibration:main"
         )
 
     deployment_contracts = (
@@ -1908,6 +2250,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
         model_quality_document = ""
     else:
         model_quality_document = model_quality_document_path.read_text(encoding="utf-8")
+    if not external_calibration_document_path.is_file():
+        report.errors.append("docs/EXTERNAL_CALIBRATION_AND_OOD.md is missing")
+        external_calibration_document = ""
+    else:
+        external_calibration_document = external_calibration_document_path.read_text(
+            encoding="utf-8"
+        )
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -2065,6 +2414,31 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         if token not in model_quality_document_normalized:
             report.errors.append(f"Model-quality documentation token is missing: {token}")
+    external_calibration_document_normalized = " ".join(external_calibration_document.split())
+    for token in (
+        "18 July follow-up fixes the *statistical identifiability* problem",
+        "500 balanced calibration images",
+        "separate 500 balanced evaluation images",
+        "5,457 test images",
+        "2.697718",
+        "[2.485783, 2.908358]",
+        "0.014172",
+        "CC-BY-NC-4.0",
+        "1.598340",
+        "1.083921",
+        "0.613252",
+        "0.540326",
+        "0.219989",
+        "0.066078",
+        "0.019747",
+        "0.234908",
+        "production model and IIT Kanpur notebook remain unchanged",
+        "AUROC is **0.658873**",
+        "not an adequate unfamiliar-scene detector",
+        "production-representative labeled data",
+    ):
+        if token not in external_calibration_document_normalized:
+            report.errors.append(f"External-calibration documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -2191,6 +2565,40 @@ def audit_project(project_root: str | Path) -> AuditReport:
                 model_quality_report.get("explainability", {}).get("samples", [])
             ),
             "model_quality_contract_tests": model_quality_test_count,
+        },
+        "external_calibration": {
+            "evaluated_on": external_calibration_report.get("evaluated_on"),
+            "calibration_samples": external_calibration_report.get("provenance", {})
+            .get("role_counts", {})
+            .get("calibration"),
+            "external_test_samples": external_calibration_report.get("provenance", {})
+            .get("role_counts", {})
+            .get("external_test"),
+            "ood_samples": external_calibration_report.get("provenance", {})
+            .get("role_counts", {})
+            .get("ood_test"),
+            "temperature": external_calibration_report.get("temperature_scaling", {})
+            .get("fit", {})
+            .get("temperature"),
+            "fit_reached_bound": external_calibration_report.get("temperature_scaling", {})
+            .get("fit", {})
+            .get("at_optimization_bound"),
+            "external_test_ece_before": external_calibration_report.get("temperature_scaling", {})
+            .get("untouched_external_test", {})
+            .get("before", {})
+            .get("expected_calibration_error"),
+            "external_test_ece_after": external_calibration_report.get("temperature_scaling", {})
+            .get("untouched_external_test", {})
+            .get("after", {})
+            .get("expected_calibration_error"),
+            "statistical_gates_passed": external_calibration_report.get("promotion", {}).get(
+                "statistical_gates_passed"
+            ),
+            "production_promotion_approved": external_calibration_report.get("promotion", {}).get(
+                "production_promotion_approved"
+            ),
+            "external_calibration_contract_tests": external_calibration_test_count,
+            "external_download_contract_tests": external_download_test_count,
         },
         "production_readiness": {
             "model_release_url": model_release.url if model_release else None,

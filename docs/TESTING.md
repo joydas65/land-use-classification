@@ -1,6 +1,6 @@
 # Testing and Audit Guide
 
-The quality gate contains eight layers:
+The quality gate contains nine layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification,
@@ -23,6 +23,9 @@ The quality gate contains eight layers:
 8. The model-quality gate validates calibration math, temperature-bound detection, fixed-width
    reliability bins, selective prediction, deterministic explainability selection, Grad-CAM output,
    and consistency among the protocol, evidence report, figures, résumé claims, and documentation.
+9. The external-calibration gate validates pinned noncommercial dataset provenance, deterministic
+   and role-disjoint sampling, bootstrap intervals, five-fold stability, untouched-test calibration
+   metrics, UC Merced regression refusal, separate OOD metrics, and production claim boundaries.
 
 The complete local gate is:
 
@@ -198,3 +201,20 @@ PYTHONPATH=src python scripts/evaluate_model_quality.py \
 
 The committed report and two PNG figures are re-hashed by `terraclass-audit`; see
 `docs/MODEL_QUALITY_AND_EXPLAINABILITY.md`.
+
+The 18 July calibration-repair follow-up uses NWPU-RESISC45 without committing its 427 MB archive.
+The downloader pins the archive and official split hashes, rejects unsafe or duplicate split rows,
+and verifies the 31,500-image extracted inventory. Seven focused calibration/OOD tests and three
+secure-download tests cover the new pipeline. Reproduce the real evaluation with:
+
+```bash
+PYTHONPATH=src python -m scripts.download_resisc45 --project-root .
+PYTHONPATH=src python -m scripts.evaluate_external_calibration \
+  --project-root . \
+  --device cpu
+```
+
+The versioned manifest contains 500 independent calibration images, 500 untouched aligned external
+test images, and 5,457 unmapped OOD images. The report requires the stable 2.697718 fit, its
+500-replicate bootstrap interval, five-fold behavior, calibration improvements, and the failed UC
+Merced NLL regression gate to remain consistent. See `docs/EXTERNAL_CALIBRATION_AND_OOD.md`.

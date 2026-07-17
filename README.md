@@ -16,7 +16,8 @@ TerraClass is the reproducible engineering wrapper around the supplied IIT Kanpu
 - **17 July 2026 observability milestone — complete:** Cloud Monitoring verified zero active and idle instances before an 11.013-second scale-from-zero prediction; service `1.1.0` adds privacy-allowlisted structured prediction telemetry; the signed `api-v1.1.0` image is deployed as revision `terraclass-api-v1-1-0`; and enabled 5xx-ratio and warm-container p95-latency policies were created and read back.
 - **18 July 2026 scheduled feedback/drift-readiness milestone — completed early on 17 July:** strict offline log/review validation, aggregate class/confidence/latency profiles, Jensen–Shannon window comparison, reviewed-sample accuracy/macro-F1, explicit 100-event floors, and a deployed Cloud Monitoring operations dashboard. The first real inventory contains one event, so the tooling correctly makes no drift or production-accuracy claim.
 - **19 July 2026 scheduled model-quality milestone — completed early on 17 July:** validation-only temperature scaling, untouched-test ECE/NLL/Brier analysis, confidence/entropy/selective-risk evidence, and deterministic five-class Grad-CAM review. The fitted temperature reached its lower bound on a perfectly classified 75-image validation split, so calibration promotion was correctly rejected and the production model remains unchanged.
-- **Next production handoff:** attach and verify an owner-approved notification channel, gather two representative 100-event windows, and collect at least 100 owner-reviewed labels before evaluating the candidate drift signals.
+- **18 July 2026 calibration-repair follow-up — complete:** independent RESISC45 calibration/test/OOD roles, a stable interior temperature with bootstrap and five-fold evidence, and untouched external-test NLL/Brier/ECE improvements. Global promotion remains correctly rejected because the candidate substantially worsens UC Merced NLL, the cross-domain mapping contains proxies, and the redistributed evaluation data is marked noncommercial.
+- **Next production handoff:** attach and verify an owner-approved notification channel, gather two representative 100-event windows, and collect production-representative labels with separate calibration/test roles before reconsidering calibration or candidate drift signals.
 
 Kaggle is not used by this repository. Dataset acquisition uses the UC Merced source or the checksum-pinned TorchGeo HTTPS mirror and requires no credential.
 
@@ -62,6 +63,7 @@ These are observed values from the original notebook, not newly reproduced resul
 - `configs/monitoring/observability_v1.json` separates candidate objectives from established claims and defines the telemetry/privacy contract.
 - `configs/monitoring/drift_analysis_v1.json` defines sample floors, candidate signals, human-review privacy, and claim boundaries.
 - `configs/evaluation/model_quality_v1.json` fixes the leakage-safe calibration, uncertainty, and Grad-CAM protocol.
+- `configs/evaluation/external_calibration_v1.json` fixes the independent RESISC45 calibration, test, bootstrap, stability, OOD, license, and promotion boundaries.
 - `deploy/monitoring/` contains the deployed Cloud Monitoring alert-policy templates.
 - `web/` contains the responsive Tailwind CSS/Next.js TerraClass interface, Vercel configuration, and production build tests.
 - `reports/inference_benchmark_2026-07-15.json` records the first local CPU serving benchmark.
@@ -76,11 +78,13 @@ These are observed values from the original notebook, not newly reproduced resul
 - `reports/cloud_run_observability_deployment_2026-07-17.json` binds the current release, Cloud Run revision, API response, structured log, and Vercel browser acceptance evidence.
 - `reports/production_drift_readiness_2026-07-17.json` records dashboard readback and the first privacy-safe aggregate production inventory.
 - `reports/model_quality_evaluation_2026-07-17.json` records hash-bound calibration, uncertainty, selective-risk, and deterministic Grad-CAM evidence.
+- `reports/external_calibration_evaluation_2026-07-18.json` records the independent calibration, untouched external test, five-fold/bootstrap stability, UC Merced sensitivity, and separate OOD evidence.
 - `docs/API_AND_WEB_APP.md` documents the application architecture, routes, validation, and integrated deployment.
 - `docs/PRODUCTION_INFERENCE.md` documents the 16–17 July container, Cloud Run, Vercel, load, scale-to-zero, and observability evidence.
 - `docs/OBSERVABILITY_AND_DRIFT.md` defines the monitoring boundaries and explains what remains before a drift or SLO claim is credible.
 - `docs/PRODUCTION_FEEDBACK_AND_DRIFT.md` documents the offline review workflow, candidate comparisons, deployed dashboard, and sample-size refusal.
 - `docs/MODEL_QUALITY_AND_EXPLAINABILITY.md` documents the 19 July ML-quality phase and why calibration was not promoted.
+- `docs/EXTERNAL_CALIBRATION_AND_OOD.md` documents the statistically stable external candidate, domain regression, licensing boundary, OOD result, and continued production refusal.
 
 ## Local setup
 

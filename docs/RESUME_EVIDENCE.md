@@ -35,6 +35,9 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Validation-only confidence calibration analysis using NLL, multiclass Brier score, 10-bin ECE, predictive entropy, and selective-risk curves on the untouched group-aware test set
 - Deterministic Grad-CAM review across all five classes, with artifact/manifest hashes and an explicit distinction between qualitative localization and causal explanation
 - Model-governance decision to reject temperature promotion after the fit reached its lower bound on a small, perfectly classified validation split
+- Independent cross-domain calibration evaluation using 500 RESISC45 calibration images, a separate 500-image test set, a 500-replicate bootstrap, and five-fold stability analysis
+- Separate OOD benchmark over 5,457 unmapped land-use scenes, with explicit evidence that temperature scaling and softmax confidence are insufficient OOD detectors
+- Model-governance decision to reject a statistically stable external calibration candidate after it regressed UC Merced NLL and failed domain, mapping, and noncommercial-license promotion boundaries
 
 ## Supported numerical claim
 
@@ -83,6 +86,13 @@ Optional model-quality bullet:
 > classes; rejected calibration deployment when the bounded fit proved unstable on the small,
 > perfectly classified validation split.
 
+Optional calibration-governance bullet:
+
+> Built an independent calibration and OOD evaluation pipeline for a ResNet18 land-use classifier;
+> fit a stable temperature on 500 cross-domain images, reduced untouched-test ECE from 0.220 to
+> 0.066 without changing accuracy, quantified uncertainty with 500 bootstrap fits and five-fold
+> validation, and rejected global deployment after detecting a 10.9× UC Merced NLL regression.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -99,4 +109,6 @@ metrics. Notification routing still needs an owner-approved destination. The can
 need sufficient historical traffic before they can be described as achieved SLOs, and credible drift
 validation still requires two representative windows plus at least 100 labeled or human-reviewed
 production examples. The model-quality phase is also complete: the original softmax remains in
-production because the 75-image validation split could not identify a stable interior temperature.
+production. An external RESISC45 follow-up identified a statistically stable candidate, but it is
+not deployed because it materially regresses UC Merced calibration, uses proxy class mappings, and
+depends on evaluation data whose redistributor states a noncommercial license.

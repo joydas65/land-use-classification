@@ -31,6 +31,20 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         "gradcam_samples": 5,
         "model_quality_contract_tests": 7,
     }
+    assert report.observed["external_calibration"] == {
+        "evaluated_on": "2026-07-18",
+        "calibration_samples": 500,
+        "external_test_samples": 500,
+        "ood_samples": 5457,
+        "temperature": 2.697718011917623,
+        "fit_reached_bound": False,
+        "external_test_ece_before": 0.21998949330946,
+        "external_test_ece_after": 0.06607848174526312,
+        "statistical_gates_passed": False,
+        "production_promotion_approved": False,
+        "external_calibration_contract_tests": 7,
+        "external_download_contract_tests": 3,
+    }
     assert report.observed["production_readiness"]["container_contract"] is True
     assert report.observed["production_readiness"]["ci_workflows"] is True
     assert report.observed["production_readiness"]["model_release_public_download_verified"] is True
