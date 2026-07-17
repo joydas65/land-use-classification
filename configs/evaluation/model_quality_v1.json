@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "resnet18_group_aware_calibration_gradcam_v1",
+  "serving_config_path": "configs/serving/resnet18_group_aware_v1.json",
+  "dataset_root": "data/raw/UCMerced_LandUse/Images",
+  "calibration": {
+    "fit_split": "validation",
+    "evaluation_split": "test",
+    "bin_count": 10,
+    "temperature_bounds": [
+      0.05,
+      10.0
+    ],
+    "optimization_iterations": 96
+  },
+  "selective_prediction": {
+    "confidence_thresholds": [
+      0.0,
+      0.8,
+      0.9,
+      0.95,
+      0.99
+    ]
+  },
+  "explainability": {
+    "method": "grad_cam",
+    "target_layer": "layer4[-1]",
+    "selection_policy": "lexicographically_first_test_sample_per_class",
+    "samples_per_class": 1
+  }
+}

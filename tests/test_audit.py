@@ -16,6 +16,21 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         report.observed["serving_foundation"]["request_latency_p95_ms"]
         >= (report.observed["serving_foundation"]["request_latency_p50_ms"])
     )
+    assert report.observed["model_quality"] == {
+        "scheduled_date": "2026-07-19",
+        "completed_early": True,
+        "calibration_fit_split": "validation",
+        "calibration_fit_samples": 75,
+        "evaluation_split": "test",
+        "evaluation_samples": 75,
+        "original_test_ece": 0.017477123268026102,
+        "original_test_nll": 0.01974693908636797,
+        "fitted_temperature": 0.05,
+        "fit_reached_bound": True,
+        "calibration_deployment_approved": False,
+        "gradcam_samples": 5,
+        "model_quality_contract_tests": 7,
+    }
     assert report.observed["production_readiness"]["container_contract"] is True
     assert report.observed["production_readiness"]["ci_workflows"] is True
     assert report.observed["production_readiness"]["model_release_public_download_verified"] is True

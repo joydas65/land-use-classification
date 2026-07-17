@@ -23,6 +23,7 @@ from terraclass.drift import (
     load_drift_config,
 )
 from terraclass.inference import ServingConfig, load_serving_config
+from terraclass.model_quality import load_model_quality_config
 from terraclass.telemetry import PREDICTION_OBSERVATION_FIELDS, PROHIBITED_PREDICTION_FIELDS
 from terraclass.transfer_config import load_transfer_config
 
@@ -141,6 +142,16 @@ def audit_project(project_root: str | Path) -> AuditReport:
     drift_source_path = root / "src/terraclass/drift.py"
     drift_script_path = root / "scripts/analyze_production_drift.py"
     drift_test_path = root / "tests/test_drift.py"
+    model_quality_config_path = root / "configs/evaluation/model_quality_v1.json"
+    model_quality_report_path = root / "reports/model_quality_evaluation_2026-07-17.json"
+    model_quality_document_path = root / "docs/MODEL_QUALITY_AND_EXPLAINABILITY.md"
+    model_quality_source_path = root / "src/terraclass/model_quality.py"
+    model_quality_script_path = root / "scripts/evaluate_model_quality.py"
+    model_quality_test_path = root / "tests/test_model_quality.py"
+    reliability_figure_path = (
+        root / "reports/figures/reliability_resnet18_group_aware_2026-07-17.png"
+    )
+    gradcam_figure_path = root / "reports/figures/gradcam_resnet18_group_aware_2026-07-17.png"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
     web_css_path = root / "web/app/globals.css"
@@ -1448,6 +1459,186 @@ def audit_project(project_root: str | Path) -> AuditReport:
         }:
             report.errors.append("Current observability deployment claim boundary is inconsistent")
 
+    model_quality_test_count = 0
+    if not model_quality_source_path.is_file():
+        report.errors.append("Model-quality evaluation source is missing")
+    else:
+        model_quality_source = model_quality_source_path.read_text(encoding="utf-8")
+        for token in (
+            "def calibration_metrics(",
+            "def fit_temperature(",
+            "def selective_prediction_curve(",
+            "def compute_gradcam(",
+            "def deterministic_explainability_samples(",
+        ):
+            if token not in model_quality_source:
+                report.errors.append(f"Model-quality implementation token is missing: {token}")
+    if not model_quality_script_path.is_file():
+        report.errors.append("Model-quality evaluation script is missing")
+    elif "from terraclass.model_quality import main" not in model_quality_script_path.read_text(
+        encoding="utf-8"
+    ):
+        report.errors.append("Model-quality script does not use the packaged entry point")
+    if not model_quality_test_path.is_file():
+        report.errors.append("Model-quality focused tests are missing")
+    else:
+        model_quality_test_source = model_quality_test_path.read_text(encoding="utf-8")
+        model_quality_test_count = len(
+            re.findall(r"^def test_", model_quality_test_source, re.MULTILINE)
+        )
+        if model_quality_test_count != 7:
+            report.errors.append("Model-quality suite must contain seven focused tests")
+
+    model_quality_config = None
+    if not model_quality_config_path.is_file():
+        report.errors.append("Model-quality evaluation configuration is missing")
+    else:
+        try:
+            model_quality_config = load_model_quality_config(model_quality_config_path)
+        except (KeyError, TypeError, ValueError) as error:
+            report.errors.append(f"Model-quality evaluation configuration is invalid: {error}")
+    if not model_quality_report_path.is_file():
+        report.errors.append("Model-quality evaluation report is missing")
+        model_quality_report: dict[str, Any] = {}
+    else:
+        model_quality_report = json.loads(model_quality_report_path.read_text(encoding="utf-8"))
+    if model_quality_config is not None:
+        protocol = model_quality_report.get("protocol", {})
+        model_identity = model_quality_report.get("model", {})
+        provenance = model_quality_report.get("provenance", {})
+        temperature = model_quality_report.get("temperature_scaling", {})
+        fitted = temperature.get("fit", {})
+        test_before = temperature.get("test", {}).get("before", {})
+        uncertainty_rows = model_quality_report.get("uncertainty", {}).get(
+            "original_softmax_selective_prediction", []
+        )
+        explainability = model_quality_report.get("explainability", {})
+        explanation_samples = explainability.get("samples", [])
+        claim_boundary = model_quality_report.get("claim_boundary", {})
+        if (
+            model_quality_report.get("schema_version") != 1
+            or model_quality_report.get("evaluated_on") != "2026-07-17"
+            or model_quality_report.get("phase")
+            != {"scheduled_date": "2026-07-19", "status": "completed_early"}
+            or model_quality_report.get("evaluation_id") != model_quality_config.evaluation_id
+        ):
+            report.errors.append("Model-quality report identity is inconsistent")
+        if serving_config is not None and model_identity != {
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "architecture": serving_config.architecture,
+            "class_names": list(serving_config.class_names),
+        }:
+            report.errors.append("Model-quality report model identity is inconsistent")
+        if serving_config is not None and provenance != {
+            "evaluation_config_path": "configs/evaluation/model_quality_v1.json",
+            "evaluation_config_sha256": _sha256(model_quality_config_path),
+            "serving_config_path": model_quality_config.serving_config_path,
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+            "source_checkpoint_sha256": serving_config.source_checkpoint.sha256,
+            "manifest_path": serving_config.training_manifest_path,
+            "manifest_sha256": serving_config.training_manifest_sha256,
+        }:
+            report.errors.append("Model-quality provenance is inconsistent")
+        if protocol != {
+            "calibration_fit_split": "validation",
+            "calibration_fit_samples": 75,
+            "evaluation_split": "test",
+            "evaluation_samples": 75,
+            "bin_count": 10,
+            "temperature_bounds": [0.05, 10.0],
+            "selective_prediction_thresholds": [0.0, 0.8, 0.9, 0.95, 0.99],
+            "explainability_selection_policy": ("lexicographically_first_test_sample_per_class"),
+            "explainability_samples_per_class": 1,
+        }:
+            report.errors.append("Model-quality evaluation protocol is inconsistent")
+        if (
+            fitted.get("temperature") != 0.05
+            or fitted.get("at_optimization_bound") is not True
+            or fitted.get("at_lower_bound") is not True
+            or fitted.get("at_upper_bound") is not False
+            or temperature.get("calibration_fit_reliable") is not False
+            or temperature.get("deployment_approved") is not False
+            or "retain original softmax" not in temperature.get("deployment_decision", "")
+        ):
+            report.errors.append("Temperature-scaling refusal evidence is inconsistent")
+        expected_test_metrics = {
+            "accuracy": 1.0,
+            "macro_f1": 1.0,
+            "negative_log_likelihood": 0.01974693908636797,
+            "multiclass_brier_score": 0.005441995338968022,
+            "expected_calibration_error": 0.017477123268026102,
+            "mean_confidence": 0.9825228767319739,
+            "minimum_confidence": 0.6392675509002662,
+            "mean_normalized_predictive_entropy": 0.04297093767767427,
+        }
+        for field, expected in expected_test_metrics.items():
+            actual = test_before.get(field)
+            if actual is None or abs(actual - expected) > 1e-12:
+                report.errors.append(
+                    f"Model-quality test {field}={actual!r} differs from {expected!r}"
+                )
+        threshold_99 = next(
+            (row for row in uncertainty_rows if row.get("confidence_threshold") == 0.99),
+            {},
+        )
+        if threshold_99 != {
+            "confidence_threshold": 0.99,
+            "retained_count": 60,
+            "coverage": 0.8,
+            "accuracy": 1.0,
+            "selective_risk": 0.0,
+        }:
+            report.errors.append("Model-quality selective-prediction evidence is inconsistent")
+        if (
+            explainability.get("method") != "grad_cam"
+            or explainability.get("target_layer") != "layer4[-1]"
+            or explainability.get("selection_policy")
+            != "lexicographically_first_test_sample_per_class"
+            or len(explanation_samples) != 5
+            or [sample.get("true_class") for sample in explanation_samples]
+            != list(serving_config.class_names if serving_config else ())
+            or any(sample.get("correct") is not True for sample in explanation_samples)
+        ):
+            report.errors.append("Deterministic Grad-CAM evidence is inconsistent")
+        if claim_boundary != {
+            "dataset_scope": "balanced 500-image, five-class UC Merced subset",
+            "validation_samples": 75,
+            "test_samples": 75,
+            "calibration_deployed": False,
+            "calibration_reason": (
+                "A 75-image perfectly classified validation split cannot identify a stable "
+                "temperature when the bounded optimum is reached."
+            ),
+            "gradcam_interpretation": (
+                "Grad-CAM is a qualitative localization aid, not a causal explanation or proof "
+                "that the model will generalize."
+            ),
+            "iit_submission_changed": False,
+            "production_model_changed": False,
+        }:
+            report.errors.append("Model-quality claim boundary is inconsistent")
+        figures = model_quality_report.get("figures", {})
+        for key, expected_path, figure_path in (
+            (
+                "reliability",
+                "reports/figures/reliability_resnet18_group_aware_2026-07-17.png",
+                reliability_figure_path,
+            ),
+            (
+                "gradcam",
+                "reports/figures/gradcam_resnet18_group_aware_2026-07-17.png",
+                gradcam_figure_path,
+            ),
+        ):
+            if not figure_path.is_file():
+                report.errors.append(f"Model-quality {key} figure is missing")
+            elif figures.get(key) != {
+                "path": expected_path,
+                "sha256": _sha256(figure_path),
+            }:
+                report.errors.append(f"Model-quality {key} figure hash is inconsistent")
+
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
     if not any(str(dependency).startswith("fastapi") for dependency in web_dependencies):
@@ -1461,6 +1652,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
         != "terraclass.drift:main"
     ):
         report.errors.append("terraclass-drift command does not target terraclass.drift:main")
+    if (
+        pyproject.get("project", {}).get("scripts", {}).get("terraclass-model-quality")
+        != "terraclass.model_quality:main"
+    ):
+        report.errors.append(
+            "terraclass-model-quality command does not target terraclass.model_quality:main"
+        )
 
     deployment_contracts = (
         (
@@ -1705,6 +1903,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         feedback_drift_document = ""
     else:
         feedback_drift_document = feedback_drift_document_path.read_text(encoding="utf-8")
+    if not model_quality_document_path.is_file():
+        report.errors.append("docs/MODEL_QUALITY_AND_EXPLAINABILITY.md is missing")
+        model_quality_document = ""
+    else:
+        model_quality_document = model_quality_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -1732,6 +1935,7 @@ def audit_project(project_root: str | Path) -> AuditReport:
             production_document,
             observability_document,
             feedback_drift_document,
+            model_quality_document,
         )
     )
     for token in required_documentation_tokens:
@@ -1840,6 +2044,27 @@ def audit_project(project_root: str | Path) -> AuditReport:
             report.errors.append(
                 f"Production feedback/drift documentation token is missing: {token}"
             )
+    model_quality_document_normalized = " ".join(model_quality_document.split())
+    for token in (
+        "scheduled 19 July phase was implemented and verified early on 17 July 2026",
+        "validation images",
+        "test images remain untouched",
+        "Negative log-likelihood",
+        "Multiclass Brier score",
+        "expected calibration error",
+        "0.019747",
+        "0.005442",
+        "0.017477",
+        "configured lower bound of 0.05",
+        "retain the original softmax",
+        "60 of 75 test images",
+        "80% coverage",
+        "lexicographically first test image",
+        "not a causal explanation",
+        "production model were not modified",
+    ):
+        if token not in model_quality_document_normalized:
+            report.errors.append(f"Model-quality documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -1930,6 +2155,42 @@ def audit_project(project_root: str | Path) -> AuditReport:
             "throughput_requests_per_second": inference_benchmark.get(
                 "throughput_requests_per_second"
             ),
+        },
+        "model_quality": {
+            "scheduled_date": model_quality_report.get("phase", {}).get("scheduled_date"),
+            "completed_early": model_quality_report.get("phase", {}).get("status")
+            == "completed_early",
+            "calibration_fit_split": model_quality_report.get("protocol", {}).get(
+                "calibration_fit_split"
+            ),
+            "calibration_fit_samples": model_quality_report.get("protocol", {}).get(
+                "calibration_fit_samples"
+            ),
+            "evaluation_split": model_quality_report.get("protocol", {}).get("evaluation_split"),
+            "evaluation_samples": model_quality_report.get("protocol", {}).get(
+                "evaluation_samples"
+            ),
+            "original_test_ece": model_quality_report.get("temperature_scaling", {})
+            .get("test", {})
+            .get("before", {})
+            .get("expected_calibration_error"),
+            "original_test_nll": model_quality_report.get("temperature_scaling", {})
+            .get("test", {})
+            .get("before", {})
+            .get("negative_log_likelihood"),
+            "fitted_temperature": model_quality_report.get("temperature_scaling", {})
+            .get("fit", {})
+            .get("temperature"),
+            "fit_reached_bound": model_quality_report.get("temperature_scaling", {})
+            .get("fit", {})
+            .get("at_optimization_bound"),
+            "calibration_deployment_approved": model_quality_report.get(
+                "temperature_scaling", {}
+            ).get("deployment_approved"),
+            "gradcam_samples": len(
+                model_quality_report.get("explainability", {}).get("samples", [])
+            ),
+            "model_quality_contract_tests": model_quality_test_count,
         },
         "production_readiness": {
             "model_release_url": model_release.url if model_release else None,

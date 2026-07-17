@@ -1,6 +1,6 @@
 # Testing and Audit Guide
 
-The quality gate contains seven layers:
+The quality gate contains eight layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification,
@@ -20,6 +20,9 @@ The quality gate contains seven layers:
 7. The production-review gate validates strict prediction/review schemas, privacy exclusions,
    aggregate profiles, Jensen–Shannon calculations, insufficient-sample refusal, reviewed-sample
    accuracy/macro-F1, dashboard definition, and deployment readback evidence.
+8. The model-quality gate validates calibration math, temperature-bound detection, fixed-width
+   reliability bins, selective prediction, deterministic explainability selection, Grad-CAM output,
+   and consistency among the protocol, evidence report, figures, résumé claims, and documentation.
 
 The complete local gate is:
 
@@ -179,3 +182,19 @@ contained one allowlisted prediction, and the committed aggregate correctly repo
 Dashboard configuration was checked through `gcloud monitoring dashboards create --validate-only`
 before creation, then described by resource ID to verify the saved widgets and etag. See
 `reports/production_drift_readiness_2026-07-17.json`.
+
+The scheduled 19 July model-quality phase was run locally against the hash-verified serving artifact
+and completed early on 17 July. Its 75 validation logits are the only input to scalar-temperature
+fitting; the 75 test logits are used only for final evaluation. The fit reached the configured 0.05
+lower bound, and the evidence therefore requires `deployment_approved=false` rather than promoting a
+misleading calibration artifact. Seven focused unit tests cover the numerical and Grad-CAM
+primitives. Reproduce the full model pass with:
+
+```bash
+PYTHONPATH=src python scripts/evaluate_model_quality.py \
+  --project-root . \
+  --device cpu
+```
+
+The committed report and two PNG figures are re-hashed by `terraclass-audit`; see
+`docs/MODEL_QUALITY_AND_EXPLAINABILITY.md`.

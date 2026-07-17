@@ -32,6 +32,9 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Deployed Cloud Monitoring 5xx-ratio and warm-container p95 policies, with candidate objectives kept separate from achieved SLO and drift claims
 - Privacy-preserving production ML review pipeline with strict log/review schemas, aggregate class/confidence/latency profiles, Jensen–Shannon comparison, sample-size gates, and reviewed-sample accuracy/macro-F1
 - API-validated and deployed Cloud Monitoring dashboard for request rate, p95 latency, instance state, and allowlisted prediction logs
+- Validation-only confidence calibration analysis using NLL, multiclass Brier score, 10-bin ECE, predictive entropy, and selective-risk curves on the untouched group-aware test set
+- Deterministic Grad-CAM review across all five classes, with artifact/manifest hashes and an explicit distinction between qualitative localization and causal explanation
+- Model-governance decision to reject temperature promotion after the fit reached its lower bound on a small, perfectly classified validation split
 
 ## Supported numerical claim
 
@@ -73,6 +76,13 @@ Optional production-ML monitoring bullet:
 
 > Built a privacy-preserving production review pipeline that validates Cloud Logging and human-label records, aggregates class/confidence/latency profiles, compares eligible windows with Jensen–Shannon divergence, and calculates reviewed-sample accuracy and macro-F1 behind explicit 100-event evidence gates.
 
+Optional model-quality bullet:
+
+> Evaluated a ResNet18 classifier with validation-only temperature scaling, NLL/Brier/ECE,
+> predictive entropy, selective-risk curves, and deterministic Grad-CAM across five land-use
+> classes; rejected calibration deployment when the bounded fit proved unstable on the small,
+> perfectly classified validation split.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -88,4 +98,5 @@ including strict privacy schemas, sample-size refusal, Jensen–Shannon comparis
 metrics. Notification routing still needs an owner-approved destination. The candidate objectives
 need sufficient historical traffic before they can be described as achieved SLOs, and credible drift
 validation still requires two representative windows plus at least 100 labeled or human-reviewed
-production examples.
+production examples. The model-quality phase is also complete: the original softmax remains in
+production because the 75-image validation split could not identify a stable interior temperature.

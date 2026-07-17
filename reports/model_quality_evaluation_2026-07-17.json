@@ -1,0 +1,577 @@
+{
+  "schema_version": 1,
+  "evaluated_on": "2026-07-17",
+  "phase": {
+    "scheduled_date": "2026-07-19",
+    "status": "completed_early"
+  },
+  "evaluation_id": "resnet18_group_aware_calibration_gradcam_v1",
+  "environment": {
+    "python": "3.13.5",
+    "torch": "2.13.0",
+    "torchvision": "0.28.0",
+    "numpy": "2.5.1",
+    "scikit_learn": "1.9.0"
+  },
+  "model": {
+    "model_id": "terraclass-resnet18-group-aware",
+    "model_version": "1.0.0",
+    "architecture": "resnet18",
+    "class_names": [
+      "agricultural",
+      "airplane",
+      "baseballdiamond",
+      "beach",
+      "buildings"
+    ]
+  },
+  "provenance": {
+    "evaluation_config_path": "configs/evaluation/model_quality_v1.json",
+    "evaluation_config_sha256": "fbf0f970a1362e2b25d0daccdb604ca3aa8d0e06f651bae6d9dfff96c3fc6012",
+    "serving_config_path": "configs/serving/resnet18_group_aware_v1.json",
+    "serving_artifact_sha256": "b4e8522aa702ef8d6670acd58e37ef2dd8948148a4fa9f07b88c23953473e523",
+    "source_checkpoint_sha256": "d3c22a5cf0e3f96c124f4c9e5b7b1200f696fb9b8bd95d6d79d8330035bf4067",
+    "manifest_path": "data/manifests/five_class_group_aware_seed42.csv",
+    "manifest_sha256": "26bc3503f6a16e841286771b727e1f1f14a58c623deafe26c45e52d68b88081d"
+  },
+  "protocol": {
+    "calibration_fit_split": "validation",
+    "calibration_fit_samples": 75,
+    "evaluation_split": "test",
+    "evaluation_samples": 75,
+    "bin_count": 10,
+    "temperature_bounds": [
+      0.05,
+      10.0
+    ],
+    "selective_prediction_thresholds": [
+      0.0,
+      0.8,
+      0.9,
+      0.95,
+      0.99
+    ],
+    "explainability_selection_policy": "lexicographically_first_test_sample_per_class",
+    "explainability_samples_per_class": 1
+  },
+  "temperature_scaling": {
+    "method": "single_scalar_validation_nll",
+    "fit": {
+      "temperature": 0.05,
+      "validation_nll_before": 0.036871384637562565,
+      "validation_nll_after": 9.090550232149961e-06,
+      "at_optimization_bound": true,
+      "at_lower_bound": true,
+      "at_upper_bound": false
+    },
+    "calibration_fit_reliable": false,
+    "deployment_approved": false,
+    "deployment_decision": "retain original softmax; fitted temperature reached an optimization bound",
+    "validation": {
+      "before": {
+        "sample_count": 75,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "negative_log_likelihood": 0.036871384637562565,
+        "multiclass_brier_score": 0.01275162541011858,
+        "expected_calibration_error": 0.031010350303636705,
+        "mean_confidence": 0.9689896496963635,
+        "minimum_confidence": 0.5049803923106696,
+        "confidence_quantiles": {
+          "p25": 0.9883611700988659,
+          "p50": 0.9957034507671766,
+          "p75": 0.9986964381598297
+        },
+        "mean_normalized_predictive_entropy": 0.06805319060667943,
+        "reliability_bins": [
+          {
+            "lower": 0.0,
+            "upper": 0.1,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.4,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 2,
+            "mean_confidence": 0.5508947062652608,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.6,
+            "upper": 0.7,
+            "count": 1,
+            "mean_confidence": 0.6559015412785318,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.8,
+            "count": 1,
+            "mean_confidence": 0.7620274712765834,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.8,
+            "upper": 0.9,
+            "count": 1,
+            "mean_confidence": 0.8572079539378535,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 70,
+            "mean_confidence": 0.9899613906886251,
+            "accuracy": 1.0
+          }
+        ]
+      },
+      "after_sensitivity": {
+        "sample_count": 75,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "negative_log_likelihood": 9.090545898920582e-06,
+        "multiclass_brier_score": 1.2387239284559839e-08,
+        "expected_calibration_error": 9.087447681355165e-06,
+        "mean_confidence": 0.9999909125523186,
+        "minimum_confidence": 0.9993184418783619,
+        "confidence_quantiles": {
+          "p25": 1.0,
+          "p50": 1.0,
+          "p75": 1.0
+        },
+        "mean_normalized_predictive_entropy": 4.6812736570822346e-05,
+        "reliability_bins": [
+          {
+            "lower": 0.0,
+            "upper": 0.1,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.4,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.6,
+            "upper": 0.7,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.8,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.8,
+            "upper": 0.9,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 75,
+            "mean_confidence": 0.9999909125523186,
+            "accuracy": 1.0
+          }
+        ]
+      }
+    },
+    "test": {
+      "before": {
+        "sample_count": 75,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "negative_log_likelihood": 0.01974693908636797,
+        "multiclass_brier_score": 0.005441995338968022,
+        "expected_calibration_error": 0.017477123268026102,
+        "mean_confidence": 0.9825228767319739,
+        "minimum_confidence": 0.6392675509002662,
+        "confidence_quantiles": {
+          "p25": 0.9929484994349516,
+          "p50": 0.9983833030971861,
+          "p75": 0.9993829001406385
+        },
+        "mean_normalized_predictive_entropy": 0.04297093767767427,
+        "reliability_bins": [
+          {
+            "lower": 0.0,
+            "upper": 0.1,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.4,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.6,
+            "upper": 0.7,
+            "count": 2,
+            "mean_confidence": 0.6591187754194932,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.8,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.8,
+            "upper": 0.9,
+            "count": 1,
+            "mean_confidence": 0.8722851664898147,
+            "accuracy": 1.0
+          },
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 72,
+            "mean_confidence": 0.9930374032995728,
+            "accuracy": 1.0
+          }
+        ]
+      },
+      "after_sensitivity": {
+        "sample_count": 75,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "negative_log_likelihood": 1.0935530995259708e-11,
+        "multiclass_brier_score": 1.59721358508459e-20,
+        "expected_calibration_error": 1.093558577025533e-11,
+        "mean_confidence": 0.9999999999890644,
+        "minimum_confidence": 0.9999999992275463,
+        "confidence_quantiles": {
+          "p25": 1.0,
+          "p50": 1.0,
+          "p75": 1.0
+        },
+        "mean_normalized_predictive_entropy": 1.504634757590272e-10,
+        "reliability_bins": [
+          {
+            "lower": 0.0,
+            "upper": 0.1,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.4,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.4,
+            "upper": 0.5,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 0.6,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.6,
+            "upper": 0.7,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.7,
+            "upper": 0.8,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.8,
+            "upper": 0.9,
+            "count": 0,
+            "mean_confidence": null,
+            "accuracy": null
+          },
+          {
+            "lower": 0.9,
+            "upper": 1.0,
+            "count": 75,
+            "mean_confidence": 0.9999999999890644,
+            "accuracy": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "uncertainty": {
+    "method": "top_one_confidence_predictive_entropy_and_selective_risk",
+    "original_softmax_selective_prediction": [
+      {
+        "confidence_threshold": 0.0,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.8,
+        "retained_count": 73,
+        "coverage": 0.9733333333333334,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.9,
+        "retained_count": 72,
+        "coverage": 0.96,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.95,
+        "retained_count": 69,
+        "coverage": 0.92,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.99,
+        "retained_count": 60,
+        "coverage": 0.8,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      }
+    ],
+    "temperature_sensitivity_selective_prediction": [
+      {
+        "confidence_threshold": 0.0,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.8,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.9,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.95,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      },
+      {
+        "confidence_threshold": 0.99,
+        "retained_count": 75,
+        "coverage": 1.0,
+        "accuracy": 1.0,
+        "selective_risk": 0.0
+      }
+    ]
+  },
+  "explainability": {
+    "method": "grad_cam",
+    "target_layer": "layer4[-1]",
+    "target_policy": "model_predicted_class",
+    "selection_policy": "lexicographically_first_test_sample_per_class",
+    "samples": [
+      {
+        "relative_path": "agricultural/agricultural06.tif",
+        "image_sha256": "a9eac59d5d176cdd2099c2486c0938c5f12d6b507274f0ee90c1f212967a99f2",
+        "true_class": "agricultural",
+        "predicted_class": "agricultural",
+        "confidence": 0.993049144744873,
+        "correct": true,
+        "target_class": "agricultural"
+      },
+      {
+        "relative_path": "airplane/airplane12.tif",
+        "image_sha256": "f4cb21cc355fd4d2889dff416e57df168b33a9b382266c1fbf6249fb0c18b2be",
+        "true_class": "airplane",
+        "predicted_class": "airplane",
+        "confidence": 0.9987742304801941,
+        "correct": true,
+        "target_class": "airplane"
+      },
+      {
+        "relative_path": "baseballdiamond/baseballdiamond01.tif",
+        "image_sha256": "56cbd6353767bc6f906385368e940d5c252597f31fdf240b1c39f6a91f7ac76f",
+        "true_class": "baseballdiamond",
+        "predicted_class": "baseballdiamond",
+        "confidence": 0.9965858459472656,
+        "correct": true,
+        "target_class": "baseballdiamond"
+      },
+      {
+        "relative_path": "beach/beach05.tif",
+        "image_sha256": "7ec754950e88b03a0dc18f6a4bd5911672137bbe5fd4c855565c79efdb4e103c",
+        "true_class": "beach",
+        "predicted_class": "beach",
+        "confidence": 0.9992278814315796,
+        "correct": true,
+        "target_class": "beach"
+      },
+      {
+        "relative_path": "buildings/buildings11.tif",
+        "image_sha256": "62112c301b745ba7282ab373cfedf38f4f2a1126b918b1236f47b84aa6d6d288",
+        "true_class": "buildings",
+        "predicted_class": "buildings",
+        "confidence": 0.9991746544837952,
+        "correct": true,
+        "target_class": "buildings"
+      }
+    ]
+  },
+  "figures": {
+    "reliability": {
+      "path": "reports/figures/reliability_resnet18_group_aware_2026-07-17.png",
+      "sha256": "2254559d76d0f67f5acb3e3793fad72678463aad36948c57a5031e6936c2b3e9"
+    },
+    "gradcam": {
+      "path": "reports/figures/gradcam_resnet18_group_aware_2026-07-17.png",
+      "sha256": "e51377ecf2ef91d87154fb1a2f6eb19f3fc7dff70cd3e61b43ab1ddb98bf231a"
+    }
+  },
+  "claim_boundary": {
+    "dataset_scope": "balanced 500-image, five-class UC Merced subset",
+    "validation_samples": 75,
+    "test_samples": 75,
+    "calibration_deployed": false,
+    "calibration_reason": "A 75-image perfectly classified validation split cannot identify a stable temperature when the bounded optimum is reached.",
+    "gradcam_interpretation": "Grad-CAM is a qualitative localization aid, not a causal explanation or proof that the model will generalize.",
+    "iit_submission_changed": false,
+    "production_model_changed": false
+  }
+}
