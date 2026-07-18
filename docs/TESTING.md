@@ -1,6 +1,6 @@
 # Testing and Audit Guide
 
-The quality gate contains nine layers:
+The quality gate contains ten layers:
 
 1. `terraclass-audit` cross-checks the immutable notebook, checksum, configuration, observed metrics, issue register, and documentation tokens.
 2. `pytest` validates configuration, data discovery, deterministic and group-aware stratification,
@@ -26,6 +26,9 @@ The quality gate contains nine layers:
 9. The external-calibration gate validates pinned noncommercial dataset provenance, deterministic
    and role-disjoint sampling, bootstrap intervals, five-fold stability, untouched-test calibration
    metrics, UC Merced regression refusal, separate OOD metrics, and production claim boundaries.
+10. The corruption-robustness gate validates deterministic corruptions, the 16-condition matrix,
+    exact TTA tensor semantics, validation-only candidate selection, untouched-test refusal after
+    rejection, figure/report hashes, résumé wording, and the synthetic-evidence claim boundary.
 
 The complete local gate is:
 
@@ -218,3 +221,21 @@ The versioned manifest contains 500 independent calibration images, 500 untouche
 test images, and 5,457 unmapped OOD images. The report requires the stable 2.697718 fit, its
 500-replicate bootstrap interval, five-fold behavior, calibration improvements, and the failed UC
 Merced NLL regression gate to remain consistent. See `docs/EXTERNAL_CALIBRATION_AND_OOD.md`.
+
+The robustness phase scheduled for 20 July was completed early on 18 July. Nine focused test
+functions cover configuration separation, deterministic sample seeds, five corruption families,
+invalid parameters, exact TTA tensor semantics, the 16-condition matrix, aggregation, validation
+selection, and production refusal. Reproduce the real model evaluation with:
+
+```bash
+PYTHONPATH=src python -m scripts.evaluate_robustness \
+  --project-root . \
+  --device cpu
+```
+
+The evaluator uses validation to decide whether four-view dihedral TTA may proceed. The candidate
+reduced mean corruption macro F1 from 0.986390 to 0.985616, so it was rejected and candidate test
+metrics were not computed. The single-view test baseline retained 0.991879 mean macro F1 across 15
+synthetic corruption conditions; severe Gaussian blur was the worst condition at 0.918319 macro F1.
+The JSON report and PNG figure are re-hashed by `terraclass-audit`; see
+`docs/CORRUPTION_ROBUSTNESS.md`.

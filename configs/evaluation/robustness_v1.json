@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "resnet18_group_aware_corruption_robustness_v1",
+  "serving_config_path": "configs/serving/resnet18_group_aware_v1.json",
+  "dataset_root": "data/raw/UCMerced_LandUse/Images",
+  "protocol": {
+    "selection_split": "validation",
+    "evaluation_split": "test",
+    "batch_size": 32,
+    "bin_count": 10,
+    "seed": 42,
+    "corruptions": {
+      "brightness_reduction": [
+        0.85,
+        0.65,
+        0.45
+      ],
+      "contrast_reduction": [
+        0.8,
+        0.6,
+        0.4
+      ],
+      "gaussian_blur": [
+        0.8,
+        1.6,
+        2.4
+      ],
+      "gaussian_noise": [
+        0.02,
+        0.05,
+        0.1
+      ],
+      "jpeg_compression": [
+        70,
+        40,
+        15
+      ]
+    }
+  },
+  "candidate": {
+    "name": "dihedral_4_logit_mean",
+    "transforms": [
+      "identity",
+      "horizontal_flip",
+      "vertical_flip",
+      "rotate_180"
+    ],
+    "aggregation": "mean_logits",
+    "selection_metric": "mean_corruption_macro_f1",
+    "minimum_validation_improvement": 0.005,
+    "require_clean_classification_unchanged": true,
+    "require_worst_corruption_macro_f1_not_worse": true
+  },
+  "promotion_gates": {
+    "require_candidate_selected_on_validation": true,
+    "require_test_clean_classification_unchanged": true,
+    "require_test_mean_corruption_macro_f1_improvement": true,
+    "require_test_worst_corruption_macro_f1_not_worse": true,
+    "automatic_production_promotion": false
+  },
+  "methodology_references": {
+    "corruption_benchmark": "https://arxiv.org/abs/1903.12261",
+    "test_time_augmentation": "https://openaccess.thecvf.com/content/ICCV2021/papers/Shanmugam_Better_Aggregation_in_Test-Time_Augmentation_ICCV_2021_paper.pdf"
+  },
+  "claim_boundary": {
+    "synthetic_corruptions_are_production_representative": false,
+    "test_split_used_for_candidate_selection": false,
+    "adversarial_robustness_evaluated": false,
+    "resisc45_used": false,
+    "iit_submission_changed": false
+  }
+}

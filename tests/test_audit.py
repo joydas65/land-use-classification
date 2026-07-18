@@ -45,6 +45,21 @@ def test_cross_artifact_consistency_audit_passes(project_root: Path) -> None:
         "external_calibration_contract_tests": 7,
         "external_download_contract_tests": 3,
     }
+    assert report.observed["robustness"] == {
+        "scheduled_date": "2026-07-20",
+        "completed_early": True,
+        "validation_samples": 75,
+        "test_samples": 75,
+        "corrupted_conditions": 15,
+        "validation_baseline_mean_macro_f1": 0.9863898357852752,
+        "validation_tta_mean_macro_f1": 0.9856160395036926,
+        "tta_selected": False,
+        "tta_test_evaluated": False,
+        "test_baseline_mean_macro_f1": 0.9918790124718935,
+        "test_worst_macro_f1": 0.9183190659914798,
+        "production_promotion_approved": False,
+        "robustness_contract_tests": 9,
+    }
     assert report.observed["production_readiness"]["container_contract"] is True
     assert report.observed["production_readiness"]["ci_workflows"] is True
     assert report.observed["production_readiness"]["model_release_public_download_verified"] is True

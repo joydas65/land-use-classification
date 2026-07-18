@@ -25,6 +25,7 @@ from terraclass.drift import (
 from terraclass.external_calibration import load_external_calibration_config
 from terraclass.inference import ServingConfig, load_serving_config
 from terraclass.model_quality import load_model_quality_config
+from terraclass.robustness import corruption_scenarios, load_robustness_config
 from terraclass.telemetry import PREDICTION_OBSERVATION_FIELDS, PROHIBITED_PREDICTION_FIELDS
 from terraclass.transfer_config import load_transfer_config
 
@@ -169,6 +170,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
     external_download_script_path = root / "scripts/download_resisc45.py"
     external_calibration_test_path = root / "tests/test_external_calibration.py"
     external_download_test_path = root / "tests/test_download_resisc45.py"
+    robustness_config_path = root / "configs/evaluation/robustness_v1.json"
+    robustness_report_path = root / "reports/robustness_evaluation_2026-07-18.json"
+    robustness_figure_path = root / "reports/figures/robustness_resnet18_group_aware_2026-07-18.png"
+    robustness_document_path = root / "docs/CORRUPTION_ROBUSTNESS.md"
+    robustness_source_path = root / "src/terraclass/robustness.py"
+    robustness_script_path = root / "scripts/evaluate_robustness.py"
+    robustness_test_path = root / "tests/test_robustness.py"
     pyproject_path = root / "pyproject.toml"
     web_app_path = root / "web/app/TerraClassApp.tsx"
     web_css_path = root / "web/app/globals.css"
@@ -1973,6 +1981,283 @@ def audit_project(project_root: str | Path) -> AuditReport:
         }:
             report.errors.append("External-calibration figure hash is inconsistent")
 
+    robustness_test_count = 0
+    if not robustness_source_path.is_file():
+        report.errors.append("Corruption-robustness evaluation source is missing")
+    else:
+        robustness_source = robustness_source_path.read_text(encoding="utf-8")
+        for token in (
+            "def deterministic_sample_seed(",
+            "def apply_corruption(",
+            "def tta_variant(",
+            "def evaluate_candidate_selection(",
+            "def evaluate_promotion(",
+            "def render_robustness_figure(",
+        ):
+            if token not in robustness_source:
+                report.errors.append(
+                    f"Corruption-robustness implementation token is missing: {token}"
+                )
+    if not robustness_script_path.is_file():
+        report.errors.append("Corruption-robustness evaluation script is missing")
+    elif "from terraclass.robustness import main" not in robustness_script_path.read_text(
+        encoding="utf-8"
+    ):
+        report.errors.append("Corruption-robustness script does not use the packaged entry point")
+    if not robustness_test_path.is_file():
+        report.errors.append("Corruption-robustness focused tests are missing")
+    else:
+        robustness_test_source = robustness_test_path.read_text(encoding="utf-8")
+        robustness_test_count = len(re.findall(r"^def test_", robustness_test_source, re.MULTILINE))
+        if robustness_test_count != 9:
+            report.errors.append("Corruption-robustness suite must contain nine focused tests")
+
+    robustness_config = None
+    if not robustness_config_path.is_file():
+        report.errors.append("Corruption-robustness configuration is missing")
+    else:
+        try:
+            robustness_config = load_robustness_config(robustness_config_path)
+        except (KeyError, TypeError, ValueError) as error:
+            report.errors.append(f"Corruption-robustness configuration is invalid: {error}")
+    if not robustness_report_path.is_file():
+        report.errors.append("Corruption-robustness evaluation report is missing")
+        robustness_report: dict[str, Any] = {}
+    else:
+        robustness_report = json.loads(robustness_report_path.read_text(encoding="utf-8"))
+    if robustness_config is not None:
+        robustness_model = robustness_report.get("model", {})
+        robustness_provenance = robustness_report.get("provenance", {})
+        robustness_protocol = robustness_report.get("protocol", {})
+        robustness_validation = robustness_report.get("validation", {})
+        robustness_validation_summary = robustness_validation.get("summary", {})
+        robustness_test = robustness_report.get("test", {})
+        robustness_test_summary = robustness_test.get("summary", {})
+        robustness_selection = robustness_report.get("candidate_selection", {})
+        robustness_promotion = robustness_report.get("promotion", {})
+        expected_scenarios = corruption_scenarios(robustness_config)
+        if (
+            robustness_report.get("schema_version") != 1
+            or robustness_report.get("evaluated_on") != "2026-07-18"
+            or robustness_report.get("phase")
+            != {"scheduled_date": "2026-07-20", "status": "completed_early"}
+            or robustness_report.get("evaluation_id") != robustness_config["evaluation_id"]
+        ):
+            report.errors.append("Corruption-robustness report identity is inconsistent")
+        if serving_config is not None and robustness_model != {
+            "model_id": serving_config.model_id,
+            "model_version": serving_config.model_version,
+            "architecture": serving_config.architecture,
+            "class_names": list(serving_config.class_names),
+            "serving_artifact_sha256": serving_config.serving_artifact.sha256,
+        }:
+            report.errors.append("Corruption-robustness model identity is inconsistent")
+        if serving_config is not None and robustness_provenance != {
+            "config_path": "configs/evaluation/robustness_v1.json",
+            "config_sha256": _sha256(robustness_config_path),
+            "manifest_path": serving_config.training_manifest_path,
+            "manifest_sha256": serving_config.training_manifest_sha256,
+            "dataset_archive_sha256": config.dataset.archive_sha256,
+            "validation_samples": 75,
+            "test_samples": 75,
+        }:
+            report.errors.append("Corruption-robustness provenance is inconsistent")
+        if robustness_protocol != {
+            **robustness_config["protocol"],
+            "scenario_count_per_split": 16,
+            "candidate": robustness_config["candidate"],
+            "selection_precedes_test": True,
+        }:
+            report.errors.append("Corruption-robustness protocol is inconsistent")
+        if (
+            robustness_report.get("methodology_references")
+            != robustness_config["methodology_references"]
+        ):
+            report.errors.append("Corruption-robustness methodology references are inconsistent")
+        expected_scenario_contract = [
+            {
+                "id": row["id"],
+                "corruption": row["corruption"],
+                "severity": row["severity"],
+                "parameter": row["parameter"],
+            }
+            for row in expected_scenarios
+        ]
+        for split_name, split_evidence, expect_candidate in (
+            ("validation", robustness_validation, True),
+            ("test", robustness_test, False),
+        ):
+            scenario_rows = split_evidence.get("scenarios", [])
+            scenario_contract = [
+                {
+                    "id": row.get("id"),
+                    "corruption": row.get("corruption"),
+                    "severity": row.get("severity"),
+                    "parameter": row.get("parameter"),
+                }
+                for row in scenario_rows
+            ]
+            if (
+                scenario_contract != expected_scenario_contract
+                or any(row.get("baseline", {}).get("sample_count") != 75 for row in scenario_rows)
+                or any(
+                    (row.get("candidate") is not None) != expect_candidate for row in scenario_rows
+                )
+            ):
+                report.errors.append(
+                    f"Corruption-robustness {split_name} scenario evidence is inconsistent"
+                )
+        if (
+            robustness_validation.get("samples") != 75
+            or robustness_validation.get("candidate_evaluated") is not True
+            or robustness_validation_summary.get("scenario_count") != 16
+            or robustness_validation_summary.get("corrupted_scenario_count") != 15
+            or robustness_test.get("samples") != 75
+            or robustness_test.get("candidate_evaluated") is not False
+            or robustness_test_summary.get("scenario_count") != 16
+            or robustness_test_summary.get("corrupted_scenario_count") != 15
+            or robustness_test_summary.get("candidate") is not None
+        ):
+            report.errors.append("Corruption-robustness split separation is inconsistent")
+        expected_selection = {
+            "split": "validation",
+            "metric": "mean_corruption_macro_f1",
+            "minimum_improvement": 0.005,
+            "observed_improvement": -0.0007737962815825838,
+            "checks": {
+                "clean_classification_unchanged": True,
+                "minimum_mean_corruption_macro_f1_improvement": False,
+                "worst_corruption_macro_f1_not_worse": True,
+            },
+            "selected_for_final_test": False,
+            "test_metrics_consulted": False,
+        }
+        if robustness_selection != expected_selection:
+            report.errors.append("Corruption-robustness validation selection is inconsistent")
+        validation_baseline = robustness_validation_summary.get("baseline", {})
+        validation_candidate = robustness_validation_summary.get("candidate", {})
+        validation_delta = robustness_validation_summary.get("candidate_vs_baseline", {})
+        validation_exact_scalars = (
+            (
+                "validation baseline mean macro F1",
+                validation_baseline.get("corruption_average", {}).get("macro_f1"),
+                0.9863898357852752,
+            ),
+            (
+                "validation candidate mean macro F1",
+                validation_candidate.get("corruption_average", {}).get("macro_f1"),
+                0.9856160395036926,
+            ),
+            (
+                "validation candidate worst macro F1",
+                validation_candidate.get("worst_condition", {}).get("macro_f1"),
+                0.9312491735183615,
+            ),
+            (
+                "validation mean macro F1 delta",
+                validation_delta.get("mean_corruption_macro_f1_delta"),
+                -0.0007737962815825838,
+            ),
+        )
+        for name, actual, expected in validation_exact_scalars:
+            if actual is None or abs(actual - expected) > 1e-12:
+                report.errors.append(
+                    f"Corruption-robustness {name}={actual!r} differs from {expected!r}"
+                )
+        test_baseline = robustness_test_summary.get("baseline", {})
+        test_exact_scalars = (
+            (
+                "clean test macro F1",
+                test_baseline.get("clean", {}).get("macro_f1"),
+                1.0,
+            ),
+            (
+                "mean corruption test accuracy",
+                test_baseline.get("corruption_average", {}).get("accuracy"),
+                0.9919999999999999,
+            ),
+            (
+                "mean corruption test macro F1",
+                test_baseline.get("corruption_average", {}).get("macro_f1"),
+                0.9918790124718935,
+            ),
+            (
+                "severity-3 test macro F1",
+                next(
+                    (
+                        row.get("macro_f1")
+                        for row in test_baseline.get("by_severity", [])
+                        if row.get("severity") == 3
+                    ),
+                    None,
+                ),
+                0.9783066703411532,
+            ),
+            (
+                "worst-condition test macro F1",
+                test_baseline.get("worst_condition", {}).get("macro_f1"),
+                0.9183190659914798,
+            ),
+        )
+        for name, actual, expected in test_exact_scalars:
+            if actual is None or abs(actual - expected) > 1e-12:
+                report.errors.append(
+                    f"Corruption-robustness {name}={actual!r} differs from {expected!r}"
+                )
+        expected_family_macro_f1 = {
+            "brightness_reduction": 1.0,
+            "contrast_reduction": 1.0,
+            "gaussian_blur": 0.9683236337880388,
+            "gaussian_noise": 0.9910714285714285,
+            "jpeg_compression": 1.0,
+        }
+        actual_family_macro_f1 = {
+            name: values.get("macro_f1")
+            for name, values in test_baseline.get("by_corruption", {}).items()
+        }
+        if actual_family_macro_f1 != expected_family_macro_f1:
+            report.errors.append("Corruption-robustness family results are inconsistent")
+        if test_baseline.get("worst_condition") != {
+            "id": "gaussian_blur:severity_3",
+            "corruption": "gaussian_blur",
+            "severity": 3,
+            "parameter": 2.4,
+            "accuracy": 0.92,
+            "macro_f1": 0.9183190659914798,
+        }:
+            report.errors.append("Corruption-robustness worst condition is inconsistent")
+        if robustness_promotion != {
+            "checks": {
+                "candidate_selected_on_validation": False,
+                "test_clean_classification_unchanged": False,
+                "test_mean_corruption_macro_f1_improved": False,
+                "test_worst_corruption_macro_f1_not_worse": False,
+            },
+            "evidence_gates_passed": False,
+            "policy_blockers": {
+                "synthetic_corruptions_not_proven_production_representative": True,
+                "automatic_production_promotion_disabled": True,
+            },
+            "production_promotion_approved": False,
+        }:
+            report.errors.append("Corruption-robustness promotion refusal is inconsistent")
+        expected_robustness_claim_boundary = {
+            **robustness_config["claim_boundary"],
+            "production_model_changed": False,
+            "production_serving_policy_changed": False,
+            "calibration_policy_changed": False,
+            "candidate_is_evaluation_only": True,
+        }
+        if robustness_report.get("claim_boundary") != expected_robustness_claim_boundary:
+            report.errors.append("Corruption-robustness claim boundary is inconsistent")
+        if not robustness_figure_path.is_file():
+            report.errors.append("Corruption-robustness figure is missing")
+        elif robustness_report.get("figure") != {
+            "path": "reports/figures/robustness_resnet18_group_aware_2026-07-18.png",
+            "sha256": _sha256(robustness_figure_path),
+        }:
+            report.errors.append("Corruption-robustness figure hash is inconsistent")
+
     pyproject = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
     web_dependencies = pyproject.get("project", {}).get("optional-dependencies", {}).get("web", [])
     if not any(str(dependency).startswith("fastapi") for dependency in web_dependencies):
@@ -2000,6 +2285,13 @@ def audit_project(project_root: str | Path) -> AuditReport:
         report.errors.append(
             "terraclass-external-calibration command does not target "
             "terraclass.external_calibration:main"
+        )
+    if (
+        pyproject.get("project", {}).get("scripts", {}).get("terraclass-robustness")
+        != "terraclass.robustness:main"
+    ):
+        report.errors.append(
+            "terraclass-robustness command does not target terraclass.robustness:main"
         )
 
     deployment_contracts = (
@@ -2257,6 +2549,11 @@ def audit_project(project_root: str | Path) -> AuditReport:
         external_calibration_document = external_calibration_document_path.read_text(
             encoding="utf-8"
         )
+    if not robustness_document_path.is_file():
+        report.errors.append("docs/CORRUPTION_ROBUSTNESS.md is missing")
+        robustness_document = ""
+    else:
+        robustness_document = robustness_document_path.read_text(encoding="utf-8")
     for issue_id in KNOWN_ISSUE_IDS:
         if issue_id not in audit_document:
             report.errors.append(f"Known issue {issue_id} is missing from BASELINE_AUDIT.md")
@@ -2285,6 +2582,8 @@ def audit_project(project_root: str | Path) -> AuditReport:
             observability_document,
             feedback_drift_document,
             model_quality_document,
+            external_calibration_document,
+            robustness_document,
         )
     )
     for token in required_documentation_tokens:
@@ -2439,6 +2738,22 @@ def audit_project(project_root: str | Path) -> AuditReport:
     ):
         if token not in external_calibration_document_normalized:
             report.errors.append(f"External-calibration documentation token is missing: {token}")
+    robustness_document_normalized = " ".join(robustness_document.split())
+    for token in (
+        "robustness phase scheduled for 20 July 2026 was completed early on 18 July 2026",
+        "mean macro F1 of **0.991879**",
+        "Gaussian blur at severity 3",
+        "macro F1 was **0.918319**",
+        "mean corruption macro F1 from **0.986390** to **0.985616**",
+        "TTA was rejected before candidate test metrics were opened",
+        "five corruption families at three severities",
+        "Validation is reserved for candidate selection",
+        "synthetic and have not been shown to represent production traffic",
+        "does not evaluate adversarial attacks",
+        "single-view softmax and ResNet18 serving artifact remain unchanged",
+    ):
+        if token not in robustness_document_normalized:
+            report.errors.append(f"Corruption-robustness documentation token is missing: {token}")
 
     report.warnings.extend(
         [
@@ -2599,6 +2914,44 @@ def audit_project(project_root: str | Path) -> AuditReport:
             ),
             "external_calibration_contract_tests": external_calibration_test_count,
             "external_download_contract_tests": external_download_test_count,
+        },
+        "robustness": {
+            "scheduled_date": robustness_report.get("phase", {}).get("scheduled_date"),
+            "completed_early": robustness_report.get("phase", {}).get("status")
+            == "completed_early",
+            "validation_samples": robustness_report.get("validation", {}).get("samples"),
+            "test_samples": robustness_report.get("test", {}).get("samples"),
+            "corrupted_conditions": robustness_report.get("test", {})
+            .get("summary", {})
+            .get("corrupted_scenario_count"),
+            "validation_baseline_mean_macro_f1": robustness_report.get("validation", {})
+            .get("summary", {})
+            .get("baseline", {})
+            .get("corruption_average", {})
+            .get("macro_f1"),
+            "validation_tta_mean_macro_f1": robustness_report.get("validation", {})
+            .get("summary", {})
+            .get("candidate", {})
+            .get("corruption_average", {})
+            .get("macro_f1"),
+            "tta_selected": robustness_report.get("candidate_selection", {}).get(
+                "selected_for_final_test"
+            ),
+            "tta_test_evaluated": robustness_report.get("test", {}).get("candidate_evaluated"),
+            "test_baseline_mean_macro_f1": robustness_report.get("test", {})
+            .get("summary", {})
+            .get("baseline", {})
+            .get("corruption_average", {})
+            .get("macro_f1"),
+            "test_worst_macro_f1": robustness_report.get("test", {})
+            .get("summary", {})
+            .get("baseline", {})
+            .get("worst_condition", {})
+            .get("macro_f1"),
+            "production_promotion_approved": robustness_report.get("promotion", {}).get(
+                "production_promotion_approved"
+            ),
+            "robustness_contract_tests": robustness_test_count,
         },
         "production_readiness": {
             "model_release_url": model_release.url if model_release else None,

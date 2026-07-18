@@ -32,6 +32,7 @@ terraclass-api = "terraclass.api:main"
 terraclass-drift = "terraclass.drift:main"
 terraclass-model-quality = "terraclass.model_quality:main"
 terraclass-external-calibration = "terraclass.external_calibration:main"
+terraclass-robustness = "terraclass.robustness:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

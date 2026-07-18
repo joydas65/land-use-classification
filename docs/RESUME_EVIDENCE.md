@@ -38,6 +38,8 @@ Only completed, versioned experiment outputs may become numerical résumé claim
 - Independent cross-domain calibration evaluation using 500 RESISC45 calibration images, a separate 500-image test set, a 500-replicate bootstrap, and five-fold stability analysis
 - Separate OOD benchmark over 5,457 unmapped land-use scenes, with explicit evidence that temperature scaling and softmax confidence are insufficient OOD detectors
 - Model-governance decision to reject a statistically stable external calibration candidate after it regressed UC Merced NLL and failed domain, mapping, and noncommercial-license promotion boundaries
+- Deterministic corruption benchmark covering brightness, contrast, blur, noise, and JPEG compression at three severities, with clean, mean, per-family, per-severity, and worst-condition metrics
+- Leakage-safe TTA selection that evaluated four-view logit averaging on validation, rejected the candidate before test evaluation, and preserved the production inference policy
 
 ## Supported numerical claim
 
@@ -93,6 +95,13 @@ Optional calibration-governance bullet:
 > 0.066 without changing accuracy, quantified uncertainty with 500 bootstrap fits and five-fold
 > validation, and rejected global deployment after detecting a 10.9× UC Merced NLL regression.
 
+Optional robustness bullet:
+
+> Built a deterministic corruption benchmark for a ResNet18 land-use classifier across 1,125
+> corrupted test evaluations; measured 0.992 mean macro F1 and 0.918 worst-case macro F1 under
+> severe Gaussian blur, and rejected four-view test-time augmentation on validation before opening
+> candidate test metrics.
+
 Keep the dataset scope in the same bullet as the perfect score. Do not shorten this into a generic “100% satellite classifier” claim.
 
 ## Senior-engineering extension
@@ -112,3 +121,7 @@ production examples. The model-quality phase is also complete: the original soft
 production. An external RESISC45 follow-up identified a statistically stable candidate, but it is
 not deployed because it materially regresses UC Merced calibration, uses proxy class mappings, and
 depends on evaluation data whose redistributor states a noncommercial license.
+The corruption-robustness phase is also complete. The single-view model retained 0.991879 mean
+macro F1 across the 15 synthetic test conditions, while four-view TTA was rejected on validation
+and was not evaluated as a candidate on the test split. These are small five-class synthetic-stress
+results, not production-traffic or adversarial-robustness claims.
